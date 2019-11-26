@@ -232,7 +232,7 @@ Once all your sound files have been placed around the room and loaded onto all p
 ## Contributors
 <a name="contributors"></a>
 
- - Rupert Parry
+ - [Rupert Parry](http://rparry.me) | [Github](https://github.com/rupertparry) | [Twitter](https://twitter.com/rupert_parry)
  - Byron Hallett
  - [Nick Cellini](http://ncellini.com) | [Github](https://github.com/cellininicholas) | [Twitter](https://twitter.com/nfcellini)
  - [Jude Osborn](https://github.com/JudeOsborn)
