@@ -53,7 +53,7 @@ To the audience, this is an audio only experience. The phone screen is only requ
 
 The app has not been released to the public on a mobile app store, but can be downloaded and built in Unity. So far the experience has only been tested on fairly recent Android phones, such as a Pixel or Samsung Galaxy 7 or higher.
 
-1. Download Unity version [2018.3.0f2](https://unity3d.com/get-unity/download?thank-you=update&download_nid=59189) for compatibility.
+1. Download Unity version [2018.4.13f1](https://unity3d.com/unity/qa/lts-releases?version=2018.4) for compatibility.
 
 2. Clone this repo to your machine
 
