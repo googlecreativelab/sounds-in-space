@@ -46,8 +46,8 @@ namespace SIS {
         public IObjectSelectionDelegate selectionDelegate = null;
         SoundRadius objSelectionRadius;
         public GameObject SoundRadiusPrefab;
-        private SoundMarker selSound = null;
-        public SoundMarker selectedSound { get { return selSound; } }
+        private SoundMarker selMarker = null;
+        public SoundMarker selectedMarker { get { return selMarker; } }
 
         [HideInInspector] public bool selectionEnabled = true;
 
@@ -101,19 +101,19 @@ namespace SIS {
         #region Reposition the selected sound
 
         public void ParentSelectedSoundIconToCursor(Transform cursorTransform) {
-            if (selectedSound == null) { return; }
+            if (selectedMarker == null) { return; }
 
-            selectedSound.SoundIcons.transform.parent = cursorTransform;
-            selectedSound.SoundIcons.transform.localPosition = Vector3.zero;
+            selectedMarker.SoundIcons.transform.parent = cursorTransform;
+            selectedMarker.SoundIcons.transform.localPosition = Vector3.zero;
             SetSelectionRadiusParent(cursorTransform);
         }
 
         public void ReturnSelectedSoundIconFromCursor() {
-            if (selectedSound == null) { return; }
+            if (selectedMarker == null) { return; }
 
-            selectedSound.SoundIcons.transform.parent = selectedSound.gameObject.transform;
-            selectedSound.SoundIcons.transform.localPosition = Vector3.zero;
-            SetSelectionRadiusParent(selectedSound.transform);
+            selectedMarker.SoundIcons.transform.parent = selectedMarker.gameObject.transform;
+            selectedMarker.SoundIcons.transform.localPosition = Vector3.zero;
+            SetSelectionRadiusParent(selectedMarker.transform);
         }
 
         #endregion
@@ -127,24 +127,24 @@ namespace SIS {
             objSelectionRadius.isMinHidden = false;
             objSelectionRadius.isMaxHidden = false;
 
-            selSound = sso;
+            selMarker = sso;
             if (selectionDelegate != null) { selectionDelegate.ObjectSelectionSoundSourceIconSelected(sso); }
         }
 
         public void SetSelectedSoundToNextColor() {
-            if (selSound == null) { return; }
-            selSound.SetToNextColor();
+            if (selMarker == null) { return; }
+            selMarker.SetToNextColor();
         }
 
         public void SetSelectedSoundToNextIcon() {
-            if (selSound == null) { return; }
-            selSound.SetToNextIcon();
+            if (selMarker == null) { return; }
+            selMarker.SetToNextIcon();
         }
 
         public void DeselectSound() {
             objSelectionRadius.isMinHidden = true;
             objSelectionRadius.isMaxHidden = true;
-            selSound = null;
+            selMarker = null;
         }
 
         // Update is called once per frame

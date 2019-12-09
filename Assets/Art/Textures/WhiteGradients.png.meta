@@ -1,8 +1,9 @@
 fileFormatVersion: 2
-guid: 4b18cd06e9d9b43d7aa721c497a31a02
+guid: a185ecd6cfd0549e9aafd12c3b25f654
 TextureImporter:
   fileIDToRecycleName:
-    21300000: Icons-2_0
+    21300000: WhiteGradients_Top
+    21300002: WhiteGradients_Bot
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -48,8 +49,8 @@ TextureImporter:
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spriteGenerateFallbackPhysicsShape: 1
-  alphaUsage: 2
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationDetail: -1
   textureType: 8
@@ -107,21 +108,41 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Icons-2_0
+      name: WhiteGradients_Top
       rect:
         serializedVersion: 2
-        x: 11
-        y: 344
-        width: 160
-        height: 160
+        x: 0
+        y: 256
+        width: 512
+        height: 256
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e76d8cc7231864fd0942b28a9382b83e
+      spriteID: 434b73c1df89f47ccbaa62053b81004f
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WhiteGradients_Bot
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 512
+        height: 256
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: adaca45b2b3ae445dab598ab1e820e8d
       vertices: []
       indices: 
       edges: []
@@ -129,7 +150,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 9eaf1550ba116404c8a7ca8319cee390
+    spriteID: ca84586f6d22d4118841eb5fdd56a93b
     vertices: []
     indices: 
     edges: []

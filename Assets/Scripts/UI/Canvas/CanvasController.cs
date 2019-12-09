@@ -19,6 +19,7 @@
 //-----------------------------------------------------------------------
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 namespace SIS {
     public interface ICanvasControllerDelegate {
@@ -156,7 +157,8 @@ namespace SIS {
         public void LoadLayoutBTNClicked() {
             SetCanvasScreenActive(CanvasUIScreen.LayoutList);
         }
-        public void LoadSoundBTNClicked() {
+        public void SoundMarkersBTNClicked() {
+            soundMarkerList.setMode(CanvasSoundMarkerList.Mode.FromMainMenu);
             SetCanvasScreenActive(CanvasUIScreen.SoundMarkerList);
         }
         public void LoadSoundFileBTNClicked() {
@@ -209,6 +211,15 @@ namespace SIS {
             SetCanvasScreenActive(CanvasUIScreen.SoundFileList);
         }
 
+        public void SyncPlaybackButtonClicked() {
+            SoundMarker selMarker = objectSelection.selectedMarker;
+            HashSet<string> syncedMarkerIDs = GetCurrentLayout().getSynchronisedMarkers(selMarker.hotspot.id);
+
+            soundMarkerList.setMode(CanvasSoundMarkerList.Mode.SyncronisedMarkers, 
+                                    selectedMarker:selMarker, syncedMarkerIDs:syncedMarkerIDs);
+            SetCanvasScreenActive(CanvasUIScreen.SoundMarkerList);
+        }
+
     public void PlaceNewSoundsButtonClickedFromSoundEdit() {
         objectSelection.ReturnSelectedSoundIconFromCursor();
         objectSelection.DeselectSound();
@@ -235,19 +246,65 @@ namespace SIS {
             PlaceSoundsBTNClicked();
         }
 
-        public void ConfirmButtonClicked(CanvasUIScreen fromScreen, CanvasListCell<Layout> currentSelectedCell) {
-            canvasDelegate?.LoadLayout(currentSelectedCell.datum);
+        // -------------------
+
+        public void ConfirmButtonClicked(CanvasUIScreen fromScreen, HashSet<CanvasListCell<Layout>> currentSelectedCells) {
+            if (currentSelectedCells.Count > 0) {
+                canvasDelegate?.LoadLayout(currentSelectedCells.First().datum);
+            }
+            
             BackButtonClicked(CanvasUIScreen.LayoutList);
         }
 
-        public void ConfirmButtonClicked(CanvasUIScreen fromScreen, CanvasListCell<SoundFile> currentSelectedCell) {
-            canvasDelegate?.BindSoundFile(currentSelectedCell.datum);
+        public void ConfirmButtonClicked(CanvasUIScreen fromScreen, HashSet<CanvasListCell<SoundFile>> currentSelectedCells) {
+            if (currentSelectedCells.Count > 0) {
+                canvasDelegate?.BindSoundFile(currentSelectedCells.First().datum);
+            }
+            
             BackButtonClicked(CanvasUIScreen.SoundFileList);
         }
 
-        public void ConfirmButtonClicked(CanvasUIScreen fromScreen, CanvasListCell<SoundMarker> currentSelectedCell) {
-            canvasDelegate?.SelectSoundMarker(currentSelectedCell.datum);
+        public void ConfirmButtonClicked(CanvasUIScreen fromScreen, HashSet<CanvasListCell<SoundMarker>> currentSelectedCells) {
+            if (currentSelectedCells.Count > 0) {
+                canvasDelegate?.SelectSoundMarker(currentSelectedCells.First().datum);
+            }
+            
         }
+
+        // -------------------
+
+        public void CanvasListWillReturn(CanvasController.CanvasUIScreen fromScreen, HashSet<CanvasListCell<Layout>> currentSelectedCells) {
+
+        }
+
+        public void CanvasListWillReturn(CanvasController.CanvasUIScreen fromScreen, HashSet<CanvasListCell<SoundFile>> currentSelectedCells) {
+
+        }
+
+        public void CanvasListWillReturn(CanvasController.CanvasUIScreen fromScreen, HashSet<CanvasListCell<SoundMarker>> currentSelectedCells) {
+            if (fromScreen == CanvasController.CanvasUIScreen.SoundMarkerList 
+            && soundMarkerList.listMode == CanvasSoundMarkerList.Mode.SyncronisedMarkers) {
+                SoundMarker selMarker = objectSelection.selectedMarker;
+                if (selMarker == null) { return; }
+
+                // Save associated cells
+                HashSet<string> markerIDs = new HashSet<string>();
+
+                markerIDs.Add(selMarker.hotspot.id);
+                foreach (CanvasListCell<SoundMarker> cell in currentSelectedCells) { markerIDs.Add(cell.datum.hotspot.id); }
+
+                Layout curLayout = GetCurrentLayout();
+                curLayout.setSynchronisedMarkerIDs(markerIDs);
+            }
+        }
+
+        // -------------------
+
+        public HashSet<string> SynchronisedMarkerIDsWithMarkerID(string markerID) {
+            return GetCurrentLayout().getSynchronisedMarkers(markerID);
+        }
+
+        // -------------------
 
         // -----------------------
         public void ReloadSoundFiles(System.Action completion) {
@@ -271,14 +328,32 @@ namespace SIS {
 
         public void BackButtonClicked(CanvasUIScreen fromScreen) {
 
-            objectSelection.ReturnSelectedSoundIconFromCursor();
-            objectSelection.DeselectSound();
+            // if (fromScreen == CanvasUIScreen.SoundMarkerList 
+            // && soundMarkerList.listMode == CanvasSoundMarkerList.Mode.SyncronisedMarkers) {
+
+            // } else {
+            //     objectSelection.ReturnSelectedSoundIconFromCursor();
+            //     objectSelection.DeselectSound();
+            // }
+
+            bool returnToEditSound = canvasDelegate.SoundMarkerIsSelected() 
+            && (fromScreen == CanvasUIScreen.SoundFileList 
+                || (fromScreen == CanvasUIScreen.SoundMarkerList 
+                    && soundMarkerList.listMode == CanvasSoundMarkerList.Mode.SyncronisedMarkers));
+
+            if (!returnToEditSound) {
+                objectSelection.ReturnSelectedSoundIconFromCursor();
+                objectSelection.DeselectSound();
+            }
 
             if (canvasDelegate == null) return;
+            
             // Different case: If we were selecting a sound while editing a sound object, go to edit
-            if (fromScreen == CanvasUIScreen.SoundFileList && canvasDelegate.SoundMarkerIsSelected()) {
-                editSoundOverlay.SoundMarkerSelected(canvasDelegate?.objectSelection.selectedSound);
+            if (returnToEditSound) {
+                
+                editSoundOverlay.SoundMarkerSelected(canvasDelegate?.objectSelection.selectedMarker);
                 SetCanvasScreenActive(CanvasUIScreen.EditSound);
+
             } else {
                 // BASE CASE:
                 SetCanvasScreenActive(CanvasUIScreen.Main);

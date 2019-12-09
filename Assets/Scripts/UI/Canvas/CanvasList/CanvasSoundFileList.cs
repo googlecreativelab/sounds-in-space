@@ -64,7 +64,7 @@ namespace SIS {
         public override void CellClicked(CanvasListCell<SoundFile> listCell, SoundFile datum) {
             base.CellClicked(listCell, datum);
 
-            confirmButton.interactable = (selectedCell != null);
+            confirmButton.interactable = (_selectedCells.Count > 0);
             VoiceOver.main.PlayPreview(datum);
         }
 

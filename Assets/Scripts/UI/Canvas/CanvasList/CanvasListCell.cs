@@ -24,6 +24,9 @@ namespace SIS {
     public class CanvasListCell<D> : MonoBehaviour {
         [HideInInspector] public D datum { get; private set; }
 
+        protected bool _isSelected = false;
+        public bool isSelected { get { return _isSelected; } }
+
         public Text titleLabel;
         public Text subtitleLabel;
         public Image iconImage;
@@ -53,10 +56,12 @@ namespace SIS {
         }
 
         public virtual void CellWasSelected(CanvasListBase<D> parentList) {
+            _isSelected = true;
             SetContentUIColor(Color.white, ColorThemeData.Instance.interactionColor);
         }
 
         public virtual void CellWasDeselected(CanvasListBase<D> parentList) {
+            _isSelected = false;
             SetContentUIColor(ColorThemeData.Instance.interactionColor, Color.white);
         }
     }

@@ -65,7 +65,10 @@ Shader "ARCore/CL/DiffuseDitherCloseCamFadeDoubleSided"
             o.Albedo = col.rgb * _Color.rgb;
 
             // float cameraDist = length(mul (unity_ObjectToWorld, IN.vertex) - _WorldSpaceCameraPos.xyz);
-            float cameraDist = distance(IN.worldPos, _WorldSpaceCameraPos);
+
+            float4 objectOrigin = mul(unity_ObjectToWorld, float4(0.0,0.0,0.0,1.0) );
+            float cameraDist = distance(objectOrigin, _WorldSpaceCameraPos); // IN.worldPos
+            // float cameraDist = distance(IN.worldPos, _WorldSpaceCameraPos);
             float camDistPercent = ((cameraDist-_EndFadeDist) / (_StartFadeDist - _EndFadeDist)); // cameraDist / _StartFadeDist;
 
             float ditherAlpha = min(col.a * _Color.a,camDistPercent);

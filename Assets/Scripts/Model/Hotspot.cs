@@ -37,6 +37,8 @@ namespace SIS {
     public class Hotspot : ISerializationCallbackReceiver {
         [NonSerialized] public IHotspotDelegate hotspotDelegate = null;
 
+        [SerializeField] private string _id;
+        // [SerializeField] private string _syncedSoundsJSON;
 
         [SerializeField] private float _positionX;
         [SerializeField] private float _positionY;
@@ -56,17 +58,24 @@ namespace SIS {
         [SerializeField] private bool _loopAudio;
         [SerializeField] private float _pitchBend;
         [SerializeField] private float _srcVolume = 1f;
+        [SerializeField] private float _freqCutoff;
+        [SerializeField] private float _distortion;
+        [SerializeField] private float _phaserLevel;
 
         [SerializeField] private string _objectName;
 
         [SerializeField] private string _soundID; // See DEFAULT_CLIP
                                                   // -----------
                                                   // GETTERS
+        public string id { get { return _id; } }
         public int iconIndex { get { return _iconIndex; } }
         public int colorIndex { get { return _colorIndex; } }
         public bool triggerPlayback { get { return _triggerPlayback; } }
         public bool loopAudio { get { return _loopAudio; } }
         public float pitchBend { get { return _pitchBend; } }
+        public float freqCutoff { get { return _freqCutoff; } }
+        public float distortion { get { return _distortion; } }
+        public float phaserLevel { get { return _phaserLevel; } }
         public float soundVolume { get { return _srcVolume < 0 ? 0 : _srcVolume; } }
         public Vector3 positon { get { return new Vector3(_positionX, _positionY, _positionZ); } }
         public Quaternion rotation { get { return Quaternion.Euler(_rotationX, _rotationY, _rotationZ); } }
@@ -75,6 +84,9 @@ namespace SIS {
         public string name { get { return _objectName; } }
         public string soundID { get { return _soundID; } }
         public SoundFile soundFile { get { return hotspotDelegate?.GetSoundFileFromSoundID(_soundID); } }
+        // public string[] syncedSoundsIDs { 
+        //     get { return JsonUtility.FromJson<string[]>(_syncedSoundsJSON); } 
+        // }
 
         public void OnBeforeSerialize() {
           // Debug.Log ("OnBeforeDeserialize _srcVolume: " + _srcVolume);
@@ -83,6 +95,13 @@ namespace SIS {
         public void OnAfterDeserialize() {
             if (_srcVolume == 0) { _srcVolume = 1f; } // If _srcVolume==0, it has not been set.
             // Debug.Log("OnAfterDeserialize _srcVolume: " + _srcVolume);
+            if (_id == null || _id.Length < 1) { _id = System.Guid.NewGuid().ToString(); }
+            // Debug.Log("_id(" + _id.Length + "): " + _id);
+            // Debug.Log("_syncedSoundsJSON(" + _syncedSoundsJSON.Length + "): " + _syncedSoundsJSON);
+            // if (_syncedSoundsJSON != null && _syncedSoundsJSON.Length < 1) { _syncedSoundsJSON = "[]"; }
+
+            // string[] ids = syncedSoundsIDs;
+            // Debug.Log("syncedSoundsIDs(" + syncedSoundsIDs.Length + "): " + syncedSoundsIDs);
         }
 
         // =============
@@ -114,6 +133,21 @@ namespace SIS {
 
         public void SetSoundVolume(float newVolume) {
             _srcVolume = newVolume == 0 ? -1 : newVolume;
+            hotspotDelegate?.Save();
+        }
+
+        public void SetFreqCutoff(float newFreqCutoff) {
+            _freqCutoff = newFreqCutoff;
+            hotspotDelegate?.Save();
+        }
+
+        public void SetDistortion(float newDistortion) {
+            _distortion = newDistortion;
+            hotspotDelegate?.Save();
+        }
+
+        public void SetPhaserLevel(float newLevel) {
+            _phaserLevel = newLevel;
             hotspotDelegate?.Save();
         }
 
@@ -165,6 +199,9 @@ namespace SIS {
 
 
         public Hotspot(Vector3 localPos, Vector3 rotation, float newMinDistance, float newMaxDistance) {
+            _id = System.Guid.NewGuid().ToString();
+            // _syncedSoundsJSON = "[]";
+            
             _positionX = localPos.x;
             _positionY = localPos.y;
             _positionZ = localPos.z;
@@ -185,9 +222,11 @@ namespace SIS {
             _loopAudio = true;
             _pitchBend = 0;
             _srcVolume = 1f;
+            _freqCutoff = 0;
+            _distortion = 0;
 
             _soundID = SoundFile.DEFAULT_CLIP;
         }
 
     }
-        }
+}

@@ -26,6 +26,16 @@ namespace SIS {
         public int Count { get { return meshRends == null ? 0 : meshRends.Length; } }
         int curIndex = 0;
 
+        private bool _rotateFast = false;
+        private float _rotMultiplier = 1f;
+        public bool rotateFast {
+            get { return _rotateFast; }
+            set { 
+                _rotateFast = value;
+                _rotMultiplier = _rotateFast ? 3f : 0.7f;
+            }
+        }
+
         MaterialPropertyBlock propBlock;
 
         void Awake() {
@@ -56,7 +66,11 @@ namespace SIS {
 
         // Update is called once per frame
         void Update() {
-            transform.Rotate(Mathf.Sin(0.618f * Time.time), Mathf.Sin(Time.time), Mathf.Sin(0.309f * Time.time));
+            transform.Rotate(
+                _rotMultiplier * Mathf.Sin(0.618f * Time.time),
+                _rotMultiplier * Mathf.Sin(Time.time),
+                _rotMultiplier * Mathf.Sin(0.309f * Time.time)
+            );
         }
     }
 }

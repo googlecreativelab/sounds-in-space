@@ -29,13 +29,31 @@ namespace SIS {
     }
 
     [Serializable]
-    public class Layout : IHotspotDelegate {
+    public class SyncedMarkers {
+        public List<string> list;
+        public SyncedMarkers(HashSet<string> markers) {
+            list = new List<string>(markers);
+        }
+        public SyncedMarkers() {
+            list = new List<string>();
+        }
+        public bool containsMarkerID(string id) {
+            return this.list.Contains(id);
+        }
+    }
+
+    [Serializable]
+    public class Layout : IHotspotDelegate, ISerializationCallbackReceiver {
 
         [NonSerialized] public ILayoutDelegate layoutDelegate;
 
         public int id;
         public string layoutName;
         public List<Hotspot> hotspots;
+        
+        public List<SyncedMarkers> syncedMarkerIDs;
+        [NonSerialized] public HashSet<HashSet<string>> syncedMarkerIDSets;
+
         public long lastSaveDate;
         [NonSerialized] public string filename;
 
@@ -62,7 +80,95 @@ namespace SIS {
             this.id = id;
             this.layoutName = string.Format("New Layout {0}", id);
             this.hotspots = new List<Hotspot>();
+            this.syncedMarkerIDs = new List<SyncedMarkers>();
             this.lastSaveDate = DateTime.Now.Ticks;
+            this.syncedMarkerIDSets = new HashSet<HashSet<string>>();
+        }
+
+        public void OnBeforeSerialize() {
+
+        }
+
+        public void OnAfterDeserialize() {
+            if (this.syncedMarkerIDSets == null) {
+                this.syncedMarkerIDSets = new HashSet<HashSet<string>>();
+            }
+            if (this.syncedMarkerIDs == null) {
+                this.syncedMarkerIDs = new List<SyncedMarkers>();
+            } else {
+                updateSyncedMarkerSets();
+            }
+        }
+
+        // =========
+
+        private void updateSyncedMarkerSets() {
+            this.syncedMarkerIDSets.Clear();
+            foreach (SyncedMarkers markers in this.syncedMarkerIDs) {
+                if (this.syncedMarkerIDs.Count < 2) { continue; }
+                this.syncedMarkerIDSets.Add(new HashSet<string>(markers.list));
+            }
+        }
+
+        public HashSet<string> getSynchronisedMarkers(string forMarkerID) {
+            foreach (HashSet<string> syncedMarkerIDs in this.syncedMarkerIDSets) {
+                if (syncedMarkerIDs.Contains(forMarkerID)) {
+                    return syncedMarkerIDs;
+                }
+            }
+
+            return null;
+        }
+
+        public void setSynchronisedMarkerIDs(HashSet<string> markers) {
+            // Remove ANY duplicates
+            for (int i = 0; i < this.syncedMarkerIDs.Count; i++) {
+                for (int j = 0; j < this.syncedMarkerIDs[i].list.Count; j++) {
+                    string markerID = this.syncedMarkerIDs[i].list[j];
+                    if (markers.Contains(markerID)) {
+                        this.syncedMarkerIDs[i].list.RemoveAt(j);
+                        --j;
+                    }
+                }
+                // If any lists have <2 markers, Delete the whole list
+                if (this.syncedMarkerIDs[i].list.Count < 2) {
+                    this.syncedMarkerIDs.RemoveAt(i);
+                    --i;
+                }
+            }
+
+            // Add the new markers
+            this.syncedMarkerIDs.Add(new SyncedMarkers(markers));
+            updateSyncedMarkerSets();
+
+            // Debug.Log ("setSynchronisedMarkerIDs this.syncedMarkerIDs.count " + this.syncedMarkerIDs.Count);
+            Save();
+        }
+
+        private void removeMarkerIDFromSynchronisedMarkers(string markerID, bool save = true) {
+            for (int i = 0; i < this.syncedMarkerIDs.Count; i++) {
+                for (int j = 0; j < this.syncedMarkerIDs[i].list.Count; j++) {
+                    string tmpMarkerID = this.syncedMarkerIDs[i].list[j];
+                    if (markerID == tmpMarkerID) {
+                        this.syncedMarkerIDs[i].list.RemoveAt(j);
+                        --j;
+                    }
+                }
+                // If any lists have <2 markers, Delete the whole list
+                if (this.syncedMarkerIDs[i].list.Count < 2) {
+                    this.syncedMarkerIDs.RemoveAt(i);
+                    --i;
+                }
+            }
+
+            updateSyncedMarkerSets();
+            if (save) { Save(); }
+        }
+
+        private void clearSynchronisedMarkers(bool save = true) {
+            this.syncedMarkerIDs.Clear();
+            updateSyncedMarkerSets();
+            if (save) { Save(); }
         }
 
         // =========
@@ -76,10 +182,14 @@ namespace SIS {
         public void EraseHotspot(Hotspot hotspot) {
             if (hotspot == null) return;
             // Save the Layout of the Hotspot was successfully removed
-            if (hotspots.Remove(hotspot)) Save();
+            removeMarkerIDFromSynchronisedMarkers(hotspot.id, save:false);
+            
+            hotspots.Remove(hotspot);
+            Save();
         }
 
         public void EraseHotspots() {
+            clearSynchronisedMarkers(save: false);
             if (hotspots == null) { this.hotspots = new List<Hotspot>(); }
             hotspots.Clear();
             Save();
@@ -113,6 +223,7 @@ namespace SIS {
             using (StreamWriter streamWriter = File.CreateText(jsonDataPath)) {
                 streamWriter.Write(jsonString);
             }
+            // Debug.Log ("Saved to " + jsonDataPath);
         }
 
         public SoundFile GetSoundFileFromSoundID(string soundID) {
