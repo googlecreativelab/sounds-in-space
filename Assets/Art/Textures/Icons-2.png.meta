@@ -8,6 +8,8 @@ TextureImporter:
     21300006: Icons-2_3
     21300008: refresh-icon
     21300010: CopyIcon
+    21300012: BackButton
+    21300014: BackButton-wShadow
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -53,7 +55,7 @@ TextureImporter:
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spriteGenerateFallbackPhysicsShape: 1
+  spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationDetail: -1
@@ -220,13 +222,53 @@ TextureImporter:
         width: 160
         height: 160
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
       spriteID: 7f8412903cc4e47d7b9e248e5bfc5187
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BackButton
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 349
+        width: 160
+        height: 160
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2c5c58528c2014e1ba3f473986fc4c2a
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BackButton-wShadow
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 176
+        width: 160
+        height: 160
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fc120c8e7572d45f2987dab25e68e3a9
       vertices: []
       indices: 
       edges: []

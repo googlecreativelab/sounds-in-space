@@ -18,6 +18,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using UnityEngine.UI;
+using System.Linq;
 
 namespace SIS {
     public class CanvasLayoutList : CanvasListBase<Layout> {
@@ -45,12 +46,12 @@ namespace SIS {
 
         private void UpdateBTNStates() {
 
-            bool selection = selectedCell != null;
-            openLayoutButton.interactable = (selection);
-            duplicateButton.interactable = (selection);
-            duplicateButton.gameObject.SetActive(selection);
+            bool atLeast1CellSelected = _selectedCells.Count > 0;
+            openLayoutButton.interactable = atLeast1CellSelected;
+            duplicateButton.interactable = atLeast1CellSelected;
+            duplicateButton.gameObject.SetActive(atLeast1CellSelected);
 
-            bool deletion = selection && data.Count > 1;
+            bool deletion = atLeast1CellSelected && data.Count > 1;
             deleteButton.gameObject.SetActive(deletion);
             deleteButton.interactable = (deletion);
         }
@@ -63,21 +64,25 @@ namespace SIS {
 
 
         public void DeleteButtonClicked() {
-            if (selectedCell == null) { return; }
+            if (_selectedCells.Count < 1) { return; }
 
-            canvasDelegate?.DeleteLayout(selectedCell.datum);
+            foreach (CanvasListCell<Layout> cell in _selectedCells) {
+                data.Remove(cell.datum);
+                DeleteCell(cell);
+                canvasDelegate?.DeleteLayout(cell.datum);
+            }
 
             ReloadLayouts();
             RefreshCells();
 
-            selectedCell = null;
+            deselectAllCells();
             UpdateBTNStates();
         }
 
         public void DuplicateButtonClicked() {
-            if (selectedCell == null) { return; }
+            if (_selectedCells.Count != 1) { return; }
 
-            canvasDelegate?.DuplicateLayout(selectedCell.datum);
+            canvasDelegate?.DuplicateLayout(_selectedCells.First().datum);
             ReloadLayouts();
             RefreshCells();
 

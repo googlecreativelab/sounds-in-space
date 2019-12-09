@@ -55,6 +55,7 @@ sysinfo.txt
 
 # Builds
 *.apk
+!InstantPreview.apk
 *.unitypackage
 
 .DS_Store

@@ -28,7 +28,7 @@ namespace SIS {
         void ResetCameraBTNClicked();
         void PlaceSoundsBTNClicked();
         void LoadLayoutBTNClicked();
-        void LoadSoundBTNClicked();
+        void SoundMarkersBTNClicked();
         void CurrentLayoutWasRenamed(string layoutName);
         Layout GetCurrentLayout();
     }
@@ -38,6 +38,7 @@ namespace SIS {
         public override CanvasController.CanvasUIScreen canvasID { get { return CanvasController.CanvasUIScreen.Main; } }
 
         public Button playbackButton = null;
+        public Button placeSoundsButton = null;
 
         private bool _playbackIsStopped = false;
         public bool playbackIsStopped {
@@ -141,6 +142,12 @@ namespace SIS {
             }
         }
 
+        override public void CanvasWillAppear() {
+            base.CanvasWillAppear();
+
+            UpdateMenuState();
+        }
+
         void UpdateMenuState(bool animated = false, float animDelay = 0) {
 
             int hotspotCount = canvasDelegate == null ? 0 : canvasDelegate.GetCurrentLayout().hotspots.Count;
@@ -151,13 +158,15 @@ namespace SIS {
                 numSoundMarkersText.gameObject.SetActive(initialStartPosHasBeenSet);
                 menuButton.gameObject.SetActive(initialStartPosHasBeenSet);
                 playbackButton.gameObject.SetActive(initialStartPosHasBeenSet && hotspotCount > 0);
+                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
 
                 menuBtnImg.sprite = menuIsOpen ? menuCloseSprite : menuNormalSprite;
 
                 menuBGIMG.raycastTarget = initialStartPosHasBeenSet && menuIsOpen;
                 menuBGIMG.color = new Color(0, 0, 0, menuBGIMG.raycastTarget ? 0.75f : 0);
 
-                menuButtonsCanvasGroup.alpha = initialStartPosHasBeenSet && menuIsOpen ? 1 : 0;
+                // menuButtonsCanvasGroup.alpha = initialStartPosHasBeenSet && menuIsOpen ? 1 : 0;
+                menuButtonsCanvasGroup.alpha = initialStartPosHasBeenSet ? 1 : 0;
                 for (int i = 0; i < buttons.Length; i++) {
                     Button b = buttons[i];
                     b.gameObject.SetActive(menuIsOpen);
@@ -171,6 +180,7 @@ namespace SIS {
 
                 menuBtnImg.sprite = menuIsOpen ? menuCloseSprite : menuNormalSprite;
                 playbackButton.gameObject.SetActive(initialStartPosHasBeenSet && hotspotCount > 0);
+                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
 
                 menuBGIMG.raycastTarget = initialStartPosHasBeenSet && menuIsOpen;
 
@@ -258,7 +268,7 @@ namespace SIS {
 
         public void BtnClickedSoundList() {
             if (canvasDelegate == null) { return; }
-            canvasDelegate.LoadSoundBTNClicked();
+            canvasDelegate.SoundMarkersBTNClicked();
             CloseMenu();
         }
 

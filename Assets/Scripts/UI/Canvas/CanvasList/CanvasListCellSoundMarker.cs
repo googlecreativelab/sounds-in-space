@@ -51,10 +51,12 @@ namespace SIS {
 
         public override void CellWasSelected(CanvasListBase<SoundMarker> parentList) {
             // Don't call base.cellWasSelected(parentList);
+            _isSelected = true;
             SetContentUIColor(Color.white, this.datum.color);
         }
 
         public override void CellWasDeselected(CanvasListBase<SoundMarker> parentList) {
+            _isSelected = false;
             SetContentUIColor(this.datum.color, Color.white);
         }
     }

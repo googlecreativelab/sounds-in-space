@@ -81,10 +81,11 @@ namespace SIS {
             }
         }
 
-        private void PlayThis(SoundFile sf, bool playOnLoop = false) {
+        private void PlayThis(SoundFile sf, bool playOnLoop = false, float volume = 1.0f) {
             AdjustVolume(voiceOver: true);
             audioSource.clip = sf.clip;
             audioSource.loop = playOnLoop;
+            audioSource.volume = volume;
             audioSource.Play();
         }
         private void StopVoiceOver() {
@@ -97,7 +98,7 @@ namespace SIS {
             // Don't start more than once
             if (audioSource.clip == SoundFile.warningSoundFile.clip && audioSource.isPlaying) return;
             // otherwise, launch the warning
-            PlayThis(SoundFile.warningSoundFile, playOnLoop: true);
+            PlayThis(SoundFile.warningSoundFile, playOnLoop: true, volume: 0.7f);
         }
         public void PlayPreview(SoundFile sf) {
             PlayThis(sf, playOnLoop: true);

@@ -18,6 +18,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using GoogleARCore;
 using UnityEngine;
@@ -25,7 +26,7 @@ using UnityEngine;
 namespace SIS {
 
     [RequireComponent(typeof(SoundMarkerSelection))]
-    public class MainController : MonoBehaviour, IObjectSelectionDelegate, ICanvasControllerDelegate, ILayoutManagerDelegate {
+    public class MainController : MonoBehaviour, IObjectSelectionDelegate, ICanvasControllerDelegate, ILayoutManagerDelegate, ISoundMarkerDelegate {
 
         // Used to reset the ARCore device.
         private SessionStatus arCoreSessionStatus = SessionStatus.None;
@@ -108,8 +109,13 @@ namespace SIS {
         /// <param name="removeFromList"></param>
         /// <param name="eraseHotspotData"></param>
         public void DeleteAndDestroySoundMarker(SoundMarker soundObj, bool removeFromList = true, bool eraseHotspotData = true) {
+            if (soundObj == null) { return; }
+
             // TODO: Implement object pooling
-            if (removeFromList) soundMarkers.Remove(soundObj);
+            if (removeFromList) {
+                soundObj.markerDelegate = null;
+                soundMarkers.Remove(soundObj);
+            }
             if (eraseHotspotData) layoutManager.EraseHotspot(soundObj.hotspot);
 
             if (soundObj.transform.parent != null) {
@@ -141,6 +147,7 @@ namespace SIS {
             } else {
                 soundIconObj = SoundMarker.CreatePrefab(firstPersonCamera.transform, soundMarkerPrefab, anchorWrapperTransform);
             }
+            soundIconObj.markerDelegate = this;
             Anchor anchorParent = soundIconObj.transform.parent.GetComponent<Anchor>();
             Vector3 anchorPos = anchorParent.transform.localPosition;
 
@@ -189,6 +196,8 @@ namespace SIS {
                   h.rotation, soundMarkerPrefab, anchorWrapperTransform);
                 SoundMarker soundObj = pf.GetComponent<SoundMarker>();
                 layoutManager.Bind(soundObj, h, !playbackIsStopped);
+
+                pf.markerDelegate = this;
                 soundMarkers.Add(pf);
             }
         }
@@ -227,6 +236,82 @@ namespace SIS {
         }
 
         // ------------------------------------------------------
+        #region ISoundMarkerDelegate
+        // ------------------------------------------------------
+
+        // IEnumerable collection does not include the marker that was passed
+        private IEnumerable<SoundMarker> syncedMarkersFromMarker(SoundMarker marker) {
+            HashSet<string> syncedMarkerIDs = GetCurrentLayout().getSynchronisedMarkers(marker.hotspot.id);
+            if (syncedMarkerIDs == null || syncedMarkerIDs.Count < 1) { return null; }
+
+            return MainController.soundMarkers.Where(
+                (sm) => {
+                    return sm.hotspot.id != marker.hotspot.id // Ignore the caller marker
+                        && syncedMarkerIDs.Contains(sm.hotspot.id);
+                });
+        }
+
+        private bool atLeastOneMarkerIsInTriggerRange(IEnumerable<SoundMarker> syncedMarkers) {
+            foreach (SoundMarker tmpMarker in syncedMarkers) {
+                if (tmpMarker.userIsInsideTriggerRange) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // - - - - -
+
+        public bool shouldSoundMarkerTriggerPlayback(SoundMarker marker) {
+            IEnumerable<SoundMarker> syncedMarkers = syncedMarkersFromMarker(marker);
+            if (syncedMarkers == null) { return true; }
+
+            /*
+                There is at least 1 Synchronised SoundMarker
+                 - Check if ANY of synced markers are already playing (in user range)
+                 - If NONE are in range, let's trigger their playback!
+                 - Notify the calling SoundMarker if it should start it's own playback
+             */
+
+            bool atLeastOneSyncedMarkerIsInTriggerRange = atLeastOneMarkerIsInTriggerRange(syncedMarkers);
+            if (!atLeastOneSyncedMarkerIsInTriggerRange) {
+                // The FIRST SoundMarker that is in the synced collection, let's TRIGGER the others!
+                foreach (SoundMarker tmpMarker in syncedMarkers) { tmpMarker.PlayAudioFromBeginning(ignoreTrigger: true); }
+            }
+
+            Debug.Log(string.Format("START syncedMarkers.Count: {0} - atLeastOneSyncedMarkerIsInTriggerRange: {1}", 
+                syncedMarkers.Count(), atLeastOneSyncedMarkerIsInTriggerRange ? "true" : "false"));
+
+            // Start playing if 'atLeastOne...' is NOT in range
+            return !atLeastOneSyncedMarkerIsInTriggerRange;
+        }
+
+        public bool shouldSoundMarkerStopPlaybackAfterUserLeftTriggerRange(SoundMarker marker) {
+            IEnumerable<SoundMarker> syncedMarkers = syncedMarkersFromMarker(marker);
+            if (syncedMarkers == null) { return true; }
+
+            /*
+                There is at least 1 Synchronised SoundMarker
+                 - Check if ANY of synced markers are already playing (in user range)
+                 - If NONE are in range, let's STOP their playback!
+                 - Notify the calling SoundMarker if it should stop it's own playback
+             */
+
+            bool atLeastOneSyncedMarkerIsInTriggerRange = atLeastOneMarkerIsInTriggerRange(syncedMarkers);
+            if (!atLeastOneSyncedMarkerIsInTriggerRange) {
+                // The LAST SoundMarker that is in the synced collection, let's STOP the others!
+                foreach (SoundMarker tmpMarker in syncedMarkers) { tmpMarker.StopAudioPlayback(); }
+            }
+
+            Debug.Log(string.Format("STOP syncedMarkers.Count: {0} - atLeastOneSyncedMarkerIsInTriggerRange: {1}",
+                syncedMarkers.Count(), atLeastOneSyncedMarkerIsInTriggerRange ? "true" : "false"));
+
+            // Stop playing if 'atLeastOne...' is NOT in range
+            return !atLeastOneSyncedMarkerIsInTriggerRange;
+        }
+
+        // ------------------------------------------------------
+        #endregion
         #region ICanvasControllerDelegate
         // ------------------------------------------------------
 
@@ -234,7 +319,7 @@ namespace SIS {
         /// Resets the camera, which basically restarts AR Core.s
         /// </summary>
         public void ResetCameraTapped() {
-            Debug.Log("DONE");
+            // Debug.Log("DONE");
             StartCoroutine(ReloadSoundsRelativeToCamera());
         }
 
@@ -243,7 +328,7 @@ namespace SIS {
                 if (playbackIsStopped) {
                     marker.StopAudioPlayback();
                 } else {
-                    marker.PlayAudioFromBeginning();
+                    marker.PlayAudioFromBeginning(ignoreTrigger: true);
                 }
             }
         }
@@ -313,7 +398,7 @@ namespace SIS {
 
         public void BindSoundFile(SoundFile sf) {
             if (SoundMarkerIsSelected()) {
-                layoutManager.Bind(objectSelection.selectedSound, sf);
+                layoutManager.Bind(objectSelection.selectedMarker, sf);
             } else {
                 // Another use case?
                 Debug.Log("NO SSO SELECTD");
@@ -325,7 +410,7 @@ namespace SIS {
         }
 
         public bool SoundMarkerIsSelected() {
-            return myObjectSelection.selectedSound != null;
+            return myObjectSelection.selectedMarker != null;
         }
 
         public void ReloadSoundFiles(System.Action completion) {
@@ -338,7 +423,6 @@ namespace SIS {
 
         // ------------------------------------------------------
         #endregion
-        // ------------------------------------------------------
         #region ICanvasCreateSoundsDelegate
         // ------------------------------------------------------
 
@@ -357,8 +441,8 @@ namespace SIS {
         public void CreateSoundsMaxRadiusSliderValueChanged(float radiusVal, float adjustedRadius) {
             objectSelection.SetSelectionMaxRadius(adjustedRadius);
 
-            if (objectSelection.selectedSound == null) return;
-            objectSelection.selectedSound.SetSoundMaxDistance(adjustedRadius);
+            if (objectSelection.selectedMarker == null) return;
+            objectSelection.selectedMarker.SetSoundMaxDistance(adjustedRadius);
         }
 
         // ------------------------------------------------------
@@ -370,20 +454,20 @@ namespace SIS {
         public void EditSoundMinRadiusSliderValueChanged(float radiusVal, float adjustedRadius) {
             objectSelection.SetSelectionMinRadius(adjustedRadius);
 
-            if (objectSelection.selectedSound == null) return;
-            if (objectSelection.selectedSound.SetSoundMinDistance(adjustedRadius)) {
+            if (objectSelection.selectedMarker == null) return;
+            if (objectSelection.selectedMarker.SetSoundMinDistance(adjustedRadius)) {
                 // Update the editSound MaxRadiusSlider
-                canvasControl.editSoundOverlay.SetMaxRadiusSliderDistanceValue(objectSelection.selectedSound.soundMaxDist);
+                canvasControl.editSoundOverlay.SetMaxRadiusSliderDistanceValue(objectSelection.selectedMarker.soundMaxDist);
             }
         }
 
         public void EditSoundMaxRadiusSliderValueChanged(float radiusVal, float adjustedRadius) {
             objectSelection.SetSelectionMaxRadius(adjustedRadius);
 
-            if (objectSelection.selectedSound == null) return;
-            if (objectSelection.selectedSound.SetSoundMaxDistance(adjustedRadius)) {
+            if (objectSelection.selectedMarker == null) return;
+            if (objectSelection.selectedMarker.SetSoundMaxDistance(adjustedRadius)) {
                 // Update the editSound MinRadiusSlider
-                canvasControl.editSoundOverlay.SetMinRadiusSliderDistanceValue(objectSelection.selectedSound.soundMinDist);
+                canvasControl.editSoundOverlay.SetMinRadiusSliderDistanceValue(objectSelection.selectedMarker.soundMinDist);
             }
 
         }
