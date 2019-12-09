@@ -234,8 +234,8 @@ namespace SIS {
                 }
                 if (hotspot.echoMagnitude > 0.1f) {
                     // delay (10-1000)
-                    filterEcho.delay = 10 + (1000f * percentageToEdge * hotspot.echoMagnitude);
-                    filterEcho.wetMix = percentageToEdge;
+                    filterEcho.delay = 10 + (4900f * percentageToEdge * hotspot.echoMagnitude);
+                    // filterEcho.wetMix = percentageToEdge;
                 }
                 if (hotspot.phaserLevel > 0.1f) {
                     filterPhaser.setPhaserPercent(percentageToEdge);
@@ -282,7 +282,7 @@ namespace SIS {
                 filterPhaser.setEnabled(Mathf.Abs(newHotspot.phaserLevel) > 0.1f);
 
                 filterEcho.enabled = newHotspot.echoMagnitude > 0.1f;
-                filterEcho.wetMix = 0;
+                // filterEcho.wetMix = 0;
 
                 // Set the audioSource min/max distance in the correct order
                 if (newHotspot.minDistance < _audioSrc.maxDistance) {
