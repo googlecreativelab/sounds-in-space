@@ -56,11 +56,13 @@ namespace SIS {
 
         [SerializeField] private bool _triggerPlayback;
         [SerializeField] private bool _loopAudio;
+        [SerializeField] private bool _playOnce;
         [SerializeField] private float _pitchBend;
         [SerializeField] private float _srcVolume = 1f;
         [SerializeField] private float _freqCutoff;
         [SerializeField] private float _distortion;
         [SerializeField] private float _phaserLevel;
+        [SerializeField] private float _echoMagnitude;
 
         [SerializeField] private string _objectName;
 
@@ -72,9 +74,11 @@ namespace SIS {
         public int colorIndex { get { return _colorIndex; } }
         public bool triggerPlayback { get { return _triggerPlayback; } }
         public bool loopAudio { get { return _loopAudio; } }
+        public bool playOnce { get { return _playOnce; } }
         public float pitchBend { get { return _pitchBend; } }
         public float freqCutoff { get { return _freqCutoff; } }
         public float distortion { get { return _distortion; } }
+        public float echoMagnitude { get { return _echoMagnitude; } }
         public float phaserLevel { get { return _phaserLevel; } }
         public float soundVolume { get { return _srcVolume < 0 ? 0 : _srcVolume; } }
         public Vector3 positon { get { return new Vector3(_positionX, _positionY, _positionZ); } }
@@ -126,6 +130,11 @@ namespace SIS {
             hotspotDelegate?.Save();
         }
 
+        public void SetPlayOnce(bool newValue) {
+            _playOnce = newValue;
+            hotspotDelegate?.Save();
+        }
+
         public void SetPitchBend(float newPitchBend) {
             _pitchBend = newPitchBend;
             hotspotDelegate?.Save();
@@ -143,6 +152,11 @@ namespace SIS {
 
         public void SetDistortion(float newDistortion) {
             _distortion = newDistortion;
+            hotspotDelegate?.Save();
+        }
+        
+        public void SetEchoMagnitude(float newEcho) {
+            _echoMagnitude = newEcho;
             hotspotDelegate?.Save();
         }
 
@@ -220,10 +234,12 @@ namespace SIS {
 
             _triggerPlayback = false;
             _loopAudio = true;
+            _playOnce = false;
             _pitchBend = 0;
             _srcVolume = 1f;
             _freqCutoff = 0;
             _distortion = 0;
+            _echoMagnitude = 0;
 
             _soundID = SoundFile.DEFAULT_CLIP;
         }

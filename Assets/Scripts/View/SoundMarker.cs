@@ -36,6 +36,7 @@ namespace SIS {
         private AudioLowPassFilter filterLowPass;
         private AudioHighPassFilter filterHighPass;
         private AudioDistortionFilter filterDistortion;
+        private AudioEchoFilter filterEcho;
         private AudioPhaser filterPhaser;
 
         [HideInInspector] private AudioSource _audioSrc;
@@ -168,6 +169,10 @@ namespace SIS {
             filterDistortion.enabled = distortion > 0.1f;
             hotspot.SetDistortion(distortion);
         }
+        public void SetEchoMagnitude(float echoMagnitude) {
+            filterEcho.enabled = echoMagnitude > 0.1f;
+            hotspot.SetEchoMagnitude(echoMagnitude);
+        }
 
         void Awake() {
             _audioSrc = GetComponent<AudioSource>();
@@ -176,11 +181,13 @@ namespace SIS {
             filterLowPass = GetComponent<AudioLowPassFilter>();
             filterHighPass = GetComponent<AudioHighPassFilter>();
             filterDistortion = GetComponent<AudioDistortionFilter>();
+            filterEcho = GetComponent<AudioEchoFilter>();
             filterPhaser = GetComponent<AudioPhaser>();
 
             filterLowPass.enabled = false;
             filterHighPass.enabled = false;
             filterDistortion.enabled = false;
+            filterEcho.enabled = false;
             filterPhaser.setEnabled(false);
 
             markerTrigger.triggerDelegate = this;
@@ -215,9 +222,6 @@ namespace SIS {
 
                 // =============================
                 // Optimise these checks so they don't occur on each Update()
-                if (hotspot.distortion > 0.1f) {
-                    filterDistortion.distortionLevel = Mathf.Pow(percentageToEdge, 0.5f) * hotspot.distortion;
-                }
                 if (Mathf.Abs(hotspot.pitchBend) > 0.1f) {
                     float pitchBendcoefficient = hotspot.pitchBend > 0
                                     ? Mathf.Lerp(0, highestPitch - 1.0f, hotspot.pitchBend)
@@ -225,6 +229,14 @@ namespace SIS {
                     _audioSrc.pitch = percentageToEdge * pitchBendcoefficient + 1.0f;
                 }
 
+                if (hotspot.distortion > 0.1f) {
+                    filterDistortion.distortionLevel = Mathf.Pow(percentageToEdge, 0.5f) * hotspot.distortion;
+                }
+                if (hotspot.echoMagnitude > 0.1f) {
+                    // delay (10-1000)
+                    filterEcho.delay = 10 + (1000f * percentageToEdge * hotspot.echoMagnitude);
+                    filterEcho.wetMix = percentageToEdge;
+                }
                 if (hotspot.phaserLevel > 0.1f) {
                     filterPhaser.setPhaserPercent(percentageToEdge);
                 }
@@ -268,6 +280,9 @@ namespace SIS {
                 SetFreqCutoffComponents(newHotspot.freqCutoff);
 
                 filterPhaser.setEnabled(Mathf.Abs(newHotspot.phaserLevel) > 0.1f);
+
+                filterEcho.enabled = newHotspot.echoMagnitude > 0.1f;
+                filterEcho.wetMix = 0;
 
                 // Set the audioSource min/max distance in the correct order
                 if (newHotspot.minDistance < _audioSrc.maxDistance) {

@@ -70,6 +70,7 @@ namespace SIS {
         [SerializeField] UnityEngine.UI.ScrollRect settingsScrollview = null;
         [SerializeField] UnityEngine.UI.Toggle triggerPlaybackToggle = null;
         [SerializeField] UnityEngine.UI.Toggle loopAudioToggle = null;
+        [SerializeField] UnityEngine.UI.Toggle playOnceToggle = null;
         [SerializeField] UnityEngine.UI.Text soundFilenameText = null;
 
         [SerializeField] UnityEngine.UI.Button syncPlaybackButton = null;
@@ -80,6 +81,7 @@ namespace SIS {
         [SerializeField] UnityEngine.UI.Slider freqCutoffSlider = null;
         [SerializeField] UnityEngine.UI.Slider phaserSlider = null;
         [SerializeField] UnityEngine.UI.Slider distortionSlider = null;
+        [SerializeField] UnityEngine.UI.Slider echoSlider = null;
 
         // -----------------------------------------------
         // -----------------------------------------------
@@ -176,6 +178,7 @@ namespace SIS {
             loopAudioToggle.isOn = selectedSound.hotspot.loopAudio;
             loopAudioToggle.interactable = (triggerPlaybackToggle.isOn == true);
             SetTriggerVisualInteractiveState(loopAudioToggle);
+            playOnceToggle.isOn = selectedSound.hotspot.playOnce;
 
             pitchSlider.value = selectedSound.hotspot.pitchBend;
             volumeSlider.value = selectedSound.hotspot.soundVolume;
@@ -184,6 +187,7 @@ namespace SIS {
             freqCutoffSlider.value = selectedSound.hotspot.freqCutoff;
             phaserSlider.value = selectedSound.hotspot.phaserLevel;
             distortionSlider.value = selectedSound.hotspot.distortion;
+            echoSlider.value = selectedSound.hotspot.echoMagnitude;
 
             // Syncronisation button subtitle
             syncSubtitleText.text = "Edit synchronised Sound Markers";
@@ -353,6 +357,16 @@ namespace SIS {
             selectedMarker.SetAudioShouldLoop(isOn);
         }
 
+        public void PlayOnceToggled(bool isOn) {
+            if (canvasDelegate == null) { return; }
+            SoundMarker selectedMarker = canvasDelegate.objectSelection.selectedMarker;
+            if (selectedMarker == null && selectedMarker.hotspot != null) { return; }
+
+            AnimateToggle(playOnceToggle, isOn); // Animate
+
+            // TODO:...
+        }
+
         #endregion
         #region Volume Slider Callback
 
@@ -406,6 +420,17 @@ namespace SIS {
             if (selectedMarker == null && selectedMarker.hotspot != null) { return; }
 
             selectedMarker.SetDistortion(newVal);
+        }
+
+        #endregion
+        #region Echo Slider Callback
+
+        public void EchoSliderChanged(float newVal) {
+            if (canvasDelegate == null) { return; }
+            SoundMarker selectedMarker = canvasDelegate.objectSelection.selectedMarker;
+            if (selectedMarker == null && selectedMarker.hotspot != null) { return; }
+
+            selectedMarker.SetEchoMagnitude(newVal);
         }
 
         #endregion

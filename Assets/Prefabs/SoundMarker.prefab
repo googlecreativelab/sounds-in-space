@@ -72,6 +72,7 @@ GameObject:
   - component: {fileID: 7195374161754825675}
   - component: {fileID: 8514692072512144454}
   - component: {fileID: 6006804081982610551}
+  - component: {fileID: 5961823597316815055}
   - component: {fileID: 4887001631321562754}
   - component: {fileID: 2087543787386024646}
   - component: {fileID: 8901857628658178691}
@@ -171,6 +172,18 @@ AudioDistortionFilter:
   m_GameObject: {fileID: 5111500804107003692}
   m_Enabled: 1
   m_DistortionLevel: 0.5
+--- !u!168 &5961823597316815055
+AudioEchoFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5111500804107003692}
+  m_Enabled: 1
+  m_Delay: 10
+  m_DecayRatio: 0.5
+  m_WetMix: 1
+  m_DryMix: 1
 --- !u!114 &4887001631321562754
 MonoBehaviour:
   m_ObjectHideFlags: 0
