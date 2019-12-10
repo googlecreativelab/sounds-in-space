@@ -364,7 +364,8 @@ namespace SIS {
 
             AnimateToggle(playOnceToggle, isOn); // Animate
 
-            // TODO:...
+            // Save the data to the Hotspot
+            selectedMarker.SetPlayOnce(isOn);
         }
 
         #endregion

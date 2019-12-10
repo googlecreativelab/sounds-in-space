@@ -47,11 +47,34 @@ namespace SIS {
         static float LPFMultiplier = 10000f;
         static float HPFMultiplier = 4000f;
 
+        static float UserHeardThreshold = 0.613f;
+        static float PercentThroughSoundForExpiration = 0.85f;
+        private float timeUserHasHeardSound = 0;
+        private bool _userHasHeardSound = false;
+        public bool userHasHeardSound {
+            get { return _userHasHeardSound; }
+            set {
+                if (_userHasHeardSound) {
+                    _audioSrc.loop = false;
+                } else {
+                    _audioSrc.loop = hotspot.loopAudio;
+                }
+                _userHasHeardSound = value;
+            }
+        }
+
         public SoundMarkerTrigger markerTrigger;
         public bool userIsInsideTriggerRange { get; private set; } = false;
 
         public static float SoundDistBuffer = 0.2f; // The min distance between min. and max.
         public static float SoundMultiplierBuffer = 2f;
+
+        SoundIcons soundIcons = null;
+        public SoundIcons SoundIcons { get { return soundIcons; } }
+
+        public Color color { get { return ColorThemeData.Instance.soundColors[colorIndex]; } }
+        public Sprite iconSprite { get { return SoundIconData.Instance.sprites[iconIndex]; } }
+
         public float soundMinDist {
             get { return hotspot != null ? hotspot.minDistance : _audioSrc.minDistance; }
             private set {
@@ -77,8 +100,6 @@ namespace SIS {
             }
         }
 
-        SoundIcons soundIcons = null;
-        public SoundIcons SoundIcons { get { return soundIcons; } }
         public int colorIndex {
             get { return hotspot == null ? 0 : hotspot.colorIndex; }
             set {
@@ -95,9 +116,6 @@ namespace SIS {
                 hotspot.SetIconIndex(value);
             }
         }
-
-        public Color color { get { return ColorThemeData.Instance.soundColors[colorIndex]; } }
-        public Sprite iconSprite { get { return SoundIconData.Instance.sprites[iconIndex]; } }
 
         public void PlayAudioFromBeginning(bool ignoreTrigger = false) {
             if (_audioSrc == null) return;
@@ -127,15 +145,16 @@ namespace SIS {
             hotspot.SetTriggerPlayback(shouldTrigger);
         }
 
-        public void SetPitchBend(float pitchBend) {
-            _audioSrc.pitch = pitchBend;
-            hotspot.SetPitchBend(pitchBend);
+        public void SetPlayOnce(bool playOnce) {
+            hotspot.SetPlayOnce(playOnce);
         }
 
         public void SetSoundVolume(float vol) {
             _audioSrc.volume = vol;
             hotspot.SetSoundVolume(vol);
         }
+
+        // -----------------------------------
 
         private void SetFreqCutoffComponents(float freqCutoff) {
             if (freqCutoff > 0.1f) {
@@ -152,9 +171,18 @@ namespace SIS {
             }
         }
 
+        public void SetPitchBend(float pitchBend) {
+            _audioSrc.pitch = pitchBend;
+            hotspot.SetPitchBend(pitchBend);
+
+            if (Mathf.Abs(hotspot.pitchBend) > 0.1f) { updatePitchBend(); }
+        }
+
         public void SetFrequencyCutoff(float freqCutoff) {
             SetFreqCutoffComponents(freqCutoff);
             hotspot.SetFreqCutoff(freqCutoff);
+
+            if (filterLowPass.enabled || filterHighPass.enabled) { updateFreqCuttoff(); }
         }
         public void SetPhaserLevel(float newLevel) {
             // Debug.Log ("New Phaser Level: " + newLevel);
@@ -164,15 +192,106 @@ namespace SIS {
             filterPhaser.setMaxSpeedWithPercentage(newLevel);
             filterPhaser.setEnabled(newLevel > 0.1f);
             hotspot.SetPhaserLevel(newLevel);
+
+            if (filterPhaser.enabled) { updatePhaserFilter(); }
         }
         public void SetDistortion(float distortion) {
             filterDistortion.enabled = distortion > 0.1f;
             hotspot.SetDistortion(distortion);
+
+            if (filterDistortion.enabled) { updateDistortionFilter(); }
         }
         public void SetEchoMagnitude(float echoMagnitude) {
             filterEcho.enabled = echoMagnitude > 0.1f;
             hotspot.SetEchoMagnitude(echoMagnitude);
+            
+            if (filterEcho.enabled) { updateEchoFilter(); }
         }
+
+        // - - - - - - - - - - - - - - - - - -
+
+        private void updatePlayOnce(float percentageToEdge) {
+            if (percentageToEdge > UserHeardThreshold) {
+                timeUserHasHeardSound += Time.deltaTime;
+                if (timeUserHasHeardSound / _audioSrc.clip.length > PercentThroughSoundForExpiration) {
+                    userHasHeardSound = true;
+                }
+            }
+        }
+
+        // -  -  -  -  -  -  -  -  -  -   -
+
+        private float percentToEdge() {
+            // TODO: CHECK IF SPATIAL BLEND is 2D
+            float adjMax = soundMaxDist;
+            float adjMin = soundMinDist * 2f;
+
+            float distFromCam = Vector3.Distance(transform.position, Camera.main.transform.position);
+            float preClampedPercent = (distFromCam - adjMin) / (adjMax - adjMin);
+            return Mathf.Clamp(preClampedPercent, 0, 1);
+        }
+
+        private void updatePitchBend(float percentageToEdge = -1) {
+            if (percentageToEdge < 0) { percentageToEdge = percentToEdge(); }
+
+            if (Mathf.Abs(hotspot.pitchBend) > 0.1f) {
+                float pitchBendcoefficient = hotspot.pitchBend > 0
+                                ? Mathf.Lerp(0, highestPitch - 1.0f, hotspot.pitchBend)
+                                : Mathf.Lerp(0, lowestPitch - 1.0f, Mathf.Abs(hotspot.pitchBend));
+                _audioSrc.pitch = percentageToEdge * pitchBendcoefficient + 1.0f;
+            }
+        }
+
+        private void updateEchoFilter(float percentageToEdge = -1) {
+            if (percentageToEdge < 0) { percentageToEdge = percentToEdge(); }
+
+            if (hotspot.echoMagnitude > 0.1f) {
+                // delay (10-1000)
+                filterEcho.delay = 10 + (2900f * percentageToEdge * hotspot.echoMagnitude);
+                // filterEcho.wetMix = percentageToEdge;
+            }
+        }
+
+        private void updatePhaserFilter(float percentageToEdge = -1) {
+            if (percentageToEdge < 0) { percentageToEdge = percentToEdge(); }
+
+            if (hotspot.phaserLevel > 0.1f) {
+                filterPhaser.setPhaserPercent(percentageToEdge);
+            }
+        }
+
+        private void updateDistortionFilter(float percentageToEdge = -1) {
+            if (percentageToEdge < 0) { percentageToEdge = percentToEdge(); }
+
+            if (hotspot.distortion > 0.1f) {
+                filterDistortion.distortionLevel = Mathf.Pow(percentageToEdge, 0.5f) * hotspot.distortion;
+            }
+        }
+
+        private void updateFreqCuttoff(float percentageToEdge = -1) {
+            if (percentageToEdge < 0) { percentageToEdge = percentToEdge(); }
+
+            // =============================
+            // FREQUENCY CUTOFF
+            // TODO: Should think about making this a logarithmic relationship
+            if (hotspot.freqCutoff > 0.1f) {
+                // float coefficient = Mathf.Pow(percentageToEdge * 1.1f, 2f);
+                //   10 + ([0-1] x 1 * 4000)
+                // = 
+                filterHighPass.cutoffFrequency = 80f + (percentageToEdge * hotspot.freqCutoff * HPFMultiplier);
+            } else if (hotspot.freqCutoff < -0.1f) {
+                // Minus sign because the freqCutoff value will be negative
+                // Mathf.Log10(10f); == 1
+                // float coefficient = (1f - percentageToEdge);
+                // float coefficient = Mathf.Log10((1f - percentageToEdge) * 10f);
+                // float coefficient = (1f - Mathf.Pow(percentageToEdge, 3));
+                float coefficient = Mathf.Pow((1f - (percentageToEdge * 1.1f)), 3f);
+                filterLowPass.cutoffFrequency = 150f - (coefficient * hotspot.freqCutoff * LPFMultiplier); // 21990f
+            }
+
+        }
+
+        // -----------------------------------
 
         void Awake() {
             _audioSrc = GetComponent<AudioSource>();
@@ -202,63 +321,32 @@ namespace SIS {
         }
 
         private void Update() {
-            if (userIsInsideTriggerRange && _audioSrc.spatialBlend > 0) {
-                bool atLeast1DistBasedEffect = hotspot.distortion > 0.1f 
-                                            || Mathf.Abs(hotspot.pitchBend) > 0.1f 
-                                            || Mathf.Abs(hotspot.freqCutoff) > 0.1f 
-                                            || Mathf.Abs(hotspot.phaserLevel) > 0.1f || true;
-
-                if (Mathf.Abs(hotspot.pitchBend) < 0.1f) { _audioSrc.pitch = 1f; }
-                if (!atLeast1DistBasedEffect) { return; }
-
-                // TODO: CHECK IF SPATIAL BLEND is 2D
-                float adjMax = soundMaxDist;
-                float adjMin = soundMinDist * 2f;
-
-                float distFromCam = Vector3.Distance(transform.position, Camera.main.transform.position);
-                float preClampedPercent = (distFromCam - adjMin) / (adjMax - adjMin);
-                float percentageToEdge = Mathf.Clamp(preClampedPercent, 0, 1);
+            if (userIsInsideTriggerRange) {
+                float percentageToEdge = percentToEdge();
                 // Debug.Log ("percentageToEdge: " + percentageToEdge);
-
-                // =============================
-                // Optimise these checks so they don't occur on each Update()
-                if (Mathf.Abs(hotspot.pitchBend) > 0.1f) {
-                    float pitchBendcoefficient = hotspot.pitchBend > 0
-                                    ? Mathf.Lerp(0, highestPitch - 1.0f, hotspot.pitchBend)
-                                    : Mathf.Lerp(0, lowestPitch - 1.0f, Mathf.Abs(hotspot.pitchBend));
-                    _audioSrc.pitch = percentageToEdge * pitchBendcoefficient + 1.0f;
+                
+                if (hotspot.playOnce) {
+                    updatePlayOnce(percentageToEdge);
                 }
 
-                if (hotspot.distortion > 0.1f) {
-                    filterDistortion.distortionLevel = Mathf.Pow(percentageToEdge, 0.5f) * hotspot.distortion;
+                if (_audioSrc.spatialBlend > 0) {
+                    bool atLeast1DistBasedEffect = hotspot.distortion > 0.1f
+                                                || hotspot.phaserLevel > 0.1f
+                                                || hotspot.echoMagnitude > 0.1f
+                                                || Mathf.Abs(hotspot.pitchBend) > 0.1f
+                                                || Mathf.Abs(hotspot.freqCutoff) > 0.1f;
+
+                    if (Mathf.Abs(hotspot.pitchBend) < 0.1f) { _audioSrc.pitch = 1f; }
+                    if (!atLeast1DistBasedEffect) { return; }
+
+                    // =============================
+                    // Optimise these checks so they don't occur on each Update()
+                    updateFreqCuttoff(percentageToEdge);
+                    updatePitchBend(percentageToEdge);
+                    updatePhaserFilter(percentageToEdge);
+                    updateDistortionFilter(percentageToEdge);
+                    updateEchoFilter(percentageToEdge);
                 }
-                if (hotspot.echoMagnitude > 0.1f) {
-                    // delay (10-1000)
-                    filterEcho.delay = 10 + (4900f * percentageToEdge * hotspot.echoMagnitude);
-                    // filterEcho.wetMix = percentageToEdge;
-                }
-                if (hotspot.phaserLevel > 0.1f) {
-                    filterPhaser.setPhaserPercent(percentageToEdge);
-                }
-                
-                // =============================
-                // FREQUENCY CUTOFF
-                // TODO: Should think about making this a logarithmic relationship
-                if (hotspot.freqCutoff > 0.1f) {
-                    // float coefficient = Mathf.Pow(percentageToEdge * 1.1f, 2f);
-                    //   10 + ([0-1] x 1 * 4000)
-                    // = 
-                    filterHighPass.cutoffFrequency = 80f + (percentageToEdge * hotspot.freqCutoff * HPFMultiplier);
-                } else if (hotspot.freqCutoff < -0.1f) {
-                    // Minus sign because the freqCutoff value will be negative
-                    // Mathf.Log10(10f); == 1
-                    // float coefficient = (1f - percentageToEdge);
-                    // float coefficient = Mathf.Log10((1f - percentageToEdge) * 10f);
-                    // float coefficient = (1f - Mathf.Pow(percentageToEdge, 3));
-                    float coefficient = Mathf.Pow((1f - (percentageToEdge * 1.1f)), 3f);
-                    filterLowPass.cutoffFrequency = 150f - (coefficient * hotspot.freqCutoff * LPFMultiplier); // 21990f
-                }
-                
             }
         }
 
@@ -363,7 +451,9 @@ namespace SIS {
 
         public void UserDidEnterMarkerTrigger() {
             userIsInsideTriggerRange = true;
-            if (!hotspot.triggerPlayback) { return; }
+            timeUserHasHeardSound = 0; // Restart time hearing the sound
+
+            if (!hotspot.triggerPlayback || userHasHeardSound) { return; }
             
             if (markerDelegate == null) {
                 PlayAudioFromBeginning(); // audioSrc.Play();

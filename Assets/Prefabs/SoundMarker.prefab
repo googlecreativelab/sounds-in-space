@@ -181,7 +181,7 @@ AudioEchoFilter:
   m_GameObject: {fileID: 5111500804107003692}
   m_Enabled: 1
   m_Delay: 10
-  m_DecayRatio: 0.5
+  m_DecayRatio: 0.613
   m_WetMix: 1
   m_DryMix: 1
 --- !u!114 &4887001631321562754
