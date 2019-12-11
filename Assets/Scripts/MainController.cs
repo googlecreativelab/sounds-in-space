@@ -236,7 +236,7 @@ namespace SIS {
         }
 
         // ------------------------------------------------------
-        #region ISoundMarkerDelegate
+        // ISoundMarkerDelegate functions...
         // ------------------------------------------------------
 
         // IEnumerable collection does not include the marker that was passed
@@ -260,7 +260,14 @@ namespace SIS {
             return false;
         }
 
+        #region ISoundMarkerDelegate
         // - - - - -
+
+        public void soundMarkerDebugLog(string debugStr) {
+            if (canvasControl.activeScreen == CanvasController.CanvasUIScreen.EditSound) {
+                canvasControl.editSoundOverlay.debugText.text = debugStr;
+            }
+        }
 
         public bool shouldSoundMarkerTriggerPlayback(SoundMarker marker) {
             IEnumerable<SoundMarker> syncedMarkers = syncedMarkersFromMarker(marker);
@@ -325,6 +332,7 @@ namespace SIS {
 
         public void PlaybackStateChanged(bool playbackIsStopped) {
             foreach (SoundMarker marker in soundMarkers) {
+                marker.userHasHeardSound = false;
                 if (playbackIsStopped) {
                     marker.StopAudioPlayback();
                 } else {

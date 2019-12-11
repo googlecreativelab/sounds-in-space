@@ -83,6 +83,8 @@ namespace SIS {
         [SerializeField] UnityEngine.UI.Slider distortionSlider = null;
         [SerializeField] UnityEngine.UI.Slider echoSlider = null;
 
+        public UnityEngine.UI.Text debugText = null;
+
         // -----------------------------------------------
         // -----------------------------------------------
 
@@ -227,6 +229,8 @@ namespace SIS {
             int charsOver = soundFilenameText.text.Length - charLimit;
             float percentOverCharLimit = (charsOver > 0) ? (charsOver / 8f) : 0;
             soundFilenameText.fontSize = 36 - (int)(8 * percentOverCharLimit);
+
+            debugText.text = selectedSound.userHasHeardSound ? "User HAS heard" : "NOT heard";
         }
 
         public void SetMinRadiusSliderDistanceValue(float dist) {
@@ -364,7 +368,8 @@ namespace SIS {
 
             AnimateToggle(playOnceToggle, isOn); // Animate
 
-            // TODO:...
+            // Save the data to the Hotspot
+            selectedMarker.SetPlayOnce(isOn);
         }
 
         #endregion
@@ -447,6 +452,7 @@ namespace SIS {
                 SetBottomPanelState(Visibility.Mini, animated: true);
             } else {
                 base.BackButtonClicked();
+                debugText.text = "";
 
                 if (canvasDelegate == null) { return; }
                 canvasDelegate.BackButtonClicked(this.canvasID);
