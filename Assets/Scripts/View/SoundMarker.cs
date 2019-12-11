@@ -24,6 +24,9 @@ namespace SIS {
     public interface ISoundMarkerDelegate {
         bool shouldSoundMarkerTriggerPlayback(SoundMarker marker);
         bool shouldSoundMarkerStopPlaybackAfterUserLeftTriggerRange(SoundMarker marker);
+        
+        // DEBUG
+        void soundMarkerDebugLog(string debugStr);
     }
 
     [RequireComponent(typeof(AudioSource))]
@@ -47,8 +50,8 @@ namespace SIS {
         static float LPFMultiplier = 10000f;
         static float HPFMultiplier = 4000f;
 
-        static float UserHeardThreshold = 0.613f;
-        static float PercentThroughSoundForExpiration = 0.85f;
+        static float UserHeardVolumeThreshold = 0.7f;
+        static float PercentThroughSoundForExpiration = 0.75f;
         private float timeUserHasHeardSound = 0;
         private bool _userHasHeardSound = false;
         public bool userHasHeardSound {
@@ -211,10 +214,13 @@ namespace SIS {
         // - - - - - - - - - - - - - - - - - -
 
         private void updatePlayOnce(float percentageToEdge) {
-            if (percentageToEdge > UserHeardThreshold) {
+            if (!userHasHeardSound && percentageToEdge < UserHeardVolumeThreshold) {
                 timeUserHasHeardSound += Time.deltaTime;
-                if (timeUserHasHeardSound / _audioSrc.clip.length > PercentThroughSoundForExpiration) {
+                float percentThroughSound = timeUserHasHeardSound / _audioSrc.clip.length;
+                markerDelegate?.soundMarkerDebugLog(string.Format("Per thru snd: {0:0.00}", percentThroughSound * 100f));
+                if (percentThroughSound > PercentThroughSoundForExpiration) {
                     userHasHeardSound = true;
+                    markerDelegate?.soundMarkerDebugLog("User HAS HeardSound");
                 }
             }
         }
@@ -453,8 +459,8 @@ namespace SIS {
             userIsInsideTriggerRange = true;
             timeUserHasHeardSound = 0; // Restart time hearing the sound
 
-            if (!hotspot.triggerPlayback || userHasHeardSound) { return; }
-            
+            if (!(hotspot.triggerPlayback || !userHasHeardSound)) { return; }
+
             if (markerDelegate == null) {
                 PlayAudioFromBeginning(); // audioSrc.Play();
                 return;
@@ -466,7 +472,8 @@ namespace SIS {
 
         public void UserDidExitMarkerTrigger() {
             userIsInsideTriggerRange = false;
-            if (!hotspot.triggerPlayback) { return; }
+            // if (!hotspot.triggerPlayback && !userHasHeardSound) { return; }
+            if (!(hotspot.triggerPlayback || userHasHeardSound)) { return; }
 
             if (markerDelegate == null) {
                 _audioSrc.Stop();
