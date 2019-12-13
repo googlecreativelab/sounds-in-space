@@ -53,10 +53,6 @@ namespace SIS {
         [SerializeField] UnityEngine.UI.Text soundLabelResizeText = null;
         [SerializeField] InputFieldExtension soundNameInputField = null;
 
-        // [SerializeField] RectTransform botPanelRect = null;
-        // [SerializeField] RectTransform whiteBGRect = null;
-        // [SerializeField] RectTransform sliderWrapperRect = null;
-
         [SerializeField] UnityEngine.UI.Image topGradientImage = null;
         bool topGradientActive = true;
 
@@ -107,42 +103,6 @@ namespace SIS {
 
             _bottomPanel.panelWillAppear();
         }
-
-        // private void UpdateBottomPanel(bool animated, float delay, Ease easing, float bottomMargin = 0, float animDuration = 0.6f) {
-        //     float botPanelYPos = 0;
-        //     float bgYScale = 1.05f;
-        //     float moreBTNAlpha = botPanelState == Visibility.Fullscreen ? 0 : 1f;
-        //     if (botPanelState == Visibility.Mini) {
-        //         botPanelYPos = botPanelDefaultHeight - bottomMargin;
-        //         bgYScale = 1f;
-        //     } else if (botPanelState == Visibility.Hidden) {
-        //         botPanelYPos = -botPanelRect.sizeDelta.y;
-        //         bgYScale = 1f;
-        //     }
-
-        //     if (botPanelState == Visibility.Fullscreen) { setScrollRectToTop(); }
-
-        //     UnityEngine.CanvasGroup moreBTNCanvasGroup = moreButton.GetComponentInChildren<UnityEngine.CanvasGroup>();
-        //     moreButton.interactable = botPanelState == Visibility.Mini;
-        //     if (!animated) {
-        //         Vector3 pos = botPanelRect.anchoredPosition3D;
-        //         pos.y = botPanelYPos;
-        //         botPanelRect.anchoredPosition3D = pos;
-        //         whiteBGRect.localScale = new Vector3(1f, bgYScale, 1f);
-        //         moreBTNCanvasGroup.alpha = moreBTNAlpha;
-
-        //     } else {
-        //         if (delay > 0) {
-        //             moreBTNCanvasGroup.DOFade(moreBTNAlpha, animDuration).SetDelay(delay);
-        //             botPanelRect.DOAnchorPos3DY(botPanelYPos, animDuration).SetEase(easing).SetDelay(delay);
-        //             whiteBGRect.DOScaleY(bgYScale, animDuration).SetEase(easing).SetDelay(delay);
-        //         } else {
-        //             moreBTNCanvasGroup.DOFade(moreBTNAlpha, animDuration);
-        //             botPanelRect.DOAnchorPos3DY(botPanelYPos, animDuration).SetEase(easing);
-        //             whiteBGRect.DOScaleY(bgYScale, animDuration).SetEase(easing);
-        //         }
-        //     }
-        // }
 
         // ------------------------------------------------
 
