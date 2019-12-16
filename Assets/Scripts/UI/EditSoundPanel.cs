@@ -8,8 +8,10 @@ using DG.Tweening;
 namespace SIS {
     public class EditSoundPanel : MonoBehaviour, IEditSoundEventTriggerDelegate {
         
-        
+        private EditSoundEventTrigger _eventTrigger;
         private RectTransform _rect;
+
+        private bool _botScrollviewIsDragging = false;
 
         public RectTransform sliderWrapperRect = null;
         [SerializeField] UnityEngine.UI.Button moreButton = null;
@@ -34,8 +36,10 @@ namespace SIS {
         // -----------------------------------------------
 
         private void Awake() {
+            _eventTrigger = GetComponent<EditSoundEventTrigger>();
             _rect = GetComponent<RectTransform >();
-            GetComponent<EditSoundEventTrigger>().setDelegate(this);
+            
+            _eventTrigger.setDelegate(this);
         }
 
         public void panelWillAppear() {
@@ -49,24 +53,77 @@ namespace SIS {
         // IEditSoundEventTriggerDelegate
         #region IEditSoundEventTriggerDelegate
 
+        // public bool bottomPanelIsDragging() {
+        //     return _eventTrigger.isDragging;
+        // }
+
         public void bottomPanelStartedDragging() {
             if (_state == Visibility.Fullscreen) { whiteBGRect.DOScaleY(1, 0.3f).SetEase(DG.Tweening.Ease.OutExpo); }
         }
 
         public void bottomPanelFinishedDragging(float yVelocity) {
-            // TODO:...
 
             float midPoint = Screen.height * 0.68265625f;
-            Visibility vis = transform.position.y > midPoint ? Visibility.Fullscreen : Visibility.Mini;
-            Debug.Log ("transform.position.y: " + transform.position.y + ", midPoint: " + midPoint);
+            Visibility vis = yVelocity > 12f ? Visibility.Fullscreen : (yVelocity < -12f ? Visibility.Mini : Visibility.Hidden);
+            if (vis == Visibility.Hidden) {
+                vis = transform.position.y + yVelocity > midPoint
+                             ? Visibility.Fullscreen
+                             : Visibility.Mini;
+            }
 
-            Debug.Log("EditSoundPanel::bottomPanelFinishedDragging yVelocity: " + yVelocity);
+            // Debug.Log ("transform.position.y: " + transform.position.y + ", midPoint: " + midPoint);
+            // Debug.Log("EditSoundPanel::bottomPanelFinishedDragging yVelocity: " + yVelocity);
 
             SetBottomPanelState(vis, animated: true, delay: 0, easing: Ease.OutExpo, bottomMargin: 0, 
                                 animDuration: 0.6f, forceUpdated: true);
         }
 
         #endregion
+        // -----------------------------------------------------------
+
+        public void bottomScrollViewStartedDragging(float startYPos) {
+            _botScrollviewIsDragging = true;
+            // _eventTrigger.subScrollViewStartedDragging(startYPos);
+            // settingsScrollview.horizontalNormalizedPosition = 1f;
+            
+        }
+
+        public void bottomScrollViewYMoved(float yPercent) {
+            if (!_botScrollviewIsDragging) { return; }
+            
+            if (yPercent > 1) {
+                float yDist = sliderWrapperRect.sizeDelta.y * (yPercent % 1);
+                // Debug.Log ("yPercent: " + yPercent + ", yDist: " + yDist);
+                _eventTrigger.subScrollViewMoved(yDist);
+                
+                settingsScrollview.verticalNormalizedPosition = 1f;
+            } else {
+                if (_eventTrigger.isDragging) {
+                    float yDist = sliderWrapperRect.sizeDelta.y * (1f - yPercent);
+                    float yDifference = _eventTrigger.subScrollViewMoved(-yDist);
+
+                    if (yDifference < 0) {
+                        settingsScrollview.verticalNormalizedPosition = 1f;
+                    } else {
+                        _eventTrigger.subScrollViewEndedDragging();
+
+                        SetBottomPanelState(Visibility.Fullscreen, animated: false, delay: 0, easing: Ease.OutExpo, bottomMargin: 0,
+                                animDuration: 0.6f, forceUpdated: true);
+                    }
+                }
+            }
+        }
+
+        public void bottomScrollViewEndedDragging(float endYPos) {
+            _botScrollviewIsDragging = false;
+
+            // Debug.Log ("settingsScrollview.verticalNormalizedPosition: " + settingsScrollview.verticalNormalizedPosition);
+            if (_eventTrigger.isDragging) {
+                _eventTrigger.subScrollViewFinishedDragging(endYPos);
+                // settingsScrollview.horizontalNormalizedPosition = 1f;
+            }
+        }
+
         // -----------------------------------------------------------
 
         private void setSettingsScrollRectToTop() {

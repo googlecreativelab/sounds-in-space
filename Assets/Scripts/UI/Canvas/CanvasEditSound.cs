@@ -211,11 +211,31 @@ namespace SIS {
             topGradientActive = active;
         }
 
-        public void ScrollViewMoved(Vector2 offset) {
-            // Debug.Log (offset);
-            setTopGradientState(offset.y < 0.9f);
+        // --------------------------------------
+        #region Settings ScrollView Functions
+
+        public void OnBeginDrag(UnityEngine.EventSystems.BaseEventData eventData) {
+            UnityEngine.EventSystems.PointerEventData pointerData = eventData as UnityEngine.EventSystems.PointerEventData;
+            if (pointerData != null) {
+                _bottomPanel.bottomScrollViewStartedDragging(pointerData.position.y);
+            }
+            
         }
 
+        public void ScrollViewMoved(Vector2 offset) {
+            setTopGradientState(offset.y < 0.9f);
+            _bottomPanel.bottomScrollViewYMoved(offset.y);
+        }
+
+        public void OnEndDrag(UnityEngine.EventSystems.BaseEventData eventData) {
+            UnityEngine.EventSystems.PointerEventData pointerData = eventData as UnityEngine.EventSystems.PointerEventData;
+            if (pointerData != null) {
+                _bottomPanel.bottomScrollViewEndedDragging(pointerData.position.y);
+            }
+        }
+
+        #endregion
+        // --------------------------------------
         #region Textfield Callbacks
 
         public void SoundNameTextfieldChanged(string str) {
