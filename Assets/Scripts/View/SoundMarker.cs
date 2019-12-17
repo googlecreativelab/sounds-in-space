@@ -50,14 +50,14 @@ namespace SIS {
         static float LPFMultiplier = 10000f;
         static float HPFMultiplier = 4000f;
 
-        static float UserHeardVolumeThreshold = 0.7f;
+        static float UserHeardVolumeThreshold = 0.9f;
         static float PercentThroughSoundForExpiration = 0.75f;
         private float timeUserHasHeardSound = 0;
         private bool _userHasHeardSound = false;
         public bool userHasHeardSound {
             get { return _userHasHeardSound; }
             set {
-                if (_userHasHeardSound) {
+                if (value) { // newValue
                     _audioSrc.loop = false;
                 } else {
                     _audioSrc.loop = hotspot.loopAudio;
@@ -149,6 +149,8 @@ namespace SIS {
         }
 
         public void SetPlayOnce(bool playOnce) {
+            timeUserHasHeardSound = 0;
+            userHasHeardSound = false;
             hotspot.SetPlayOnce(playOnce);
         }
 
@@ -368,6 +370,7 @@ namespace SIS {
                 iconIndex = newHotspot.iconIndex;
                 colorIndex = newHotspot.colorIndex;
                 _audioSrc.volume = newHotspot.soundVolume;
+                _audioSrc.loop = newHotspot.loopAudio;
 
                 filterDistortion.enabled = newHotspot.distortion > 0.1f;
                 filterDistortion.distortionLevel = 0.9f;
@@ -459,7 +462,8 @@ namespace SIS {
             userIsInsideTriggerRange = true;
             timeUserHasHeardSound = 0; // Restart time hearing the sound
 
-            if (!(hotspot.triggerPlayback || !userHasHeardSound)) { return; }
+            if ((hotspot.playOnce && userHasHeardSound) || !hotspot.triggerPlayback) { return; }
+            // if (!hotspot.triggerPlayback) { return; }
 
             if (markerDelegate == null) {
                 PlayAudioFromBeginning(); // audioSrc.Play();
@@ -473,7 +477,7 @@ namespace SIS {
         public void UserDidExitMarkerTrigger() {
             userIsInsideTriggerRange = false;
             // if (!hotspot.triggerPlayback && !userHasHeardSound) { return; }
-            if (!(hotspot.triggerPlayback || userHasHeardSound)) { return; }
+            if (!(hotspot.triggerPlayback || (hotspot.playOnce && userHasHeardSound))) { return; }
 
             if (markerDelegate == null) {
                 _audioSrc.Stop();
