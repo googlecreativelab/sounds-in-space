@@ -70,6 +70,10 @@ namespace SIS {
         }
 
         void Start() {
+            #if UNITY_ANDROID
+            Screen.fullScreen = false;
+            #endif
+
             myObjectSelection = GetComponent<SoundMarkerSelection>();
             soundMarkers = new List<SoundMarker>();
             myObjectSelection.selectionDelegate = this;
