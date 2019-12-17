@@ -6505,7 +6505,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Only play once
+  m_Text: Expire Audio
 --- !u!1 &3957226601071453202
 GameObject:
   m_ObjectHideFlags: 0
@@ -7195,7 +7195,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Plays the whole audio file
+  m_Text: Only play the sound ONE time
 --- !u!1 &4210516316805864862
 GameObject:
   m_ObjectHideFlags: 0
@@ -7809,7 +7809,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 820.00024}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0.000001205137, y: 1390}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &4601117822477671853
@@ -13940,7 +13940,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2258203871517540377}
   m_HandleRect: {fileID: 4701141745742435650}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 0.41007194
   m_NumberOfSteps: 0
   m_OnValueChanged:

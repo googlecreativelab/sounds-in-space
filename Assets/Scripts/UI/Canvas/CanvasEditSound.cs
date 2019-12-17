@@ -116,10 +116,14 @@ namespace SIS {
 
             // Set the trigger and loop toggles
             triggerPlaybackToggle.isOn = selectedSound.hotspot.triggerPlayback;
-            loopAudioToggle.isOn = selectedSound.hotspot.loopAudio;
-            loopAudioToggle.interactable = (triggerPlaybackToggle.isOn == true);
-            SetTriggerVisualInteractiveState(loopAudioToggle);
             playOnceToggle.isOn = selectedSound.hotspot.playOnce;
+            loopAudioToggle.isOn = selectedSound.hotspot.loopAudio;
+            
+            bool loopAudioInteractable = selectedSound.hotspot.triggerPlayback;
+            if (selectedSound.hotspot.playOnce) { loopAudioInteractable = false; }
+            loopAudioToggle.interactable = loopAudioInteractable;
+
+            SetTriggerVisualInteractiveState(loopAudioToggle, loopAudioInteractable, selectedSound.hotspot.loopAudio);
 
             pitchSlider.value = selectedSound.hotspot.pitchBend;
             volumeSlider.value = selectedSound.hotspot.soundVolume;
@@ -256,13 +260,19 @@ namespace SIS {
 
         // ------------------------------------------------
 
-        void AnimateToggle(UnityEngine.UI.Toggle toggle, bool isOn, float animDuration = 0.36f) {
+        private Color bgColorForToggle(bool interactable, bool isOn) {
             Color interactiveCol = ColorThemeData.Instance.interactionColor;
             Color onButNotInteractiveColor = new Color(interactiveCol.r, interactiveCol.g, interactiveCol.b, 0.25f);
 
-            Color bgCol = toggle.isOn
-                ? (toggle.interactable ? interactiveCol : onButNotInteractiveColor)
-                : new Color(0.632f, 0.632f, 0.632f);
+            return isOn
+                ? (interactable ? interactiveCol : onButNotInteractiveColor)
+                : (interactable ? new Color(0.632f, 0.632f, 0.632f) : new Color(0.87f, 0.87f, 0.87f));
+        }
+
+        void AnimateToggle(UnityEngine.UI.Toggle toggle, bool isOn, float animDuration = 0.36f) {
+            
+
+            Color bgCol = bgColorForToggle(toggle.interactable, isOn);
             toggle.targetGraphic.DOColor(bgCol, animDuration);
 
             // Transform toggleKnob = toggle.targetGraphic.transform.GetChild(0);
@@ -281,14 +291,13 @@ namespace SIS {
             // rectTransform.anchoredPosition = new Vector2(isOn ? 32 : -32, 0);
         }
 
-        void SetTriggerVisualInteractiveState(UnityEngine.UI.Toggle toggle) {
-            Color interactiveCol = ColorThemeData.Instance.interactionColor;
-            Color onButNotInteractiveColor = new Color(interactiveCol.r, interactiveCol.g, interactiveCol.b, 0.25f);
+        void SetTriggerVisualInteractiveState(UnityEngine.UI.Toggle toggle, bool interactable, bool isOn) {
 
-            Color bgCol = toggle.isOn
-                ? (toggle.interactable ? interactiveCol : onButNotInteractiveColor)
-                : new Color(0.632f, 0.632f, 0.632f);
+            Color bgCol = bgColorForToggle(toggle.interactable, isOn);
             toggle.targetGraphic.color = bgCol;
+
+            // UnityEngine.UI.Image knobImage = toggle.transform.GetChild(0).transform.GetChild(0).GetComponent<UnityEngine.UI.Image>();
+            // knobImage.color = toggle.interactable ? Color.white : new Color(0.8f, 0.8f, 0.8f);
         }
 
         #region Trigger Callbacks
@@ -300,19 +309,26 @@ namespace SIS {
 
             AnimateToggle(triggerPlaybackToggle, isOn); // Animate
 
+            // - - - - - - - - - - -
             // Only allow loop to be turned off if trigger is on
-            loopAudioToggle.interactable = (isOn == true);
-            if (!isOn && !loopAudioToggle.isOn) {
-                loopAudioToggle.isOn = true;
-            } else {
-                SetTriggerVisualInteractiveState(loopAudioToggle);
+            bool loopInteractable = (isOn == true);
+            if (playOnceToggle.isOn) { loopInteractable = false; }
+
+            bool loopIsOn = loopAudioToggle.isOn;
+            loopAudioToggle.interactable = loopInteractable;
+            if (loopAudioToggle.isOn == false && isOn == false && playOnceToggle.isOn == false) {
+                loopIsOn = true;
             }
+            loopAudioToggle.isOn = loopIsOn;
+            SetTriggerVisualInteractiveState(loopAudioToggle, loopInteractable, loopIsOn);
+            // - - - - - - - - - - -
 
             // Save the data to the Hotspot
             selectedMarker.SetTriggerPlayback(isOn);
         }
 
         public void LoopAudioToggled(bool isOn) {
+            // Debug.Log("LoopAudioToggled");
             if (canvasDelegate == null) { return; }
             SoundMarker selectedMarker = canvasDelegate.objectSelection.selectedMarker;
             if (selectedMarker == null && selectedMarker.hotspot != null) { return; }
@@ -329,6 +345,21 @@ namespace SIS {
             if (selectedMarker == null && selectedMarker.hotspot != null) { return; }
 
             AnimateToggle(playOnceToggle, isOn); // Animate
+
+            // - - - - - - - - - - -
+            // Only allow loop to be turned on if PlayOnce is off
+            bool loopInteractable = (isOn == false);
+            bool loopIsOn = loopAudioToggle.isOn;
+            loopAudioToggle.interactable = loopInteractable;
+            if (loopAudioToggle.isOn == true && isOn == true) {
+                loopIsOn = false;
+            } else if (loopAudioToggle.isOn == false && isOn == false && triggerPlaybackToggle.isOn == false) {
+                loopIsOn = true;
+            }
+
+            loopAudioToggle.isOn = loopIsOn;
+            SetTriggerVisualInteractiveState(loopAudioToggle, loopInteractable, loopIsOn);
+            // - - - - - - - - - - -
 
             // Save the data to the Hotspot
             selectedMarker.SetPlayOnce(isOn);
