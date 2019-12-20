@@ -283,7 +283,8 @@ namespace SIS {
 
         public void CanvasListWillReturn(CanvasController.CanvasUIScreen fromScreen, HashSet<CanvasListCell<SoundMarker>> currentSelectedCells) {
             if (fromScreen == CanvasController.CanvasUIScreen.SoundMarkerList 
-            && soundMarkerList.listMode == CanvasSoundMarkerList.Mode.SyncronisedMarkers) {
+                && soundMarkerList.listMode == CanvasSoundMarkerList.Mode.SyncronisedMarkers) {
+
                 SoundMarker selMarker = objectSelection.selectedMarker;
                 if (selMarker == null) { return; }
 
@@ -293,6 +294,15 @@ namespace SIS {
                 markerIDs.Add(selMarker.hotspot.id);
                 foreach (CanvasListCell<SoundMarker> cell in currentSelectedCells) { markerIDs.Add(cell.datum.hotspot.id); }
 
+                // Synchronise trigger states and playback
+                foreach (SoundMarker marker in MainController.soundMarkers) { 
+                    if (markerIDs.Contains(marker.hotspot.id)) {
+                        marker.hotspot.SetTriggerPlayback(true);
+                        marker.PlayAudioFromBeginning();
+                    }
+                }
+
+                // Save all the synchronised markers
                 Layout curLayout = GetCurrentLayout();
                 curLayout.setSynchronisedMarkerIDs(markerIDs);
             }
@@ -302,6 +312,10 @@ namespace SIS {
 
         public HashSet<string> SynchronisedMarkerIDsWithMarkerID(string markerID) {
             return GetCurrentLayout().getSynchronisedMarkers(markerID);
+        }
+
+        public void RemoveAnySynchronisationWithOtherMarkers(string markerID) {
+            GetCurrentLayout().removeMarkerIDFromSynchronisedMarkers(markerID);
         }
 
         // -------------------

@@ -102,10 +102,16 @@ namespace SIS {
 
         // =========
 
+        public void printSyncedMarkers() {
+            for (int i = 0; i < this.syncedMarkerIDs.Count; ++i) {
+                Debug.Log("   SynchronisedMarkerIDs(" + i + ") .count: " + this.syncedMarkerIDs[i].list.Count);
+            }
+        }
+
         private void updateSyncedMarkerSets() {
             this.syncedMarkerIDSets.Clear();
             foreach (SyncedMarkers markers in this.syncedMarkerIDs) {
-                if (this.syncedMarkerIDs.Count < 2) { continue; }
+                if (markers.list.Count < 2) { continue; }
                 this.syncedMarkerIDSets.Add(new HashSet<string>(markers.list));
             }
         }
@@ -121,6 +127,8 @@ namespace SIS {
         }
 
         public void setSynchronisedMarkerIDs(HashSet<string> markers) {
+            // Debug.Log ("setSynchronisedMarkerIDs markers.count: " + markers.Count);
+
             // Remove ANY duplicates
             for (int i = 0; i < this.syncedMarkerIDs.Count; i++) {
                 for (int j = 0; j < this.syncedMarkerIDs[i].list.Count; j++) {
@@ -140,12 +148,11 @@ namespace SIS {
             // Add the new markers
             this.syncedMarkerIDs.Add(new SyncedMarkers(markers));
             updateSyncedMarkerSets();
-
-            // Debug.Log ("setSynchronisedMarkerIDs this.syncedMarkerIDs.count " + this.syncedMarkerIDs.Count);
+            
             Save();
         }
 
-        private void removeMarkerIDFromSynchronisedMarkers(string markerID, bool save = true) {
+        public void removeMarkerIDFromSynchronisedMarkers(string markerID, bool save = true) {
             for (int i = 0; i < this.syncedMarkerIDs.Count; i++) {
                 for (int j = 0; j < this.syncedMarkerIDs[i].list.Count; j++) {
                     string tmpMarkerID = this.syncedMarkerIDs[i].list[j];
