@@ -71,7 +71,7 @@ MonoBehaviour:
   raycastLayerMask:
     serializedVersion: 2
     m_Bits: 512
-  SoundRadiusPrefab: {fileID: 4651239541668748531, guid: 19d9fec498d8a40dcbd8f8d1ee6f6d1f,
+  SoundRadiusPrefab: {fileID: 8284019053335270506, guid: 70ac56ae05e194f7cbc56f2ec59cd3fd,
     type: 3}
   selectionEnabled: 1
 --- !u!1001 &4451338017321130326

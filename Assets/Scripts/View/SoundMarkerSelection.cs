@@ -59,6 +59,7 @@ namespace SIS {
         }
 
         private void CreateNewObjSelectionRadius() {
+            Debug.LogError("SoundMarkerSelection::CreatingNewObjSelectionRadius from prefab");
             objSelectionRadius = Instantiate(SoundRadiusPrefab, parent: transform).GetComponent<SoundRadius>();
             objSelectionRadius.transform.localScale = Vector3.one;
             objSelectionRadius.isMinHidden = true;
