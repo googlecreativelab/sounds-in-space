@@ -68,6 +68,7 @@ GameObject:
   m_Component:
   - component: {fileID: 577142087666508340}
   - component: {fileID: 3303808778855351923}
+  - component: {fileID: 911307337814139377}
   - component: {fileID: 6505424966473388882}
   - component: {fileID: 7195374161754825675}
   - component: {fileID: 8514692072512144454}
@@ -115,6 +116,18 @@ MonoBehaviour:
   lowestPitch: 0.3
   highestPitch: 3
   markerTrigger: {fileID: 1949434547318497013}
+--- !u!114 &911307337814139377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5111500804107003692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7955a961d4d740998d5e631ac5436b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!135 &6505424966473388882
 SphereCollider:
   m_ObjectHideFlags: 0

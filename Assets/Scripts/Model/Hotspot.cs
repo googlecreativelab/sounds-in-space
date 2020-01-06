@@ -53,6 +53,7 @@ namespace SIS {
 
         [SerializeField] private int _iconIndex;
         [SerializeField] private int _colorIndex;
+        [SerializeField] private int _soundShapeIndex;
 
         [SerializeField] private bool _triggerPlayback;
         [SerializeField] private bool _loopAudio;
@@ -72,6 +73,7 @@ namespace SIS {
         public string id { get { return _id; } }
         public int iconIndex { get { return _iconIndex; } }
         public int colorIndex { get { return _colorIndex; } }
+        public int soundShapeIndex { get { return _soundShapeIndex; } }
         public bool triggerPlayback { get { return _triggerPlayback; } }
         public bool loopAudio { get { return _loopAudio; } }
         public bool playOnce { get { return _playOnce; } }
@@ -117,6 +119,10 @@ namespace SIS {
         }
         public void SetColorIndex(int newColorIndex) {
             _colorIndex = newColorIndex;
+            hotspotDelegate?.Save();
+        }
+        public void SetSoundShapeIndex(int newSoundShapeIndex) {
+            _soundShapeIndex = newSoundShapeIndex;
             hotspotDelegate?.Save();
         }
 

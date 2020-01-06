@@ -29,9 +29,12 @@ namespace SIS {
         void soundMarkerDebugLog(string debugStr);
     }
 
+    public enum SoundShape : int { Sphere, Column }
+
     [RequireComponent(typeof(AudioSource))]
     [RequireComponent(typeof(ResonanceAudioSource))]
     [RequireComponent(typeof(SphereCollider))]
+    [RequireComponent(typeof(FollowMainCameraYPosition))]
     public class SoundMarker : MonoBehaviour, ISoundMarkerTriggerDelegate {
 
         public ISoundMarkerDelegate markerDelegate = null;
@@ -66,6 +69,8 @@ namespace SIS {
             }
         }
 
+        private FollowMainCameraYPosition followCameraYPos;
+
         public SoundMarkerTrigger markerTrigger;
         public bool userIsInsideTriggerRange { get; private set; } = false;
 
@@ -77,6 +82,7 @@ namespace SIS {
 
         public Color color { get { return ColorThemeData.Instance.soundColors[colorIndex]; } }
         public Sprite iconSprite { get { return SoundIconData.Instance.sprites[iconIndex]; } }
+        public Sprite soundShapeSprite { get { return SoundIconData.Instance.soundShapeSprites[(int)soundShape]; } }
 
         public float soundMinDist {
             get { return hotspot != null ? hotspot.minDistance : _audioSrc.minDistance; }
@@ -117,6 +123,16 @@ namespace SIS {
                 soundIcons.SetSoundIconWithIndex(value);
                 if (hotspot == null) return;
                 hotspot.SetIconIndex(value);
+            }
+        }
+        public SoundShape soundShape {
+            get { return hotspot == null ? SoundShape.Sphere : (SoundShape)hotspot.soundShapeIndex; }
+            set {
+                // soundIcons.SetSoundIconWithIndex(value);
+                // TODO: Change
+                followCameraYPos.enabled = (value == SoundShape.Column);
+                if (hotspot == null) return;
+                hotspot.SetSoundShapeIndex((int)value);
             }
         }
 
@@ -304,6 +320,7 @@ namespace SIS {
         void Awake() {
             _audioSrc = GetComponent<AudioSource>();
             soundIcons = GetComponentInChildren<SoundIcons>();
+            followCameraYPos = GetComponent<FollowMainCameraYPosition>();
             
             filterLowPass = GetComponent<AudioLowPassFilter>();
             filterHighPass = GetComponent<AudioHighPassFilter>();
@@ -317,6 +334,7 @@ namespace SIS {
             filterEcho.enabled = false;
             filterPhaser.setEnabled(false);
 
+            followCameraYPos.enabled = false;
             markerTrigger.triggerDelegate = this;
         }
 
@@ -369,8 +387,12 @@ namespace SIS {
             if (overrideInteralData) {
                 iconIndex = newHotspot.iconIndex;
                 colorIndex = newHotspot.colorIndex;
+
                 _audioSrc.volume = newHotspot.soundVolume;
                 _audioSrc.loop = newHotspot.loopAudio;
+
+                soundShape = (SoundShape)newHotspot.soundShapeIndex;
+                followCameraYPos.enabled = (soundShape == SoundShape.Column);
 
                 filterDistortion.enabled = newHotspot.distortion > 0.1f;
                 filterDistortion.distortionLevel = 0.9f;
@@ -402,6 +424,10 @@ namespace SIS {
 
         public void SetToNextIcon() {
             iconIndex = (iconIndex + 1) % SoundIconData.Instance.sprites.Length;
+        }
+
+        public void SetToNextSoundShape() {
+            soundShape = (SoundShape)(((int)soundShape + 1) % SoundIconData.Instance.soundShapeSprites.Length);
         }
 
         // -     -     -     -     -     -     -

@@ -67,6 +67,11 @@ namespace SIS {
 
         #region Selection Radius
 
+        public void setShape(SoundShape newShape) {
+            if (objSelectionRadius == null) { CreateNewObjSelectionRadius(); }
+            objSelectionRadius.activeShape = newShape;
+        }
+
         public void SetSelectionMinRadiusVisible(bool isVisible) {
             if (objSelectionRadius == null) { CreateNewObjSelectionRadius(); }
             objSelectionRadius.isMinHidden = !isVisible;
@@ -122,6 +127,7 @@ namespace SIS {
             if (objSelectionRadius == null) { CreateNewObjSelectionRadius(); }
 
             SetSelectionRadiusParent(sso.transform);
+            objSelectionRadius.activeShape = sso.soundShape;
             objSelectionRadius.minRadius = sso.soundMinDist;
             objSelectionRadius.maxRadius = sso.soundMaxDist;
             objSelectionRadius.isMinHidden = false;

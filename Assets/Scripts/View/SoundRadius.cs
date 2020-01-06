@@ -23,8 +23,37 @@ namespace SIS {
 
     [RequireComponent(typeof(ParticleSystem))]
     public class SoundRadius : MonoBehaviour {
+        private SoundShape _activeShape = SoundShape.Sphere;
+        public SoundShape activeShape {
+            get { return _activeShape; }
+            set {
+                if (_activeShape != value) {
+                    switch (value) {
+                        case SoundShape.Sphere:
+                            if (ps != null) { ps.Play(); }
+                            if (minRadiusSphere != null) { minRadiusSphere.SetActive(!_isMinHidden); }
+                            if (maxRadiusSphere != null) { maxRadiusSphere.SetActive(!_isMaxHidden); }
+                            if (minRadiusColumn != null) { minRadiusColumn.SetActive(false); }
+                            if (maxRadiusColumn != null) { maxRadiusColumn.SetActive(false); }
+                            break;
+                        case SoundShape.Column:
+                            if (ps != null) { ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear); }
+                            // if (minRadiusColumn != null) { minRadiusColumn.SetActive(!_isMinHidden); }
+                            if (minRadiusColumn != null) { minRadiusColumn.SetActive(false); }
+                            if (maxRadiusColumn != null) { maxRadiusColumn.SetActive(!_isMaxHidden); }
+                            if (minRadiusSphere != null) { minRadiusSphere.SetActive(false); }
+                            if (maxRadiusSphere != null) { maxRadiusSphere.SetActive(false); }
+                            break;
+                    }
+                }
+                _activeShape = value;
+            }
+        }
+
         [SerializeField] GameObject minRadiusSphere = null;
         [SerializeField] GameObject maxRadiusSphere = null;
+        [SerializeField] GameObject minRadiusColumn = null;
+        [SerializeField] GameObject maxRadiusColumn = null;
 
         MeshRenderer minRadMeshRend = null;
         MaterialPropertyBlock minRadPropBlock = null;
@@ -42,10 +71,13 @@ namespace SIS {
         void Start() {
 
             ps = GetComponentInChildren<ParticleSystem>();
-            initialStartSpeed = ps.main.startSpeedMultiplier;
+            if (ps != null) { initialStartSpeed = ps.main.startSpeedMultiplier; }
+            
 
             if (minRadiusSphere != null) { minRadiusSphere.SetActive(!_isMinHidden); }
             if (maxRadiusSphere != null) { maxRadiusSphere.SetActive(!_isMaxHidden); }
+            if (minRadiusColumn != null) { minRadiusColumn.SetActive(false); }
+            if (maxRadiusColumn != null) { maxRadiusColumn.SetActive(false); }
         }
 
         private bool _isMinHidden = false;
@@ -55,19 +87,22 @@ namespace SIS {
             get => _isMinHidden;
             set {
                 _isMinHidden = value;
-                if (minRadiusSphere != null) { minRadiusSphere.SetActive(!_isMinHidden); }
+                if (_activeShape == SoundShape.Sphere && minRadiusSphere != null) { minRadiusSphere.SetActive(!_isMinHidden); }
+                // if (_activeShape == SoundShape.Column && minRadiusColumn != null) { minRadiusColumn.SetActive(!_isMinHidden); }
+                if (_activeShape == SoundShape.Column && minRadiusColumn != null) { minRadiusColumn.SetActive(false); }
             }
         }
         public bool isMaxHidden {
             get => _isMaxHidden;
             set {
                 _isMaxHidden = value;
-                if (maxRadiusSphere != null) { maxRadiusSphere.SetActive(!_isMaxHidden); }
+                if (_activeShape == SoundShape.Sphere && maxRadiusSphere != null) { maxRadiusSphere.SetActive(!_isMaxHidden); }
+                if (_activeShape == SoundShape.Column && maxRadiusColumn != null) { maxRadiusColumn.SetActive(!_isMaxHidden); }
 
                 if (ps != null) {
                     if (_isMaxHidden) {
                         ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
-                    } else {
+                    } else if (_activeShape == SoundShape.Sphere) {
                         ps.Play();
                     }
                 }
@@ -89,6 +124,12 @@ namespace SIS {
                 Vector3 scale = Vector3.one * _maxRadius * 2f;
                 maxRadiusSphere.transform.localScale = scale;
                 if (ps != null) { ps.transform.localScale = scale; }
+                
+                // ---------------------------------------
+                // COLUMN
+                scale = Vector3.one * _maxRadius * 100f;
+                scale.z *= 2f;
+                maxRadiusColumn.transform.localScale = scale;
             }
         }
 
@@ -105,6 +146,11 @@ namespace SIS {
                 float delta = (Mathf.Clamp(_minRadius, 0.1f, 4) / 4f);
                 minRadPropBlock.SetFloat("_RimScale", (delta * 3f) + 1f);
                 minRadMeshRend.SetPropertyBlock(minRadPropBlock);
+
+                // ---------------------------------------
+                // COLUMN
+                scale = Vector3.one * _minRadius * 100f;
+                minRadiusColumn.transform.localScale = scale;
             }
         }
 
@@ -121,6 +167,16 @@ namespace SIS {
             } else {
                 Debug.LogError("SoundRadius... minRadiusSphere is null?");
             }
+            // ---------------------
+            if (maxRadiusColumn != null) {
+                MeshRenderer rend = maxRadiusColumn.GetComponent<MeshRenderer>();
+                rend.material.color = col;
+            }
+            if (minRadiusColumn != null) {
+                MeshRenderer rend = minRadiusColumn.GetComponent<MeshRenderer>();
+                rend.material.color = col;
+            }
+            // ---------------------
 
             if (ps != null) {
                 ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -128,7 +184,8 @@ namespace SIS {
                 ParticleSystem.MainModule main = ps.main;
                 main.startColor = col;
 
-                ps.Play();
+                if (_activeShape == SoundShape.Sphere) { ps.Play(); }
+                
             }
         }
     }

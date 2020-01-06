@@ -314,8 +314,8 @@ namespace SIS {
                 foreach (SoundMarker tmpMarker in syncedMarkers) { tmpMarker.StopAudioPlayback(); }
             }
 
-            Debug.Log(string.Format("STOP syncedMarkers.Count: {0} - atLeastOneSyncedMarkerIsInTriggerRange: {1}",
-                syncedMarkers.Count(), atLeastOneSyncedMarkerIsInTriggerRange ? "true" : "false"));
+            // Debug.Log(string.Format("STOP syncedMarkers.Count: {0} - atLeastOneSyncedMarkerIsInTriggerRange: {1}",
+            //     syncedMarkers.Count(), atLeastOneSyncedMarkerIsInTriggerRange ? "true" : "false"));
 
             // Stop playing if 'atLeastOne...' is NOT in range
             return !atLeastOneSyncedMarkerIsInTriggerRange;
@@ -354,6 +354,7 @@ namespace SIS {
             if (canvas == CanvasController.CanvasUIScreen.AddSounds) {
                 soundPlacement.SetCursorModelHidden(false);
                 SetSoundMarkerRadiusUIParentToCursor();
+                objectSelection.setShape(SoundShape.Sphere);
                 objectSelection.SetSelectionMinRadiusVisible(false);
                 objectSelection.SetSelectionMaxRadiusVisible(true);
                 objectSelection.SetSelectionRadiusColor(Color.white);
@@ -491,7 +492,10 @@ namespace SIS {
         // ------------------------------------------------------
 
         public void ObjectSelectionSoundSourceIconSelected(SoundMarker sso) {
-            objectSelection.SetSelectionRadiusColor(sso.color);
+            if (sso != null) {
+                objectSelection.setShape(sso.soundShape);
+                objectSelection.SetSelectionRadiusColor(sso.color);
+            }
             canvasControl.ObjectSelectionSoundSourceIconSelected(sso);
             canvasControl.SetCanvasScreenActive(CanvasController.CanvasUIScreen.EditSound);
         }
