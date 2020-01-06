@@ -72,3 +72,6 @@ MonoBehaviour:
   - {fileID: 21300000, guid: f6d39cc77fb0e4eec83bd088c74b182a, type: 3}
   - {fileID: 21300000, guid: 2ad2d2acdef4846e3b101593960af011, type: 3}
   - {fileID: 21300000, guid: cfe85ccc300c6447d8357685909a7f37, type: 3}
+  soundShapeSprites:
+  - {fileID: 21300000, guid: 921fac401f1b6426e94ecffaa244e421, type: 3}
+  - {fileID: 21300000, guid: 9e2f1ae8b72a747c2ab44e54d1d0062d, type: 3}

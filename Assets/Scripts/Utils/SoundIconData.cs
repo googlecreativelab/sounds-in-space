@@ -25,6 +25,7 @@ namespace SIS {
         public static SoundIconData Instance;
 
         public Sprite[] sprites;
+        public Sprite[] soundShapeSprites;
 
         void Awake() {
             if (Instance != null) {
