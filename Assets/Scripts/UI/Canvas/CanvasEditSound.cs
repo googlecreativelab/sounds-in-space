@@ -36,7 +36,10 @@ namespace SIS {
         void SyncPlaybackButtonClicked();
         void ResetCameraBTNClicked();
         void PlaceNewSoundsButtonClickedFromSoundEdit();
+        
+        // Synced Markers
         System.Collections.Generic.HashSet<string> SynchronisedMarkerIDsWithMarkerID(string markerID);
+        void RemoveAnySynchronisationWithOtherMarkers(string markerID);
     }
 
     public class CanvasEditSound : CanvasBase, ISoundRadiusSliderDelegate, IInputFieldExtensionDelegate {
@@ -106,6 +109,18 @@ namespace SIS {
 
         // ------------------------------------------------
 
+        private void updateSyncedMarkersUI(SoundMarker soundMarker) {
+            // Syncronisation button subtitle
+            syncSubtitleText.text = "Edit synchronised Sound Markers";
+            if (canvasDelegate != null) {
+                System.Collections.Generic.HashSet<string> syncedMarkers = canvasDelegate.SynchronisedMarkerIDsWithMarkerID(soundMarker.hotspot.id);
+                if (syncedMarkers != null && syncedMarkers.Count > 1) {
+                    syncSubtitleText.text = string.Format("Synced with {0} Sound Marker{1}",
+                                            syncedMarkers.Count - 1, (syncedMarkers.Count == 2 ? "" : "s"));
+                }
+            }
+        }
+
         public void SoundMarkerSelected(SoundMarker selectedSound) {
             // Change the InputField text
             soundNameInputField.text = selectedSound.hotspot.name;
@@ -134,15 +149,7 @@ namespace SIS {
             distortionSlider.value = selectedSound.hotspot.distortion;
             echoSlider.value = selectedSound.hotspot.echoMagnitude;
 
-            // Syncronisation button subtitle
-            syncSubtitleText.text = "Edit synchronised Sound Markers";
-            if (canvasDelegate != null) {
-                System.Collections.Generic.HashSet<string> syncedMarkers = canvasDelegate.SynchronisedMarkerIDsWithMarkerID(selectedSound.hotspot.id);
-                if (syncedMarkers != null && syncedMarkers.Count > 1) {
-                    syncSubtitleText.text = string.Format("Synced with {0} Sound Marker{1}", 
-                                            syncedMarkers.Count - 1, (syncedMarkers.Count == 2 ? "" : "s"));
-                }
-            }
+            updateSyncedMarkersUI(selectedSound);
 
             // Change the colour of the UI
             Color newCol = selectedSound.color;
@@ -322,6 +329,12 @@ namespace SIS {
             loopAudioToggle.isOn = loopIsOn;
             SetTriggerVisualInteractiveState(loopAudioToggle, loopInteractable, loopIsOn);
             // - - - - - - - - - - -
+
+            if (!isOn) {
+                // Remove any involvement with synced markers
+                canvasDelegate?.RemoveAnySynchronisationWithOtherMarkers(selectedMarker.hotspot.id);
+                updateSyncedMarkersUI(selectedMarker);
+            }
 
             // Save the data to the Hotspot
             selectedMarker.SetTriggerPlayback(isOn);
