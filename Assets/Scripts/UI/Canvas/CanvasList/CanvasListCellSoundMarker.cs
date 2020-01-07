@@ -22,8 +22,8 @@ using UnityEngine;
 namespace SIS {
     public class CanvasListCellSoundMarker : CanvasListCell<SoundMarker> {
 
-        public override void SetDatum(SoundMarker newDatum) {
-            base.SetDatum(newDatum);
+        public override void ReloadUI() {
+            base.ReloadUI();
 
             // Specifics
             string soundName = "\"" + datum.hotspot.name + "\"";
@@ -37,6 +37,12 @@ namespace SIS {
 
             titleLabel.text = soundName;
             subtitleLabel.text = datum.hotspot.soundFile.filenameWithExtension;
+        }
+
+        public override void SetDatum(SoundMarker newDatum) {
+            base.SetDatum(newDatum);
+
+            ReloadUI();
 
             Color markerCol = datum.color;
             titleLabel.color = markerCol;

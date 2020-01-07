@@ -49,6 +49,9 @@ namespace SIS {
         public Button backButton = null;
         public Button confirmButton = null;
 
+        protected HashSet<CanvasListCell<D>> _selectedCells = new HashSet<CanvasListCell<D>>();
+        // public HashSet<CanvasListCell<D>> selectedCells { get { return _selectedCells; } }
+
         // ==========================================
         // private CanvasListCell<D> mySelectedCell = null;
         // protected CanvasListCell<D> selectedCell {
@@ -73,8 +76,6 @@ namespace SIS {
             }
         }
 
-        protected HashSet<CanvasListCell<D>> _selectedCells = new HashSet<CanvasListCell<D>>();
-        // public HashSet<CanvasListCell<D>> selectedCells { get { return _selectedCells; } }
         protected void cellWasSelected(CanvasListCell<D> newCell) {
             if (newCell == null || _selectedCells.Contains(newCell)) { return; } // Already selected
 

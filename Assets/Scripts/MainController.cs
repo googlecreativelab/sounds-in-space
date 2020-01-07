@@ -65,8 +65,11 @@ namespace SIS {
         void Awake() {
             layoutManager = new LayoutManager();
             layoutManager.layoutManagerDelegate = this;
-            layoutManager.LoadSoundFiles(() => { });
-            layoutManager.LoadCurrentLoudout();
+            layoutManager.LoadSoundMetaFiles(() => { });
+            
+            layoutManager.LoadCurrentLayout(); // Calls the delegate method LayoutManagerLoadedNewLayout
+            // The below is called in LayoutManagerLoadedNewLayout
+            // layoutManager.LoadSoundClipsForCurrentLayout(() => { });
         }
 
         void Start() {
@@ -163,7 +166,7 @@ namespace SIS {
               rotation: Vector3.zero,
               minDist: defaultMinDistance * 0.5f,
               maxDist: canvasControl.placeSoundsOverlay.maxRadiusSlider.radiusValue);
-            layoutManager.Bind(soundIconObj, h, !playbackIsStopped);
+            layoutManager.Bind(soundIconObj, h, !playbackIsStopped, reloadSoundClips: false);
 
             soundIconObj.SetIconAndRangeToRandomValue();
 
@@ -182,24 +185,24 @@ namespace SIS {
             CreateOriginMarkerAtCameraPosition();
 
             yield return null;
-            LoadData();
+            LoadLayoutData();
         }
 
         /// <summary>
         /// Update the scene data and place the corresponding sources
         /// </summary>
-        public void LoadData() {
+        public void LoadLayoutData() {
             // remove the previous
             UnloadCurrentSoundMarkers();
             // set up all the hotspots
-            layoutManager.LoadCurrentLoudout();
+            layoutManager.LoadCurrentLayout();
             // Bind all the sounds to their game objects
             foreach (Hotspot h in layoutManager.layout.hotspots) {
                 var pf = SoundMarker.CreatePrefab(
                   anchorWrapperTransform.TransformPoint(h.positon),
                   h.rotation, soundMarkerPrefab, anchorWrapperTransform);
                 SoundMarker soundObj = pf.GetComponent<SoundMarker>();
-                layoutManager.Bind(soundObj, h, !playbackIsStopped);
+                layoutManager.Bind(soundObj, h, !playbackIsStopped, reloadSoundClips: false);
 
                 pf.markerDelegate = this;
                 soundMarkers.Add(pf);
@@ -385,24 +388,24 @@ namespace SIS {
 
         public void NewLayout() {
             layoutManager.currentLayoutId = layoutManager.NextLayoutId();
-            LoadData();
+            LoadLayoutData();
         }
 
 
         public void LoadLayout(Layout layout) {
             layoutManager.currentLayoutId = layout.id;
-            LoadData();
+            LoadLayoutData();
 
         }
 
         public void DuplicateLayout(Layout layout) {
             layoutManager.DuplicateLayout(layout);
-            LoadData();
+            LoadLayoutData();
         }
 
         public void DeleteLayout(Layout layout) {
             layoutManager.DeleteLayout(layout);
-            LoadData();
+            LoadLayoutData();
         }
 
         public Layout GetCurrentLayout() {
@@ -411,7 +414,7 @@ namespace SIS {
 
         public void BindSoundFile(SoundFile sf) {
             if (SoundMarkerIsSelected()) {
-                layoutManager.Bind(objectSelection.selectedMarker, sf);
+                layoutManager.Bind(objectSelection.selectedMarker, sf, reloadSoundClips: true);
             } else {
                 // Another use case?
                 Debug.Log("NO SSO SELECTD");
@@ -432,6 +435,10 @@ namespace SIS {
 
         public List<SoundFile> AllSoundFiles() {
             return layoutManager.AllSoundFiles();
+        }
+
+        public void LoadClipInSoundFile(SoundFile soundFile, System.Action completion) {
+            layoutManager.LoadClipInSoundFile(soundFile, completion);
         }
 
         // ------------------------------------------------------
@@ -525,6 +532,7 @@ namespace SIS {
         // ------------------------------------------------------
 
         public void LayoutManagerLoadedNewLayout(Layout newLayout) {
+            layoutManager.LoadSoundClipsForCurrentLayout(() => { });
             UpdateCanvasTitleWithLayout(newLayout);
         }
         public void LayoutHotspotListChanged(Layout layout) {

@@ -75,7 +75,7 @@ namespace SIS {
 
         // ============
         // SOUND FILE METHODS
-        public void Bind(SoundMarker obj, Hotspot hotspot, bool startPlayback) {
+        public void Bind(SoundMarker obj, Hotspot hotspot, bool startPlayback, bool reloadSoundClips) {
             AudioClip clip = soundDictionary.TryGetValue(hotspot.soundID, out SoundFile sf)
                 ? sf.clip  // If the sound is found, use it
                 : SoundFile.defaultSoundFile.clip; // Fallback to default
@@ -85,10 +85,13 @@ namespace SIS {
             obj.LaunchNewClip(clip, playAudio: startPlayback);
         }
 
-        public void Bind(SoundMarker obj, SoundFile sf) {
+        public void Bind(SoundMarker obj, SoundFile sf, bool reloadSoundClips) {
             // bind these
             obj.hotspot.Set(sf.filename);
             obj.LaunchNewClip(sf.clip);
+            
+            // When a new binding occurs, we SHOULD refresh the loaded sound clips
+            if (reloadSoundClips) { LoadSoundClipsForCurrentLayout(() => { }); }
         }
 
         // =================
@@ -177,7 +180,7 @@ namespace SIS {
             return lays;
         }
 
-        public void LoadCurrentLoudout() {
+        public void LoadCurrentLayout() {
             // Try to load a single layout with the current id
             // If anything goes wrong, make a new layout with the next valid id
             try {
@@ -205,28 +208,105 @@ namespace SIS {
             }
         }
 
-        public void LoadSoundFiles(Action completion) {
-            var into = this.soundDictionary; // A nice little alias for it
-                                             // Make sure we have data for every wav
+        // Load all Audio File's into the SoundFile dictionary
+        public void LoadSoundMetaFiles(Action completion) {
+            
+            // Make sure all 'audio files on disk' have meta files
             SoundFile.CreateNewMetas();
 
-            // load all sound files from their metas
+            // Populate the SoundFile dictionary
+            int numLoaded = 0;
+            Dictionary<string, SoundFile> sfDict = this.soundDictionary;
             foreach (var filename in SoundFile.metaFiles) {
-                SoundFile sf = SoundFile.ReadFromMeta(filename);
-                string wavName = sf.filename;
+                SoundFile newSoundFile = SoundFile.ReadFromMeta(filename);
 
                 // If the SoundFile has already been loaded, don't reload it
-                if (soundDictionary.ContainsKey(wavName)) { continue; }
+                if (sfDict.TryGetValue(newSoundFile.filename, out SoundFile sf)) {
+                    if (sf.loadState == LoadState.Success) { ++numLoaded; }
+                    continue;
+                }
 
-                layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadSoundFileFromMeta(filename, into));
+                newSoundFile.loadState = LoadState.NotLoaded;
+                sfDict[newSoundFile.filename] = newSoundFile;
             }
-            layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(into, completion));
 
+            Debug.Log("Reloaded Metafiles... " + numLoaded + " SoundClip(s) are loaded. " 
+                                       + ( SoundFile.metaFiles.Count() - numLoaded ) + " NOT loaded.");
+            completion();
         }
+
+        public void LoadClipInSoundFile(SoundFile soundFile, System.Action completion) {
+            layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(soundFile, completion));
+        }
+
+        // EXCLUSIVLEY load soundClips of the SoundFiles that are in the current layout
+        // This also means unloading soundClips if they aren't in the current layout
+        public void LoadSoundClipsForCurrentLayout(Action completion) {
+            if (this.layout == null) {
+                completion();
+                return;
+            }
+            Debug.Log("!!! LoadSoundClipsForCurrentLayout...");
+
+            Dictionary<string, SoundFile> sfDict = this.soundDictionary;
+            Layout curLayout = this.layout;
+
+            //HashSet<SoundFile> soundFilesToUnload = new HashSet<SoundFile>(sfDict.Values);
+            HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
+            foreach (Hotspot hotspot in this.layout.hotspots) {
+                if (sfDict.TryGetValue(hotspot.soundID, out SoundFile sf)) {
+                    loadingOrLoadedSoundFiles.Add(sf);
+                    
+                    if (sf.loadState != LoadState.Success || sf.clip == null) {
+                        layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(sf));
+                    } else {
+                        Debug.Log("AudioClip ALREADY LOADED: " + sf.filenameWithExtension);
+                    }
+                }
+            }
+
+            // Unload SoundClips that aren't being used in the current layout
+            int numDestroyed = 0;
+            foreach (SoundFile sf in sfDict.Values) {
+                if (sf.clip == null 
+                 || loadingOrLoadedSoundFiles.Contains(sf) 
+                 || sf.isDefaultSoundFile) { continue; }
+
+                GameObject.DestroyImmediate(sf.clip, allowDestroyingAssets:false);
+                ++numDestroyed;
+                sf.clip = null;
+                sf.loadState = LoadState.NotLoaded;
+            }
+
+            Debug.Log("Load SoundClips for current Layout... " + loadingOrLoadedSoundFiles.Count() + " SoundClip(s) are loading... "
+                                       + ( sfDict.Values.Count() - loadingOrLoadedSoundFiles.Count() ) + " NOT loaded. " 
+                                       + numDestroyed + " DESTROYED!");
+            layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(loadingOrLoadedSoundFiles, completion));
+        }
+
+        // 
+        // public void LoadSoundFiles(Action completion) {
+        //     Dictionary<string, SoundFile> sfDict = this.soundDictionary; // A nice little alias for it
+        //                                                                  // Make sure we have data for every wav
+        //     SoundFile.CreateNewMetas();
+
+        //     // load all sound files from their metas
+        //     foreach (var filename in SoundFile.metaFiles) {
+        //         SoundFile sf = SoundFile.ReadFromMeta(filename);
+        //         string audioFilename = sf.filename;
+
+        //         // If the SoundFile has already been loaded, don't reload it
+        //         if (sfDict.ContainsKey(audioFilename)) { continue; }
+
+        //         layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadSoundFileFromMeta(filename, sfDict));
+        //     }
+        //     layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(sfDict, completion));
+        // }
 
 
         public void ReloadSoundFiles(Action completion) {
-            LoadSoundFiles(completion);
+            // LoadSoundFiles(completion);
+            LoadSoundMetaFiles(completion);
         }
 
         public List<SoundFile> AllSoundFiles() {

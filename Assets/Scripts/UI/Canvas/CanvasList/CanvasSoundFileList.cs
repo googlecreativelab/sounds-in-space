@@ -65,7 +65,9 @@ namespace SIS {
             base.CellClicked(listCell, datum);
 
             confirmButton.interactable = (_selectedCells.Count > 0);
-            VoiceOver.main.PlayPreview(datum);
+            
+            // This will now be handled by CanvasController
+            // VoiceOver.main.PlayPreview(datum);
         }
 
         public override void ConfirmButtonClicked() {

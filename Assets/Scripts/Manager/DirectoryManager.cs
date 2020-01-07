@@ -29,6 +29,7 @@ namespace SIS {
 
         static DirectoryManager() {
             CreatePaths();
+            Debug.Log("DataPath: " + Application.persistentDataPath);
         }
 
         // Creates the path to a layout and sound file on local storage.
@@ -37,7 +38,6 @@ namespace SIS {
                 if (!Directory.Exists(dir)) {
                     Directory.CreateDirectory(dir);
                 }
-
             }
         }
 

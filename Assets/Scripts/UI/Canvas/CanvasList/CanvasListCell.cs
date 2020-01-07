@@ -32,6 +32,10 @@ namespace SIS {
         public Image iconImage;
         public Button button;
 
+        public virtual void ReloadUI() {
+            
+        }
+
         public virtual void SetDatum(D newDatum) {
             datum = newDatum;
 

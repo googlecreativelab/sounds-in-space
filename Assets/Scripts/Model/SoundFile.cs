@@ -29,7 +29,6 @@ using UnityEngine.Networking;
 
 namespace SIS {
 
-
     /*
     primarily used to define the json metafiles used to declare sounds
      */
@@ -40,16 +39,18 @@ namespace SIS {
     [Serializable]
     public class SoundFile {
 
-
         static SoundFile preloadInstance;
 
         public static string DEFAULT_CLIP = "__default";
-        public static string SoundFileExtension = ".wav";
+
+        public static bool MP3_otherwise_WAV = true; // true=MP3, false=WAV
+        public static string SoundFileExtension = MP3_otherwise_WAV ? ".mp3" : ".wav";
+        private static Regex soundFileRegex = new Regex(MP3_otherwise_WAV ? @"\.mp3$" : @"\.wav$");
+
         public static string MetaFileExtension = ".json";
         public static string PlaceholderString = "Placeholder Sound";
 
-        private static Regex metaRegex = new Regex("json$"); // Ends in meta
-        private static Regex wavRegex = new Regex("wav$"); // Ends in wav
+        private static Regex metaRegex = new Regex(@"\.json$"); // Ends in .meta
 
         public string filename;
         public string filenameWithExtension { get { return isDefaultSoundFile ? PlaceholderString : filename + SoundFileExtension; } }
@@ -66,9 +67,7 @@ namespace SIS {
         public static SoundFile warningSoundFile;
 
         public static string saveDirectory {
-            get {
-                return DirectoryManager.soundSaveDirectory;
-            }
+            get { return DirectoryManager.soundSaveDirectory; }
         }
 
         private void Awake() {
@@ -94,28 +93,18 @@ namespace SIS {
             this.loadState = LoadState.Success;
         }
 
-
-        public string wavPath {
-            get {
-                return Path.Combine(saveDirectory, UnityWebRequest.EscapeURL(filename) + SoundFileExtension);
-            }
+        public string soundFilepath {
+            get { return Path.Combine(saveDirectory, UnityWebRequest.EscapeURL(filename) + SoundFileExtension); }
         }
         public string jsonPath {
-            get {
-                return Path.Combine(saveDirectory, UnityWebRequest.EscapeURL(filename) + MetaFileExtension);
-            }
+            get { return Path.Combine(saveDirectory, UnityWebRequest.EscapeURL(filename) + MetaFileExtension); }
         }
-
 
         public static string[] metaFiles {
-            get {
-                return Directory.GetFiles(saveDirectory).Where(f => metaRegex.IsMatch(f)).ToArray();
-            }
+            get { return Directory.GetFiles(saveDirectory).Where(f => metaRegex.IsMatch(f)).ToArray(); }
         }
-        public static string[] wavFiles {
-            get {
-                return Directory.GetFiles(saveDirectory).Where(f => wavRegex.IsMatch(f)).ToArray();
-            }
+        public static string[] soundFilenames {
+            get { return Directory.GetFiles(saveDirectory).Where(f => soundFileRegex.IsMatch(f)).ToArray(); }
         }
 
         // ==================
@@ -139,13 +128,13 @@ namespace SIS {
 
         public static void CreateNewMetas() {
             // Get list of soundFiles listed in metafiles
-            List<string> wavsWithData = new List<string>();
+            List<string> foundFilenamesWithData = new List<string>();
             foreach (string filename in SoundFile.metaFiles) {
-                wavsWithData.Add(ReadFromMeta(filename).wavPath);
+                foundFilenamesWithData.Add(ReadFromMeta(filename).soundFilepath);
             }
             // look for wavs without metas and create them
-            foreach (string filename in SoundFile.wavFiles) {
-                if (!wavsWithData.Contains(filename)) {
+            foreach (string filename in SoundFile.soundFilenames) {
+                if (!foundFilenamesWithData.Contains(filename)) {
                     SoundFile sf = new SoundFile(filename);
                     sf.Save();
                 }
@@ -153,38 +142,73 @@ namespace SIS {
         }
 
         public static IEnumerator AwaitLoading(Dictionary<string, SoundFile> ofDict, Action completion) {
-            foreach (var sf in ofDict.Values) {
+            yield return AwaitLoading(ofDict.Values, completion);
+        }
+
+        public static IEnumerator AwaitLoading(IEnumerable<SoundFile> soundFilesThatAreLoading, Action completion) {
+            foreach (SoundFile sf in soundFilesThatAreLoading) {
                 if (sf.loadState == LoadState.Fail) { continue; }
                 if (sf.loadState != LoadState.Success) {
-                    //Will either be loading or about to load, let's give it a chance!
+                    // Will either be loading or about to load, let's give it a chance!
                     yield return new WaitForSeconds(0.1f);
                 }
             }
+
             completion();
         }
 
-        // Loads a soundfile object from a metafile, as well as preloading the audio
-        public static IEnumerator LoadSoundFileFromMeta(string filename, Dictionary<string, SoundFile> into) {
-            // Load the metadata
-            SoundFile sf = ReadFromMeta(filename);
+        private static IEnumerator loadSoundFileClip(SoundFile sf, System.Action completion = null) {
+            if (sf.loadState == LoadState.Success && sf.clip != null) {
+                // ALREADY LOADED!
+                if (completion != null) { completion(); }
+                yield break;
+            }
+
             sf.loadState = LoadState.Loading;
             // Get and bind the assoc soundfile
-            string url = "file://" + sf.wavPath; // System.Text.Encoding.UTF8
+            string url = "file://" + sf.soundFilepath; // System.Text.Encoding.UTF8
 
-            using (UnityWebRequest req = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.WAV)) {
+            using (UnityWebRequest req = UnityWebRequestMultimedia.GetAudioClip(url,
+                        MP3_otherwise_WAV ? AudioType.MPEG : AudioType.WAV)) {
+
+                DownloadHandlerAudioClip dHandler = req.downloadHandler as DownloadHandlerAudioClip;
+                dHandler.streamAudio = true;
+                dHandler.compressed = true;
+
                 yield return req.SendWebRequest();
+                // if (dHandler.isDone) {
+                //     Debug.Log("Get Audio clip IS DONE");
+                // } else {
+                //     Debug.Log("Get Audio clip is NOT done");
+                // }
                 if (req.error != null) {
-                    Debug.Log(req.error);
+                    Debug.Log(req.error + " for: " + url);
                     sf.loadState = LoadState.Fail;
                 } else {
                     AudioClip ac = DownloadHandlerAudioClip.GetContent(req);
                     if (ac != null) {
+                        Debug.Log("AudioClip loadState: " + ac.loadState + " - " + url);
+
                         sf.clip = ac;
                         sf.loadState = LoadState.Success;
-                        into[sf.filename] = sf;
+                        sf.duration = Mathf.RoundToInt(ac.length);
+                        sf.Save();
                     }
                 }
             }
+            if (completion != null) { completion(); }
+        }
+
+        // Loads a soundfile object from a metafile, as well as preloading the audio
+        // public static IEnumerator LoadSoundFileFromMeta(string filename, Dictionary<string, SoundFile> into, System.Action completion = null) {
+        //     // Load the metadata
+        //     SoundFile sf = ReadFromMeta(filename);
+
+        //     yield return loadSoundFileClip(sf, completion);
+        // }
+
+        public static IEnumerator LoadClipInSoundFile(SoundFile sf, System.Action completion = null) {
+            yield return loadSoundFileClip(sf, completion);
         }
 
         public void Save() {

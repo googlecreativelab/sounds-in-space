@@ -21,8 +21,8 @@
 namespace SIS {
     public class CanvasListCellSoundFile : CanvasListCell<SoundFile> {
 
-        public override void SetDatum(SoundFile newDatum) {
-            base.SetDatum(newDatum);
+        public override void ReloadUI() {
+            base.ReloadUI();
 
             // Specifics
             if (datum.isDefaultSoundFile) {
@@ -34,10 +34,21 @@ namespace SIS {
             }
 
             int durSecs = datum.durationSafe;
-            int durMins = durSecs / 60;
-            durSecs = durSecs % 60;
+            if (durSecs > 0) {
+                int durMins = durSecs / 60;
+                durSecs = durSecs % 60;
 
-            subtitleLabel.text = string.Format("{0:00}:{1:00}", durMins, durSecs);
+                subtitleLabel.text = string.Format("{0:00}:{1:00}", durMins, durSecs);
+            } else {
+                subtitleLabel.text = "Unknown duration";
+            }
         }
+
+        public override void SetDatum(SoundFile newDatum) {
+            base.SetDatum(newDatum);
+
+            ReloadUI();
+        }
+
     }
 }
