@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="AugmentedImageDatabase.cs" company="Google">
 //
 // Copyright 2018 Google Inc. All Rights Reserved.
@@ -40,7 +40,7 @@ namespace GoogleARCore
     /// </summary>
     public class AugmentedImageDatabase : ScriptableObject
     {
-        private IntPtr m_ArPrestoDatabase = IntPtr.Zero;
+        private IntPtr m_ArAugmentedImageDatabase = IntPtr.Zero;
 
         [SerializeField]
         private List<AugmentedImageDatabaseEntry> m_Images =
@@ -65,7 +65,7 @@ namespace GoogleARCore
         /// </summary>
         public AugmentedImageDatabase()
         {
-            m_IsDirty = true;
+            IsDirty = true;
         }
 
         /// <summary>
@@ -86,16 +86,16 @@ namespace GoogleARCore
         /// Gets a value indicating whether the AugmentedImageDatabase is dirty and has to be reset
         /// in ArCore.
         /// </summary>
-        internal bool m_IsDirty { get; private set; }
+        internal bool IsDirty { get; private set; }
 
         /// <summary>
-        /// Gets or sets the native handle for an associated ArPrestoAugmentedImageDatabase.
-        /// <summary>
-        internal IntPtr m_ArPrestoDatabaseHandle
+        /// Gets the native handle for an associated ArAugmentedImageDatabase.
+        /// </summary>
+        internal IntPtr NativeHandle
         {
             get
             {
-                if (m_ArPrestoDatabase == IntPtr.Zero)
+                if (m_ArAugmentedImageDatabase == IntPtr.Zero)
                 {
                     var nativeSession = LifecycleManager.Instance.NativeSession;
                     if (nativeSession == null)
@@ -103,18 +103,17 @@ namespace GoogleARCore
                         return IntPtr.Zero;
                     }
 
-                    m_ArPrestoDatabase =
-                        nativeSession.AugmentedImageDatabaseApi
-                            .CreateArPrestoAugmentedImageDatabase(m_RawData);
+                    m_ArAugmentedImageDatabase =
+                        nativeSession.AugmentedImageDatabaseApi.Create(m_RawData);
                 }
 
-                m_IsDirty = false;
-                return m_ArPrestoDatabase;
+                IsDirty = false;
+                return m_ArAugmentedImageDatabase;
             }
 
             private set
             {
-                m_ArPrestoDatabase = value;
+                m_ArAugmentedImageDatabase = value;
             }
         }
 
@@ -166,7 +165,7 @@ namespace GoogleARCore
         /// <returns>The index of the added image in this database or -1 if there was an
         /// error.</returns>
         [SuppressMemoryAllocationError(Reason = "Allocates memory for the image.")]
-        public Int32 AddImage(string name, Texture2D image, float width = 0)
+        public int AddImage(string name, Texture2D image, float width = 0)
         {
             var nativeSession = LifecycleManager.Instance.NativeSession;
             if (nativeSession == null)
@@ -174,15 +173,15 @@ namespace GoogleARCore
                 return -1;
             }
 
-            Int32 imageIndex = nativeSession.AugmentedImageDatabaseApi.AddImageAtRuntime(
-                m_ArPrestoDatabaseHandle, name, image, width);
+            int imageIndex = nativeSession.AugmentedImageDatabaseApi.AddAugmentedImageAtRuntime(
+                NativeHandle, name, image, width);
 
             if (imageIndex != -1)
             {
                 lock (m_Images)
                 {
                     m_Images.Add(new AugmentedImageDatabaseEntry(name, width));
-                    m_IsDirty = true;
+                    IsDirty = true;
                 }
             }
 
@@ -390,6 +389,17 @@ namespace GoogleARCore
             return !string.IsNullOrEmpty(path);
         }
         /// @endcond
+
+        /// <summary>
+        /// Unity OnDestroy.
+        /// </summary>
+        private void OnDestroy()
+        {
+            if (m_ArAugmentedImageDatabase != IntPtr.Zero)
+            {
+                AugmentedImageDatabaseApi.Release(m_ArAugmentedImageDatabase);
+            }
+        }
 #endif
     }
 }

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="LogRequestUtils.cs" company="Google">
 //
 // Copyright 2019 Google Inc. All Rights Reserved.
@@ -62,6 +62,7 @@ namespace GoogleARCoreInternal
                 SdkInstanceId = _UniqueId(),
                 OsVersion = SystemInfo.operatingSystem,
                 ArcoreSdkVersion = GoogleARCore.VersionInfo.Version,
+                SdkType = ArCoreSdkLog.Types.SDKType.ArcoreSdk,
                 Unity = engine,     // Unity engine version.
                 SdkSessionId = _SessionId(),
             };

@@ -81,6 +81,8 @@ namespace GoogleARCoreInternal
 
         public event Action<IntPtr> BeforeResumeSession;
 
+        public event Action<IntPtr, IntPtr> OnSetConfiguration;
+
         public static ARPrestoCallbackManager Instance
         {
             get
@@ -137,6 +139,11 @@ namespace GoogleARCoreInternal
             return task;
         }
 
+        internal static void ResetInstance()
+        {
+            s_Instance = null;
+        }
+
         [AOT.MonoPInvokeCallback(typeof(CheckApkAvailabilityResultCallback))]
         private static void _OnCheckApkAvailabilityResultTrampoline(
             ApiAvailability status, IntPtr context)
@@ -171,7 +178,10 @@ namespace GoogleARCoreInternal
         private static void _BeforeSetConfigurationTrampoline(
             IntPtr sessionHandle, IntPtr configHandle)
         {
-            ExperimentManager.Instance.OnBeforeSetConfiguration(sessionHandle, configHandle);
+            if (Instance.OnSetConfiguration != null)
+            {
+                Instance.OnSetConfiguration(sessionHandle, configHandle);
+            }
         }
 
         [AOT.MonoPInvokeCallback(typeof(OnBeforeResumeSessionCallback))]
