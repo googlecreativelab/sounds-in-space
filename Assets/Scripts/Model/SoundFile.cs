@@ -173,14 +173,16 @@ namespace SIS {
 
             using (UnityWebRequest req = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.WAV)) {
                 yield return req.SendWebRequest();
-                if (req.isNetworkError) {
+                if (req.error != null) {
                     Debug.Log(req.error);
                     sf.loadState = LoadState.Fail;
                 } else {
                     AudioClip ac = DownloadHandlerAudioClip.GetContent(req);
-                    sf.clip = ac;
-                    sf.loadState = LoadState.Success;
-                    into[sf.filename] = sf;
+                    if (ac != null) {
+                        sf.clip = ac;
+                        sf.loadState = LoadState.Success;
+                        into[sf.filename] = sf;
+                    }
                 }
             }
         }

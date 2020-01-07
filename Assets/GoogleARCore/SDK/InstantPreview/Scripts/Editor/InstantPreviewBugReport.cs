@@ -124,7 +124,6 @@ namespace GoogleARCoreInternal
                         Path.GetFullPath(filePath));
                     break;
                 default:
-                    // TODO(b/128345421): Implement windows bug report
                     string dialogMessage = "ARCore does not support capturing bug reports for " +
                         SystemInfo.operatingSystemFamily + " at this time.";
 
@@ -182,10 +181,14 @@ namespace GoogleARCoreInternal
             // Search through directories in PATH to find the version of adb used from PATH
             foreach (var path in pathDirs)
             {
-                string fullAdbPath = Path.Combine(path, ShellHelper.GetAdbFileName());
-                if (File.Exists(fullAdbPath))
+                // Ignore paths that contain illegal characters.
+                if (path.IndexOfAny(Path.GetInvalidPathChars()) == -1)
                 {
-                    WriteCommand(fullAdbPath, "version", writer);
+                    string fullAdbPath = Path.Combine(path, ShellHelper.GetAdbFileName());
+                    if (File.Exists(fullAdbPath))
+                    {
+                        WriteCommand(fullAdbPath, "version", writer);
+                    }
                 }
             }
         }

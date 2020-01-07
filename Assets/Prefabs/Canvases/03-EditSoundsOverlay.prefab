@@ -1378,7 +1378,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -679}
   m_SizeDelta: {x: 0, y: 1316}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &3458955801889568866
@@ -2310,7 +2310,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -16, y: -50}
+  m_SizeDelta: {x: -16, y: -58}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &3229044360824242231
 CanvasRenderer:
@@ -2338,7 +2338,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f44f9213c120d43b582a912ac0aed16a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 921fac401f1b6426e94ecffaa244e421, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -3447,8 +3447,8 @@ MonoBehaviour:
   soundNameInputField: {fileID: 1812300061469637028}
   topGradientImage: {fileID: 3606693541991588806}
   repositionImage: {fileID: 4127933473716522191}
-  soundIconImage: {fileID: 6418231944345830214}
-  soundColorImage: {fileID: 3956991870128113239}
+  soundShapeImage: {fileID: 6418231944345830214}
+  soundAppearanceImage: {fileID: 3956991870128113239}
   minRadiusSlider: {fileID: 2790932808351267486}
   maxRadiusSlider: {fileID: 3030716805577898812}
   confirmRepositionButton: {fileID: 4740467156421315833}
@@ -4003,7 +4003,7 @@ GameObject:
   - component: {fileID: 3584194391375509596}
   - component: {fileID: 4452977755703142264}
   m_Layer: 5
-  m_Name: PositionBTN
+  m_Name: RepositionBTN
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5948,10 +5948,10 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Colour
+  m_Text: Appearance
 --- !u!1 &3685150225426292163
 GameObject:
   m_ObjectHideFlags: 0
@@ -8401,7 +8401,7 @@ GameObject:
   - component: {fileID: 3348037513180010730}
   - component: {fileID: 7800611901596877787}
   m_Layer: 5
-  m_Name: ColourBTN
+  m_Name: AppearanceBTN
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8498,7 +8498,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2188513804677067742}
-        m_MethodName: SoundColorButtonClicked
+        m_MethodName: SoundAppearanceButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -10443,7 +10443,7 @@ GameObject:
   - component: {fileID: 7537933463221115695}
   - component: {fileID: 15990326848501333}
   m_Layer: 5
-  m_Name: IconBTN
+  m_Name: SoundShapeBTN
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10539,7 +10539,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2188513804677067742}
-        m_MethodName: SoundIconButtonClicked
+        m_MethodName: SoundShapeButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -11110,10 +11110,10 @@ RectTransform:
   m_Father: {fileID: 4319739250137394867}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 28}
-  m_SizeDelta: {x: 100, y: 95}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 25}
+  m_SizeDelta: {x: -16, y: -50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2378964118545029674
 CanvasRenderer:
@@ -11136,13 +11136,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.49411768, g: 0.70980394, b: 0.16862746, a: 1}
+  m_Color: {r: 0.5372686, g: 0.8490566, b: 0.15619439, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 7d02fb9e4e9e440238f44ee911a991c6, type: 3}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: f44f9213c120d43b582a912ac0aed16a, type: 3}
+  m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
@@ -13082,10 +13082,10 @@ MonoBehaviour:
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Shape
+  m_Text: Sound Shape
 --- !u!1 &7730410075489455911
 GameObject:
   m_ObjectHideFlags: 0

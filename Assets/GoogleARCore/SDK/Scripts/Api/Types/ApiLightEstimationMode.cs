@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="ApiLightEstimationMode.cs" company="Google">
 //
 // Copyright 2017 Google Inc. All Rights Reserved.
@@ -23,10 +23,14 @@ namespace GoogleARCoreInternal
     using System.Diagnostics.CodeAnalysis;
 
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:ElementsMustBeDocumented",
-    Justification = "Internal")]
+     Justification = "Internal")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules",
+                     "SA1602:EnumerationItemsMustBeDocumented",
+     Justification = "Internal.")]
     public enum ApiLightEstimationMode
     {
         Disabled = 0,
         AmbientIntensity = 1,
+        EnvironmentalHDR = 2,
     }
 }

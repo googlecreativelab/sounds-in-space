@@ -60,8 +60,8 @@ namespace SIS {
         bool topGradientActive = true;
 
         [SerializeField] UnityEngine.UI.Image repositionImage = null;
-        [SerializeField] UnityEngine.UI.Image soundIconImage = null;
-        [SerializeField] UnityEngine.UI.Image soundColorImage = null;
+        [SerializeField] UnityEngine.UI.Image soundShapeImage = null;
+        [SerializeField] UnityEngine.UI.Image soundAppearanceImage = null;
 
         [SerializeField] SoundRadiusSlider minRadiusSlider = null;
         [SerializeField] SoundRadiusSlider maxRadiusSlider = null;
@@ -127,7 +127,8 @@ namespace SIS {
             soundLabelResizeText.text = selectedSound.hotspot.name;
 
             // Change the 2D UI representation
-            soundIconImage.sprite = selectedSound.iconSprite;
+            soundAppearanceImage.sprite = selectedSound.iconSprite;
+            soundShapeImage.sprite = selectedSound.soundShapeSprite;
 
             // Set the trigger and loop toggles
             triggerPlaybackToggle.isOn = selectedSound.hotspot.triggerPlayback;
@@ -152,22 +153,23 @@ namespace SIS {
             updateSyncedMarkersUI(selectedSound);
 
             // Change the colour of the UI
-            Color newCol = selectedSound.color;
-            repositionImage.color = newCol;
-            soundIconImage.color = newCol;
-            soundColorImage.color = newCol;
+            updateUIColor(selectedSound.color, notifyDelegate: false);
+            // Color newCol = selectedSound.color;
+            // repositionImage.color = newCol;
+            // soundAppearanceImage.color = newCol;
+            // soundColorImage.color = newCol;
 
-            minRadiusSlider.SetColorTint(newCol);
-            maxRadiusSlider.SetColorTint(newCol);
+            // minRadiusSlider.SetColorTint(newCol);
+            // maxRadiusSlider.SetColorTint(newCol);
+
+            // UnityEngine.UI.ColorBlock cols = soundSrcButton.colors;
+            // cols.normalColor = newCol;
+            // cols.highlightedColor = newCol.ColorWithBrightness(-0.15f);
+            // cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
+            // soundSrcButton.colors = cols;
 
             minRadiusSlider.SetSliderRadius(selectedSound.soundMinDist, notifyDelegate: false);
             maxRadiusSlider.SetSliderRadius(selectedSound.soundMaxDist, notifyDelegate: false);
-
-            UnityEngine.UI.ColorBlock cols = soundSrcButton.colors;
-            cols.normalColor = newCol;
-            cols.highlightedColor = newCol.ColorWithBrightness(-0.15f);
-            cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
-            soundSrcButton.colors = cols;
 
             if (selectedSound.hotspot.soundFile.isDefaultSoundFile) {
                 soundFilenameText.text = "Tap to change sound";
@@ -445,6 +447,25 @@ namespace SIS {
         }
 
         #endregion
+
+        private void updateUIColor(Color newCol, bool notifyDelegate = true) {
+            
+            repositionImage.color = newCol;
+            soundShapeImage.color = newCol;
+            soundAppearanceImage.color = newCol;
+            minRadiusSlider.SetColorTint(newCol);
+            maxRadiusSlider.SetColorTint(newCol);
+
+            UnityEngine.UI.ColorBlock cols = soundSrcButton.colors;
+            cols.normalColor = newCol;
+            cols.highlightedColor = newCol.ColorWithBrightness(-0.15f);
+            cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
+            soundSrcButton.colors = cols;
+
+            if (!notifyDelegate) { return; }
+            canvasDelegate.objectSelection.SetSelectionRadiusColor(newCol);
+        }
+
         #region Button Callbacks
 
         public void SyncPlaybackButtonClicked() {
@@ -530,40 +551,31 @@ namespace SIS {
             canvasDelegate.objectSelection.ReturnSelectedSoundIconFromCursor();
         }
 
-        public void SoundIconButtonClicked() {
-            // Just cycle through soundIcons for now
+        public void SoundShapeButtonClicked() {
             if (canvasDelegate == null) { return; }
             SoundMarker selectedSound = canvasDelegate.objectSelection.selectedMarker;
             if (selectedSound == null) { return; }
 
-            // Change the 3D representation
-            selectedSound.SetToNextIcon();
-            // Change the 2D UI representation
-            soundIconImage.sprite = selectedSound.iconSprite;
+            selectedSound.SetToNextSoundShape();
+
+            soundShapeImage.sprite = selectedSound.soundShapeSprite;
+
+            canvasDelegate?.objectSelection.setShape(selectedSound.soundShape);
         }
 
-        public void SoundColorButtonClicked() {
-            // Just cycle through colors for now
+        public void SoundAppearanceButtonClicked() {
+            // Cycle through colors AND icon
             if (canvasDelegate == null) { return; }
             SoundMarker selectedSound = canvasDelegate.objectSelection.selectedMarker;
             if (selectedSound == null) { return; }
 
+            // TODO: selectedSound.SetToRandomDifferentColor();
+            // TODO: selectedSound.SetToRandomDifferentIcon();
             selectedSound.SetToNextColor();
+            selectedSound.SetToNextIcon();
 
-            Color newCol = selectedSound.color;
-            repositionImage.color = newCol;
-            soundIconImage.color = newCol;
-            soundColorImage.color = newCol;
-            minRadiusSlider.SetColorTint(newCol);
-            maxRadiusSlider.SetColorTint(newCol);
-
-            UnityEngine.UI.ColorBlock cols = soundSrcButton.colors;
-            cols.normalColor = newCol;
-            cols.highlightedColor = newCol.ColorWithBrightness(-0.15f);
-            cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
-            soundSrcButton.colors = cols;
-
-            canvasDelegate.objectSelection.SetSelectionRadiusColor(newCol);
+            soundAppearanceImage.sprite = selectedSound.iconSprite;
+            updateUIColor(selectedSound.color);
         }
 
         void DeleteSelectedSound() {
