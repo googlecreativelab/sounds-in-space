@@ -158,7 +158,7 @@ namespace SIS {
         }
 
         private static IEnumerator loadSoundFileClip(SoundFile sf, System.Action completion = null) {
-            if (sf.loadState == LoadState.Success && sf.clip != null) {
+            if (sf.isDefaultSoundFile || (sf.loadState == LoadState.Success && sf.clip != null)) {
                 // ALREADY LOADED!
                 if (completion != null) { completion(); }
                 yield break;

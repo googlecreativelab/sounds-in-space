@@ -90,9 +90,6 @@ namespace SIS {
         public string name { get { return _objectName; } }
         public string soundID { get { return _soundID; } }
         public SoundFile soundFile { get { return hotspotDelegate?.GetSoundFileFromSoundID(_soundID); } }
-        // public string[] syncedSoundsIDs { 
-        //     get { return JsonUtility.FromJson<string[]>(_syncedSoundsJSON); } 
-        // }
 
         public void OnBeforeSerialize() {
           // Debug.Log ("OnBeforeDeserialize _srcVolume: " + _srcVolume);
@@ -100,14 +97,7 @@ namespace SIS {
 
         public void OnAfterDeserialize() {
             if (_srcVolume == 0) { _srcVolume = 1f; } // If _srcVolume==0, it has not been set.
-            // Debug.Log("OnAfterDeserialize _srcVolume: " + _srcVolume);
             if (_id == null || _id.Length < 1) { _id = System.Guid.NewGuid().ToString(); }
-            // Debug.Log("_id(" + _id.Length + "): " + _id);
-            // Debug.Log("_syncedSoundsJSON(" + _syncedSoundsJSON.Length + "): " + _syncedSoundsJSON);
-            // if (_syncedSoundsJSON != null && _syncedSoundsJSON.Length < 1) { _syncedSoundsJSON = "[]"; }
-
-            // string[] ids = syncedSoundsIDs;
-            // Debug.Log("syncedSoundsIDs(" + syncedSoundsIDs.Length + "): " + syncedSoundsIDs);
         }
 
         // =============

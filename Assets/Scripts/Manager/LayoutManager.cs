@@ -262,6 +262,83 @@ namespace SIS {
                 completion: () => audioClipLoadingOrUnloadingComplete(completion)));
         }
 
+        public void UnloadSoundMarkerAndSyncedClips(SoundMarker marker) {
+
+            SoundFile markerSF = marker.hotspot.soundFile;
+            if (!markerSF.isDefaultSoundFile && (markerSF.loadState == LoadState.Success || markerSF.clip != null)) {
+                // Unload the first marker
+                GameObject.DestroyImmediate(markerSF.clip, allowDestroyingAssets: false);
+                markerSF.clip = null;
+                markerSF.loadState = LoadState.NotLoaded;
+            }
+
+            // - - - - - - - - - - - - - - - - - - -
+            // Unload Synced Markers
+            HashSet<string> syncedMarkerIDs = layout.getSynchronisedMarkers(marker.hotspot.id);
+            if (syncedMarkerIDs == null) { return; }
+
+            IEnumerable<SoundMarker> syncedMarkers = MainController.soundMarkers.Where(
+                (sm) => {
+                    return sm.hotspot.id != marker.hotspot.id // Ignore the caller marker
+                        && syncedMarkerIDs.Contains(sm.hotspot.id);
+                });
+
+            foreach (SoundMarker sm in syncedMarkers) {
+                SoundFile syncedSF = marker.hotspot.soundFile;
+
+                if (!syncedSF.isDefaultSoundFile && (syncedSF.loadState == LoadState.Success || syncedSF.clip != null)) {
+                    // GameObject.DestroyImmediate(syncedSF.clip, allowDestroyingAssets: false);
+                    GameObject.Destroy(syncedSF.clip);
+                    syncedSF.clip = null;
+                    syncedSF.loadState = LoadState.NotLoaded;
+                }
+            }
+            // - - - - - - - - - - - - - - - - - - -
+        }
+
+        public void LoadSoundMarkerAndSyncedClips(SoundMarker marker, Action<HashSet<SoundMarker>> completion) {
+
+            HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
+            HashSet<SoundMarker> loadingOrLoadedMarkers = new HashSet<SoundMarker>();
+
+            // Load the SoundFile for the marker passed in
+            SoundFile markerSF = marker.hotspot.soundFile;
+            loadingOrLoadedSoundFiles.Add(markerSF);
+            loadingOrLoadedMarkers.Add(marker);
+            if (!markerSF.isDefaultSoundFile && (markerSF.loadState != LoadState.Success || markerSF.clip == null)) {
+                layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(markerSF));
+            }
+
+            // - - - - - - - - - - - - - - - - - - -
+            // Load the Synced Markers
+            HashSet<string> syncedMarkerIDs = layout.getSynchronisedMarkers(marker.hotspot.id);
+            if (syncedMarkerIDs != null) {
+                IEnumerable<SoundMarker> syncedMarkers = MainController.soundMarkers.Where(
+                (sm) => {
+                    return sm.hotspot.id != marker.hotspot.id // Ignore the caller marker
+                        && syncedMarkerIDs.Contains(sm.hotspot.id);
+                });
+
+                foreach (SoundMarker sm in syncedMarkers) {
+                    SoundFile syncedSF = marker.hotspot.soundFile;
+                    loadingOrLoadedSoundFiles.Add(syncedSF);
+                    loadingOrLoadedMarkers.Add(sm);
+                    if (!markerSF.isDefaultSoundFile && (syncedSF.loadState != LoadState.Success || syncedSF.clip == null)) {
+                        layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(syncedSF));
+                    }
+                }
+            }
+            // - - - - - - - - - - - - - - - - - - -
+
+            // Wait for loading to complete
+            layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(
+                loadingOrLoadedSoundFiles,
+                completion: () => {
+                    audioClipLoadingOrUnloadingComplete(completion:null);
+                    completion(loadingOrLoadedMarkers);
+                }));
+        }
+
         // EXCLUSIVLEY load soundClips of the SoundFiles that are in the current layout
         // This also means unloading soundClips if they aren't in the current layout
         public void LoadSoundClipsExclusivelyForCurrentLayout(Action completion) {

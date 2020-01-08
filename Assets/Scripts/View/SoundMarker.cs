@@ -81,8 +81,8 @@ namespace SIS {
         public SoundIcons SoundIcons { get { return soundIcons; } }
 
         public Color color { get { return ColorThemeData.Instance.soundColors[colorIndex]; } }
-        public Sprite iconSprite { get { return SoundIconData.Instance.sprites[iconIndex]; } }
-        public Sprite soundShapeSprite { get { return SoundIconData.Instance.soundShapeSprites[(int)soundShape]; } }
+        public Sprite iconSprite { get { return SingletonData.Instance.sprites[iconIndex]; } }
+        public Sprite soundShapeSprite { get { return SingletonData.Instance.soundShapeSprites[(int)soundShape]; } }
 
         public float soundMinDist {
             get { return hotspot != null ? hotspot.minDistance : _audioSrc.minDistance; }
@@ -378,7 +378,7 @@ namespace SIS {
 
         public void SetIconAndRangeToRandomValue() {
             colorIndex = Random.Range(0, ColorThemeData.Instance.soundColors.Length - 1);
-            iconIndex = Random.Range(0, SoundIconData.Instance.sprites.Length - 1);
+            iconIndex = Random.Range(0, SingletonData.Instance.sprites.Length - 1);
         }
 
         public void SetHotspot(Hotspot newHotspot, bool overrideInteralData = true) {
@@ -423,11 +423,11 @@ namespace SIS {
         }
 
         public void SetToNextIcon() {
-            iconIndex = (iconIndex + 1) % SoundIconData.Instance.sprites.Length;
+            iconIndex = (iconIndex + 1) % SingletonData.Instance.sprites.Length;
         }
 
         public void SetToNextSoundShape() {
-            soundShape = (SoundShape)(((int)soundShape + 1) % SoundIconData.Instance.soundShapeSprites.Length);
+            soundShape = (SoundShape)(((int)soundShape + 1) % SingletonData.Instance.soundShapeSprites.Length);
         }
 
         // -     -     -     -     -     -     -

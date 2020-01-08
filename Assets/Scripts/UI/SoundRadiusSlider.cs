@@ -27,8 +27,8 @@ namespace SIS {
     public class SoundRadiusSlider : MonoBehaviour {
         public ISoundRadiusSliderDelegate sliderDelegate = null;
 
-        public float minDiameter = 0.2f;
-        public float maxDiameter = 21.1f;
+        public float minDiameter = SingletonData.Instance.MinDiameterForSoundMarkers; // 0.2f;
+        public float maxDiameter = SingletonData.Instance.MaxDiameterForSoundMarkers; // 21.1f;
         public float minRadius { get { return minDiameter * 0.5f; } }
         public float maxRadius { get { return maxDiameter * 0.5f; } }
         protected float minDiameterDelta { get { return 1f - minDiameter; } }
