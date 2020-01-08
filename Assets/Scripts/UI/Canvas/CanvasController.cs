@@ -54,6 +54,7 @@ namespace SIS {
         List<SoundFile> AllSoundFiles();
         void ReloadSoundFiles(System.Action completion);
         void LoadClipInSoundFile(SoundFile soundFile, System.Action completion);
+        void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion);
 
     }
 
@@ -237,11 +238,15 @@ namespace SIS {
         }
         public void ListCellClicked(CanvasListCell<SoundFile> listCell, SoundFile sf) {
             // !!! SoundFile binding OCCURS ON ConfirmButtonClicked()
+            if (canvasDelegate == null) { return; }
 
             VoiceOver.main.StopPreview();
-            canvasDelegate?.LoadClipInSoundFile(sf, completion: () => {
-                VoiceOver.main.PlayPreview(sf);
-                listCell.ReloadUI();
+            canvasDelegate.LoadSoundClipsExclusivelyForCurrentLayout(
+            completion: () => {
+                canvasDelegate.LoadClipInSoundFile(sf, completion: () => {
+                    VoiceOver.main.PlayPreview(sf);
+                    listCell.ReloadUI();
+                });
             });
         }
         public void ListCellClicked(CanvasListCell<SoundMarker> listCell, SoundMarker sso) {

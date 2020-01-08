@@ -441,6 +441,10 @@ namespace SIS {
             layoutManager.LoadClipInSoundFile(soundFile, completion);
         }
 
+        public void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion) {
+            layoutManager.LoadSoundClipsExclusivelyForCurrentLayout(completion);
+        }
+
         // ------------------------------------------------------
         #endregion
         #region ICanvasCreateSoundsDelegate
@@ -532,7 +536,7 @@ namespace SIS {
         // ------------------------------------------------------
 
         public void LayoutManagerLoadedNewLayout(Layout newLayout) {
-            layoutManager.LoadSoundClipsForCurrentLayout(() => { });
+            LoadSoundClipsExclusivelyForCurrentLayout(() => { });
             UpdateCanvasTitleWithLayout(newLayout);
         }
         public void LayoutHotspotListChanged(Layout layout) {

@@ -91,7 +91,7 @@ namespace SIS {
             obj.LaunchNewClip(sf.clip);
             
             // When a new binding occurs, we SHOULD refresh the loaded sound clips
-            if (reloadSoundClips) { LoadSoundClipsForCurrentLayout(() => { }); }
+            if (reloadSoundClips) { LoadSoundClipsExclusivelyForCurrentLayout(() => { }); }
         }
 
         // =================
@@ -241,7 +241,7 @@ namespace SIS {
 
         // EXCLUSIVLEY load soundClips of the SoundFiles that are in the current layout
         // This also means unloading soundClips if they aren't in the current layout
-        public void LoadSoundClipsForCurrentLayout(Action completion) {
+        public void LoadSoundClipsExclusivelyForCurrentLayout(Action completion) {
             if (this.layout == null) {
                 completion();
                 return;
