@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6511648024236452583}
   - component: {fileID: 6511648024236452582}
   - component: {fileID: 6511648024236452584}
+  - component: {fileID: 8593938719725311844}
   m_Layer: 0
   m_Name: Main Controller
   m_TagString: Untagged
@@ -74,6 +75,21 @@ MonoBehaviour:
   SoundRadiusPrefab: {fileID: 8284019053335270506, guid: 70ac56ae05e194f7cbc56f2ec59cd3fd,
     type: 3}
   selectionEnabled: 1
+--- !u!114 &8593938719725311844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6511648024236452580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72b4e1c0f09714d66b62c551ebc2862b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  checkFrequency: 0.25
+  maxRadiusFactor: 1
+  thresholdDistance: 0.5
 --- !u!1001 &4451338017321130326
 PrefabInstance:
   m_ObjectHideFlags: 0

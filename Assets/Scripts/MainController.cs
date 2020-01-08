@@ -531,28 +531,27 @@ namespace SIS {
         }
         // ------------------------------------------------------
         #endregion
-        // ------------------------------------------------------
         #region ILayoutManagerDelegate
         // ------------------------------------------------------
 
-        public void LayoutManagerLoadedNewLayout(Layout newLayout) {
+        public void LayoutManagerLoadedNewLayout(LayoutManager manager, Layout newLayout) {
             LoadSoundClipsExclusivelyForCurrentLayout(() => { });
-            UpdateCanvasTitleWithLayout(newLayout);
+            canvasControl.mainScreen.LayoutChanged(newLayout, manager.loadedAudioClipCount, manager.soundDictionary.Count);
         }
-        public void LayoutHotspotListChanged(Layout layout) {
-            UpdateCanvasTitleWithLayout(layout);
+        public void LayoutManagerHotspotListChanged(LayoutManager manager, Layout layout) {
+            canvasControl.mainScreen.LayoutChanged(layout, manager.loadedAudioClipCount, manager.soundDictionary.Count);
+        }
+
+        public void LayoutManagerLoadedAudioClipsChanged(LayoutManager manager, int hotspotCount) {
+            Debug.Log("MainController::LoadedAudioClipsChanged. loadedAudioClips: " + manager.loadedAudioClipCount 
+                    + ", AllClipCount: " + manager.soundDictionary.Count);
+            canvasControl.mainScreen.UpdateMarkerCountLabel(hotspotCount, manager.loadedAudioClipCount, manager.soundDictionary.Count);
         }
 
         public void StartCoroutineOn(IEnumerator e) {
             StartCoroutine(e);
         }
-
-        void UpdateCanvasTitleWithLayout(Layout layout) {
-            // string markerNumberString = "("+ layout.hotspots.Count +" marker" + (layout.hotspots.Count == 1 ? ")" : "s)");
-            // canvasControl.mainScreen.setCanvasTitle("\""+ layout.layoutName +"\" " + markerNumberString);
-            canvasControl.mainScreen.LayoutChanged(layout);
-        }
-        // ------------------------------------------------------
+        
         #endregion
         // ------------------------------------------------------
     }

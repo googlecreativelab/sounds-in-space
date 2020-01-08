@@ -36,15 +36,16 @@ namespace SIS {
         // -----------------------------------------------
 
         private void Awake() {
-            _eventTrigger = GetComponent<EditSoundEventTrigger>();
-            _rect = GetComponent<RectTransform >();
+            if (_rect == null) { _rect = GetComponent<RectTransform>(); }
             
+            _eventTrigger = GetComponent<EditSoundEventTrigger>();
             _eventTrigger.setDelegate(this);
         }
 
         public void panelWillAppear() {
             setSettingsScrollRectToTop();
 
+            if (_rect == null) { _rect = GetComponent<RectTransform>(); }
             SetBottomPanelState(Visibility.Hidden, animated: false);
             SetBottomPanelState(Visibility.Mini, animated: true, easing: Ease.OutExpo);
         }

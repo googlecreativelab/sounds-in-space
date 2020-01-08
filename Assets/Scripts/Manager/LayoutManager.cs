@@ -29,8 +29,9 @@ using UnityEngine;
 namespace SIS {
 
     public interface ILayoutManagerDelegate {
-        void LayoutManagerLoadedNewLayout(Layout newLayout);
-        void LayoutHotspotListChanged(Layout layout);
+        void LayoutManagerLoadedNewLayout(LayoutManager manager, Layout newLayout);
+        void LayoutManagerHotspotListChanged(LayoutManager manager, Layout layout);
+        void LayoutManagerLoadedAudioClipsChanged(LayoutManager manager, int hotspotCount);
         void StartCoroutineOn(IEnumerator e);
     }
 
@@ -40,6 +41,14 @@ namespace SIS {
 
         public Layout layout; // Current scene layout in memory
         public Dictionary<string, SoundFile> soundDictionary;
+        public int loadedAudioClipCount {
+            get { 
+                return soundDictionary.Values.Aggregate(0, (acc, x) => {
+                    // Don't count the loading of the default sound file...
+                    return acc + (!x.isDefaultSoundFile && x.loadState == LoadState.Success ? 1 : 0);
+                });
+            }
+        }
 
         // Top level save state int
         public int currentLayoutId {
@@ -56,7 +65,7 @@ namespace SIS {
         public Hotspot AddNewHotspot(Vector3 localPos, Vector3 rotation, float minDist, float maxDist) {
             Hotspot h = new Hotspot(localPos, rotation, minDist, maxDist);
             layout.AddHotspot(h);
-            layoutManagerDelegate?.LayoutHotspotListChanged(layout);
+            layoutManagerDelegate?.LayoutManagerHotspotListChanged(this, layout);
             return h;
         }
 
@@ -64,12 +73,12 @@ namespace SIS {
             if (layout == null) return;
 
             layout?.EraseHotspot(hotspot);
-            layoutManagerDelegate?.LayoutHotspotListChanged(layout);
+            layoutManagerDelegate?.LayoutManagerHotspotListChanged(this, layout);
         }
 
         public void EraseAllHotspots() {
             layout.EraseHotspots();
-            layoutManagerDelegate?.LayoutHotspotListChanged(layout);
+            layoutManagerDelegate?.LayoutManagerHotspotListChanged(this, layout);
         }
 
 
@@ -195,7 +204,7 @@ namespace SIS {
             // Set appropriate references
             layout.layoutDelegate = this;
             layout.SetHotspotDelegates();
-            layoutManagerDelegate?.LayoutManagerLoadedNewLayout(this.layout);
+            layoutManagerDelegate?.LayoutManagerLoadedNewLayout(this, this.layout);
         }
 
         private static void DeleteLayoutsWith(int id) {
@@ -230,13 +239,27 @@ namespace SIS {
                 sfDict[newSoundFile.filename] = newSoundFile;
             }
 
+            layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
+                hotspotCount: layout != null ? layout.hotspots.Count : 0);
             Debug.Log("Reloaded Metafiles... " + numLoaded + " SoundClip(s) are loaded. " 
                                        + ( SoundFile.metaFiles.Count() - numLoaded ) + " NOT loaded.");
             completion();
         }
 
+        // - - - - - - - - - - - -
+        // Called internally after some Audio Clip loading or unloading completes
+        private void audioClipLoadingOrUnloadingComplete(System.Action completion) {
+            layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
+                hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
+
+            if (completion != null) { completion(); }
+        }
+        // - - - - - - - - - - - -
+
         public void LoadClipInSoundFile(SoundFile soundFile, System.Action completion) {
-            layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(soundFile, completion));
+            layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(
+                soundFile,
+                completion: () => audioClipLoadingOrUnloadingComplete(completion)));
         }
 
         // EXCLUSIVLEY load soundClips of the SoundFiles that are in the current layout
@@ -281,28 +304,10 @@ namespace SIS {
             Debug.Log("Load SoundClips for current Layout... " + loadingOrLoadedSoundFiles.Count() + " SoundClip(s) are loading... "
                                        + ( sfDict.Values.Count() - loadingOrLoadedSoundFiles.Count() ) + " NOT loaded. " 
                                        + numDestroyed + " DESTROYED!");
-            layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(loadingOrLoadedSoundFiles, completion));
+            layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(
+                loadingOrLoadedSoundFiles, 
+                completion: () => audioClipLoadingOrUnloadingComplete(completion)));
         }
-
-        // 
-        // public void LoadSoundFiles(Action completion) {
-        //     Dictionary<string, SoundFile> sfDict = this.soundDictionary; // A nice little alias for it
-        //                                                                  // Make sure we have data for every wav
-        //     SoundFile.CreateNewMetas();
-
-        //     // load all sound files from their metas
-        //     foreach (var filename in SoundFile.metaFiles) {
-        //         SoundFile sf = SoundFile.ReadFromMeta(filename);
-        //         string audioFilename = sf.filename;
-
-        //         // If the SoundFile has already been loaded, don't reload it
-        //         if (sfDict.ContainsKey(audioFilename)) { continue; }
-
-        //         layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadSoundFileFromMeta(filename, sfDict));
-        //     }
-        //     layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(sfDict, completion));
-        // }
-
 
         public void ReloadSoundFiles(Action completion) {
             // LoadSoundFiles(completion);
