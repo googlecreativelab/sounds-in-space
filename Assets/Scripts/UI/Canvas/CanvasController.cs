@@ -53,8 +53,9 @@ namespace SIS {
 
         List<SoundFile> AllSoundFiles();
         void ReloadSoundFiles(System.Action completion);
-        void LoadClipInSoundFile(SoundFile soundFile, System.Action completion);
-        void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion);
+        void LoadClipInSoundFile(SoundFile soundFile, System.Action<SoundFile> completion);
+        // void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion);
+        void RefreshLoadStateForSoundMarkers(System.Action completion);
 
     }
 
@@ -215,22 +216,22 @@ namespace SIS {
 
         public void SyncPlaybackButtonClicked() {
             SoundMarker selMarker = objectSelection.selectedMarker;
-            HashSet<string> syncedMarkerIDs = GetCurrentLayout().getSynchronisedMarkers(selMarker.hotspot.id);
+            HashSet<string> syncedMarkerIDs = GetCurrentLayout().getSynchronisedMarkerIDs(selMarker.hotspot.id);
 
             soundMarkerList.setMode(CanvasSoundMarkerList.Mode.SyncronisedMarkers, 
                                     selectedMarker:selMarker, syncedMarkerIDs:syncedMarkerIDs);
             SetCanvasScreenActive(CanvasUIScreen.SoundMarkerList);
         }
 
-    public void PlaceNewSoundsButtonClickedFromSoundEdit() {
-        objectSelection.ReturnSelectedSoundIconFromCursor();
-        objectSelection.DeselectSound();
+        public void PlaceNewSoundsButtonClickedFromSoundEdit() {
+            objectSelection.ReturnSelectedSoundIconFromCursor();
+            objectSelection.DeselectSound();
 
-        PlaceSoundsBTNClicked();
-    }
+            PlaceSoundsBTNClicked();
+        }
 
-    #endregion
-    #region ICanvasListDelegate
+        #endregion
+        #region ICanvasListDelegate
 
 
         public void ListCellClicked(CanvasListCell<Layout> listCell, Layout layout) {
@@ -241,10 +242,11 @@ namespace SIS {
             if (canvasDelegate == null) { return; }
 
             VoiceOver.main.StopPreview();
-            canvasDelegate.LoadSoundClipsExclusivelyForCurrentLayout(
+            //canvasDelegate.LoadSoundClipsExclusivelyForCurrentLayout(
+            canvasDelegate.RefreshLoadStateForSoundMarkers(
             completion: () => {
-                canvasDelegate.LoadClipInSoundFile(sf, completion: () => {
-                    VoiceOver.main.PlayPreview(sf);
+                canvasDelegate.LoadClipInSoundFile(sf, completion: (SoundFile returnedSoundFile) => {
+                    VoiceOver.main.PlayPreview(returnedSoundFile);
                     listCell.ReloadUI();
                 });
             });
@@ -323,7 +325,7 @@ namespace SIS {
         // -------------------
 
         public HashSet<string> SynchronisedMarkerIDsWithMarkerID(string markerID) {
-            return GetCurrentLayout().getSynchronisedMarkers(markerID);
+            return GetCurrentLayout().getSynchronisedMarkerIDs(markerID);
         }
 
         public void RemoveAnySynchronisationWithOtherMarkers(string markerID) {

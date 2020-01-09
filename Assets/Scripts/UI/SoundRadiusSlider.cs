@@ -27,8 +27,8 @@ namespace SIS {
     public class SoundRadiusSlider : MonoBehaviour {
         public ISoundRadiusSliderDelegate sliderDelegate = null;
 
-        public float minDiameter = SingletonData.Instance.MinDiameterForSoundMarkers; // 0.2f;
-        public float maxDiameter = SingletonData.Instance.MaxDiameterForSoundMarkers; // 21.1f;
+        public float minDiameter = 0; // Will get set on Awake
+        public float maxDiameter = 0; // Will get set on Awake
         public float minRadius { get { return minDiameter * 0.5f; } }
         public float maxRadius { get { return maxDiameter * 0.5f; } }
         protected float minDiameterDelta { get { return 1f - minDiameter; } }
@@ -49,6 +49,11 @@ namespace SIS {
         [SerializeField] UnityEngine.UI.Image sliderBorderImage = null;
 
         bool notifySliderDelegate = true;
+
+        private void Awake() {
+            minDiameter = SingletonData.Instance.MinDiameterForSoundMarkers; // 0.2f;
+            maxDiameter = SingletonData.Instance.MaxDiameterForSoundMarkers; // 21.1f;
+        }
 
         // Start is called before the first frame update
         void Start() {

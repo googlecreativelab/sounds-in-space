@@ -336,6 +336,12 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 128985845}
   m_PrefabAsset: {fileID: 0}
+--- !u!20 &199551390 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 148, guid: e3742696ac12f45c5bd72452a7f5f90b,
+    type: 3}
+  m_PrefabInstance: {fileID: 1439130835}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &220058552 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3761219716021933082, guid: 99b3d6f57fd1443a8aaec38537116a04,
@@ -2278,7 +2284,7 @@ PrefabInstance:
     - target: {fileID: 7994065471992340091, guid: 1ccbff62ac0ef4694bb87e4d0d8283b2,
         type: 3}
       propertyPath: m_Name
-      value: SoundVariationData
+      value: SingletonData
       objectReference: {fileID: 0}
     - target: {fileID: 3348998777963022007, guid: 1ccbff62ac0ef4694bb87e4d0d8283b2,
         type: 3}
@@ -2404,5 +2410,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6511648024236452582, guid: d796d7f7a16184047807acd3f6e5f7e3,
+        type: 3}
+      propertyPath: canvasControl
+      value: 
+      objectReference: {fileID: 1608144858}
+    - target: {fileID: 6511648024236452582, guid: d796d7f7a16184047807acd3f6e5f7e3,
+        type: 3}
+      propertyPath: firstPersonCamera
+      value: 
+      objectReference: {fileID: 199551390}
+    - target: {fileID: 6511648024236452582, guid: d796d7f7a16184047807acd3f6e5f7e3,
+        type: 3}
+      propertyPath: soundPlacementRef
+      value: 
+      objectReference: {fileID: 120871357}
+    - target: {fileID: 6511648024236452582, guid: d796d7f7a16184047807acd3f6e5f7e3,
+        type: 3}
+      propertyPath: anchorWrapperTransform
+      value: 
+      objectReference: {fileID: 1643203213}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d796d7f7a16184047807acd3f6e5f7e3, type: 3}

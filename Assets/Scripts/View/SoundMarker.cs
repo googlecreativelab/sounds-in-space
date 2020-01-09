@@ -24,6 +24,9 @@ namespace SIS {
     public interface ISoundMarkerDelegate {
         bool shouldSoundMarkerTriggerPlayback(SoundMarker marker);
         bool shouldSoundMarkerStopPlaybackAfterUserLeftTriggerRange(SoundMarker marker);
+
+        void loadOnDemandAudioForSoundMarker(SoundMarker marker, SoundFile soundFile);
+        bool unloadOnDemandAudioForSoundMarkerIsPossible(SoundMarker marker, SoundFile soundFile);
         
         // DEBUG
         void soundMarkerDebugLog(string debugStr);
@@ -73,6 +76,7 @@ namespace SIS {
 
         public SoundMarkerTrigger markerTrigger;
         public bool userIsInsideTriggerRange { get; private set; } = false;
+        public bool onDemandAudioShouldBeLoaded { get; private set; } = false;
 
         public static float SoundDistBuffer = 0.2f; // The min distance between min. and max.
         public static float SoundMultiplierBuffer = 2f;
@@ -133,6 +137,16 @@ namespace SIS {
                 followCameraYPos.enabled = (value == SoundShape.Column);
                 if (hotspot == null) return;
                 hotspot.SetSoundShapeIndex((int)value);
+            }
+        }
+
+        public void SetAudioPauseState(bool isPaused) {
+            if (isPaused) {
+                _audioSrc.Pause();
+                soundIcons.rotateFast = false;
+            } else {
+                _audioSrc.UnPause();
+                soundIcons.rotateFast = true;
             }
         }
 
@@ -470,6 +484,12 @@ namespace SIS {
 
         // -     -     -     -     -     -     -
 
+        public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
+            Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
+            _audioSrc.clip = sf.clip;
+            _audioSrc.UnPause();
+        }
+
         public void LaunchNewClip(AudioClip clip, bool playAudio = true) {
             _audioSrc.clip = clip;
             if (playAudio) {
@@ -482,9 +502,64 @@ namespace SIS {
                 soundIcons.rotateFast = false;
             }
         }
+        #region OnDemandAudioClipLoading
+
+        private void UserDidEnterOnDemandLoadTrigger() {
+            if (onDemandAudioShouldBeLoaded) { return; }
+
+            onDemandAudioShouldBeLoaded = true;
+            Debug.LogWarning("ON-DEMAND SHOULD be Loaded: " + this.hotspot.soundFile.filename, this);
+
+            // Markers with Infinite Max Distance should be ignored
+            if (hotspot.hasInfiniteMaxDistance) { return; }
+
+            SoundFile sf = hotspot.soundFile;
+            if (sf.isDefaultSoundFile) { return; } // Skip the default soundFile
+
+            // We should LOAD this AudioClip...
+            markerDelegate?.loadOnDemandAudioForSoundMarker(this, sf); // This will also load synchronised SoundMarkers
+        }
+
+        // private void UserDidEnterOnDemandUnloadTrigger() {
+
+        // }
+
+        // - - - - - - - - - - - - - - - - - - - - - - -
+
+        // private void UserDidExitOnDemandLoadTrigger() {
+
+        // }
+
+        private void UserDidExitOnDemandUnloadTrigger() {
+            if (!onDemandAudioShouldBeLoaded) { return; }
+
+            onDemandAudioShouldBeLoaded = false;
+            Debug.LogWarning("ON-DEMAND should NOT be Loaded: " + this.hotspot.soundFile.filename, this);
+
+            // Markers with Infinite Max Distance should be ignored
+            if (hotspot.hasInfiniteMaxDistance) { return; }
+
+            SoundFile sf = hotspot.soundFile;
+            if (sf.isDefaultSoundFile) { return; } // Skip the default soundFile
+
+            // We should UNLOAD this AudioClip... (if all other Synced SoundMarkers shouldBeUnloaded)
+            markerDelegate?.unloadOnDemandAudioForSoundMarkerIsPossible(this, sf); // This will also load synchronised SoundMarkers
+        }
+
+        #endregion
         #region ISoundMarkerTriggerDelegate
 
-        public void UserDidEnterMarkerTrigger() {
+        public void UserDidEnterMarkerTrigger(SoundMarkerTrigger.Type triggerType) {
+            // -----------------------------
+            switch (triggerType) {
+                case SoundMarkerTrigger.Type.OnDemandLoad: UserDidEnterOnDemandLoadTrigger(); return;
+                // case SoundMarkerTrigger.Type.OnDemandUnload: UserDidEnterOnDemandUnloadTrigger(); return;
+                case SoundMarkerTrigger.Type.Playback: break;
+                default: return;
+            }
+            // -----------------------------
+            // BELOW - the Playback trigger
+
             userIsInsideTriggerRange = true;
             timeUserHasHeardSound = 0; // Restart time hearing the sound
 
@@ -500,7 +575,17 @@ namespace SIS {
             }
         }
 
-        public void UserDidExitMarkerTrigger() {
+        public void UserDidExitMarkerTrigger(SoundMarkerTrigger.Type triggerType) {
+            // -----------------------------
+            switch (triggerType) {
+                // case SoundMarkerTrigger.Type.OnDemandLoad: UserDidExitOnDemandLoadTrigger(); return;
+                case SoundMarkerTrigger.Type.OnDemandUnload: UserDidExitOnDemandUnloadTrigger(); return;
+                case SoundMarkerTrigger.Type.Playback: break;
+                default: return;
+            }
+            // -----------------------------
+            // BELOW - the Playback trigger
+
             userIsInsideTriggerRange = false;
             // if (!hotspot.triggerPlayback && !userHasHeardSound) { return; }
             if (!(hotspot.triggerPlayback || (hotspot.playOnce && userHasHeardSound))) { return; }

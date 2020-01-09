@@ -157,10 +157,10 @@ namespace SIS {
             completion();
         }
 
-        private static IEnumerator loadSoundFileClip(SoundFile sf, System.Action completion = null) {
+        private static IEnumerator loadSoundFileClip(SoundFile sf, System.Action<SoundFile> completion = null) {
             if (sf.isDefaultSoundFile || (sf.loadState == LoadState.Success && sf.clip != null)) {
                 // ALREADY LOADED!
-                if (completion != null) { completion(); }
+                if (completion != null) { completion(sf); }
                 yield break;
             }
 
@@ -172,7 +172,7 @@ namespace SIS {
                         MP3_otherwise_WAV ? AudioType.MPEG : AudioType.WAV)) {
 
                 DownloadHandlerAudioClip dHandler = req.downloadHandler as DownloadHandlerAudioClip;
-                dHandler.streamAudio = true;
+                // dHandler.streamAudio = true;
                 dHandler.compressed = true;
 
                 yield return req.SendWebRequest();
@@ -196,7 +196,8 @@ namespace SIS {
                     }
                 }
             }
-            if (completion != null) { completion(); }
+            Debug.LogWarning("SoundFile::loadSoundFileClip WILL call completion...");
+            if (completion != null) { completion(sf); }
         }
 
         // Loads a soundfile object from a metafile, as well as preloading the audio
@@ -207,7 +208,7 @@ namespace SIS {
         //     yield return loadSoundFileClip(sf, completion);
         // }
 
-        public static IEnumerator LoadClipInSoundFile(SoundFile sf, System.Action completion = null) {
+        public static IEnumerator LoadClipInSoundFile(SoundFile sf, System.Action<SoundFile> completion = null) {
             yield return loadSoundFileClip(sf, completion);
         }
 

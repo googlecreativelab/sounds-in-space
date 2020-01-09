@@ -87,6 +87,7 @@ namespace SIS {
         public Quaternion rotation { get { return Quaternion.Euler(_rotationX, _rotationY, _rotationZ); } }
         public float minDistance { get { return _minDistance; } }
         public float maxDistance { get { return _maxDistance; } }
+        public bool hasInfiniteMaxDistance { get { return _maxDistance < 0; } }
         public string name { get { return _objectName; } }
         public string soundID { get { return _soundID; } }
         public SoundFile soundFile { get { return hotspotDelegate?.GetSoundFileFromSoundID(_soundID); } }

@@ -35,12 +35,23 @@ namespace SIS {
         void StartCoroutineOn(IEnumerator e);
     }
 
-    public class LayoutManager : ILayoutDelegate {
+    public class LayoutManager : ILayoutDelegate, IOnDemandLoadingDelegate {
 
         public ILayoutManagerDelegate layoutManagerDelegate = null;
 
         public Layout layout; // Current scene layout in memory
+        public OnDemandLoadingManager onDemandLoadingManager = new OnDemandLoadingManager();
+
         public Dictionary<string, SoundFile> soundDictionary;
+        public Dictionary<string, SoundFile> getSoundDictionary() { return soundDictionary; }
+        public int loadingAudioClipCount {
+            get {
+                return soundDictionary.Values.Aggregate(0, (acc, x) => {
+                    // Don't count the loading of the default sound file...
+                    return acc + (!x.isDefaultSoundFile && x.loadState == LoadState.Loading ? 1 : 0);
+                });
+            }
+        }
         public int loadedAudioClipCount {
             get { 
                 return soundDictionary.Values.Aggregate(0, (acc, x) => {
@@ -100,7 +111,8 @@ namespace SIS {
             obj.LaunchNewClip(sf.clip);
             
             // When a new binding occurs, we SHOULD refresh the loaded sound clips
-            if (reloadSoundClips) { LoadSoundClipsExclusivelyForCurrentLayout(() => { }); }
+            // if (reloadSoundClips) { LoadSoundClipsExclusivelyForCurrentLayout(() => { }); }
+            if (reloadSoundClips) { RefreshLoadStateForSoundMarkers(MainController.soundMarkers, () => { }); }
         }
 
         // =================
@@ -241,150 +253,218 @@ namespace SIS {
 
             layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
                 hotspotCount: layout != null ? layout.hotspots.Count : 0);
-            Debug.Log("Reloaded Metafiles... " + numLoaded + " SoundClip(s) are loaded. " 
-                                       + ( SoundFile.metaFiles.Count() - numLoaded ) + " NOT loaded.");
+            // Debug.Log("Reloaded Metafiles... " + numLoaded + " SoundClip(s) are loaded. " 
+            //                            + ( SoundFile.metaFiles.Count() - numLoaded ) + " NOT loaded.");
             completion();
         }
 
         // - - - - - - - - - - - -
-        // Called internally after some Audio Clip loading or unloading completes
-        private void audioClipLoadingOrUnloadingComplete(System.Action completion) {
-            layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
-                hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
 
-            if (completion != null) { completion(); }
+        #region IOnDemandLoadingDelegate
+
+        public void OnDemandLoadingLoadedAudioClipsChanged(OnDemandLoadingManager manager) {
+            layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this, hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
         }
-        // - - - - - - - - - - - -
-
-        public void LoadClipInSoundFile(SoundFile soundFile, System.Action completion) {
-            layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(
-                soundFile,
-                completion: () => audioClipLoadingOrUnloadingComplete(completion)));
+        public void StartCoroutineOn(IEnumerator e) {
+            layoutManagerDelegate?.StartCoroutineOn(e);
         }
 
-        public void UnloadSoundMarkerAndSyncedClips(SoundMarker marker) {
+        #endregion
+        
 
-            SoundFile markerSF = marker.hotspot.soundFile;
-            if (!markerSF.isDefaultSoundFile && (markerSF.loadState == LoadState.Success || markerSF.clip != null)) {
-                // Unload the first marker
-                GameObject.DestroyImmediate(markerSF.clip, allowDestroyingAssets: false);
-                markerSF.clip = null;
-                markerSF.loadState = LoadState.NotLoaded;
-            }
+        public void LoadClipInSoundFile(SoundFile soundFile, System.Action<SoundFile> completion) {
+            onDemandLoadingManager.LoadClipInSoundFile(soundFile, completion);
 
-            // - - - - - - - - - - - - - - - - - - -
-            // Unload Synced Markers
-            HashSet<string> syncedMarkerIDs = layout.getSynchronisedMarkers(marker.hotspot.id);
-            if (syncedMarkerIDs == null) { return; }
+            // layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(
+            //     soundFile,
+            //     completion: (SoundFile returnedSoundFile) => {
+            //         // audioClipLoadingOrUnloadingComplete(returnedSoundFile, completion);
+            //         layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
+            //                         hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
 
-            IEnumerable<SoundMarker> syncedMarkers = MainController.soundMarkers.Where(
-                (sm) => {
-                    return sm.hotspot.id != marker.hotspot.id // Ignore the caller marker
-                        && syncedMarkerIDs.Contains(sm.hotspot.id);
-                });
+            //         if (completion != null) { completion(returnedSoundFile); }
+            //     }));
+        }
 
-            foreach (SoundMarker sm in syncedMarkers) {
-                SoundFile syncedSF = marker.hotspot.soundFile;
+        public void UnloadSoundMarkerAndSyncedClips(SoundMarker marker, IEnumerable<SoundMarker> syncedMarkers) {
+            onDemandLoadingManager.UnloadSoundMarkerAndSyncedClips(marker, syncedMarkers);
 
-                if (!syncedSF.isDefaultSoundFile && (syncedSF.loadState == LoadState.Success || syncedSF.clip != null)) {
-                    // GameObject.DestroyImmediate(syncedSF.clip, allowDestroyingAssets: false);
-                    GameObject.Destroy(syncedSF.clip);
-                    syncedSF.clip = null;
-                    syncedSF.loadState = LoadState.NotLoaded;
-                }
-            }
-            // - - - - - - - - - - - - - - - - - - -
+            // SoundFile markerSF = marker.hotspot.soundFile;
+            // if (!markerSF.isDefaultSoundFile && (markerSF.loadState == LoadState.Success || markerSF.clip != null)) {
+            //     // Unload the first marker
+            //     marker.SetAudioPauseState(true);
+            //     GameObject.DestroyImmediate(markerSF.clip, allowDestroyingAssets: false);
+            //     markerSF.clip = null;
+            //     markerSF.loadState = LoadState.NotLoaded;
+            // }
+
+            // // - - - - - - - - - - - - - - - - - - -
+            // // Unload Synced Markers
+            // if (syncedMarkers != null) {
+            //     foreach (SoundMarker sm in syncedMarkers) {
+            //         SoundFile syncedSF = marker.hotspot.soundFile;
+
+            //         if (!syncedSF.isDefaultSoundFile && (syncedSF.loadState == LoadState.Success || syncedSF.clip != null)) {
+            //             // GameObject.DestroyImmediate(syncedSF.clip, allowDestroyingAssets: false);
+            //             sm.SetAudioPauseState(true);
+            //             GameObject.Destroy(syncedSF.clip);
+            //             syncedSF.clip = null;
+            //             syncedSF.loadState = LoadState.NotLoaded;
+            //         }
+            //     }
+            // }
+            // // - - - - - - - - - - - - - - - - - - -
+
+            // layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
+            //     hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
         }
 
         public void LoadSoundMarkerAndSyncedClips(SoundMarker marker, Action<HashSet<SoundMarker>> completion) {
+            onDemandLoadingManager.LoadSoundMarkerAndSyncedClips(marker, this.layout, completion);
 
-            HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
-            HashSet<SoundMarker> loadingOrLoadedMarkers = new HashSet<SoundMarker>();
+            // HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
+            // HashSet<SoundMarker> loadingOrLoadedMarkers = new HashSet<SoundMarker>();
 
-            // Load the SoundFile for the marker passed in
-            SoundFile markerSF = marker.hotspot.soundFile;
-            loadingOrLoadedSoundFiles.Add(markerSF);
-            loadingOrLoadedMarkers.Add(marker);
-            if (!markerSF.isDefaultSoundFile && (markerSF.loadState != LoadState.Success || markerSF.clip == null)) {
-                layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(markerSF));
-            }
+            // // Load the SoundFile for the marker passed in
+            // SoundFile markerSF = marker.hotspot.soundFile;
+            // loadingOrLoadedSoundFiles.Add(markerSF);
+            // loadingOrLoadedMarkers.Add(marker);
+            // if (!markerSF.isDefaultSoundFile && (markerSF.loadState != LoadState.Success || markerSF.clip == null)) {
+            //     layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(markerSF, 
+            //     completion: (SoundFile returnedSoundFile) => {
+            //         marker.OnDemandSoundFileClipWasLoaded(returnedSoundFile);
+            //     }));
+            // }
 
-            // - - - - - - - - - - - - - - - - - - -
-            // Load the Synced Markers
-            HashSet<string> syncedMarkerIDs = layout.getSynchronisedMarkers(marker.hotspot.id);
-            if (syncedMarkerIDs != null) {
-                IEnumerable<SoundMarker> syncedMarkers = MainController.soundMarkers.Where(
-                (sm) => {
-                    return sm.hotspot.id != marker.hotspot.id // Ignore the caller marker
-                        && syncedMarkerIDs.Contains(sm.hotspot.id);
-                });
+            // // - - - - - - - - - - - - - - - - - - -
+            // // Load the Synced Markers
+            // IEnumerable<SoundMarker> syncedMarkers = layout.getSynchronisedMarkers(marker.hotspot.id);
+            // if (syncedMarkers != null) {
 
-                foreach (SoundMarker sm in syncedMarkers) {
-                    SoundFile syncedSF = marker.hotspot.soundFile;
-                    loadingOrLoadedSoundFiles.Add(syncedSF);
-                    loadingOrLoadedMarkers.Add(sm);
-                    if (!markerSF.isDefaultSoundFile && (syncedSF.loadState != LoadState.Success || syncedSF.clip == null)) {
-                        layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(syncedSF));
-                    }
-                }
-            }
-            // - - - - - - - - - - - - - - - - - - -
+            //     foreach (SoundMarker syncedMarker in syncedMarkers) {
+            //         SoundFile syncedSF = marker.hotspot.soundFile;
+            //         loadingOrLoadedSoundFiles.Add(syncedSF);
+            //         loadingOrLoadedMarkers.Add(syncedMarker);
+            //         if (!markerSF.isDefaultSoundFile && (syncedSF.loadState != LoadState.Success || syncedSF.clip == null)) {
+            //             layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(syncedSF, 
+            //             completion: (SoundFile returnedSoundFile) => {
+            //                 syncedMarker.OnDemandSoundFileClipWasLoaded(returnedSoundFile);
+            //             }));
+            //         }
+            //     }
+            // }
+            // // - - - - - - - - - - - - - - - - - - -
 
-            // Wait for loading to complete
-            layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(
-                loadingOrLoadedSoundFiles,
-                completion: () => {
-                    audioClipLoadingOrUnloadingComplete(completion:null);
-                    completion(loadingOrLoadedMarkers);
-                }));
+            // // Wait for loading to complete
+            // layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(
+            //     loadingOrLoadedSoundFiles,
+            //     completion: () => {
+            //         layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
+            //             hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
+
+            //         if (completion != null) { completion(loadingOrLoadedMarkers); }
+            //     }));
+        }
+
+        public void RefreshLoadStateForSoundMarkers(List<SoundMarker> markers, Action completion) {
+            onDemandLoadingManager.RefreshLoadStateForSoundMarkers(markers, this.layout, completion);
+
+            // Dictionary<string, SoundFile> sfDict = this.soundDictionary;
+
+            // HashSet<string> loadingOrLoadedMarkerIDs = new HashSet<string>();
+            // HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
+            // foreach (SoundMarker marker in markers) {
+            //     if (loadingOrLoadedMarkerIDs.Contains(marker.hotspot.id)) { continue; } // Already covered by a SyncedMarker
+
+            //     SoundFile sf;
+            //     if (!sfDict.TryGetValue(marker.hotspot.id, out sf)) { continue; }
+
+            //     if (marker.onDemandAudioShouldBeLoaded) {
+            //         loadingOrLoadedSoundFiles.Add(sf);
+            //         loadingOrLoadedMarkerIDs.Add(marker.hotspot.id);
+
+            //         if (sf.loadState != LoadState.Success || sf.clip == null) {
+            //             layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(sf,
+            //             completion: (SoundFile returnedSoundFile) => {
+            //                 marker.OnDemandSoundFileClipWasLoaded(returnedSoundFile);
+            //             }));
+            //         }
+
+            //         // Also make sure any synced markers are loaded or loading...
+            //         // IEnumerable<string> syncedMarkerIDs = layout.getSynchronisedMarkerIDs(marker.hotspot.id);
+            //         IEnumerable<SoundMarker> syncedMarkers = layout.getSynchronisedMarkers(marker.hotspot.id);
+            //         foreach (SoundMarker syncedMarker in syncedMarkers) {
+            //             if (loadingOrLoadedMarkerIDs.Contains(syncedMarker.hotspot.id)) { continue; } // Marker already loaded or loading...
+                        
+            //             SoundFile syncedSoundFile;
+            //             if (!sfDict.TryGetValue(syncedMarker.hotspot.id, out syncedSoundFile)) { continue; }
+
+            //             loadingOrLoadedSoundFiles.Add(syncedSoundFile);
+            //             loadingOrLoadedMarkerIDs.Add(syncedMarker.hotspot.id);
+
+            //             if (syncedSoundFile.loadState != LoadState.Success || syncedSoundFile.clip == null) {
+            //                 layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(syncedSoundFile,
+            //                 completion: (SoundFile returnedSoundFile) => {
+            //                     syncedMarker.OnDemandSoundFileClipWasLoaded(returnedSoundFile);
+            //                 }));
+            //             }
+            //         }
+            //     }
+            // }
+
+            // // Unload SoundClips that aren't being used in the current layout
+            // int numDestroyed = unloadSoundFilesExceptThoseInSet(loadingOrLoadedSoundFiles);
+
+            // Debug.Log("RefreshLoadStateForSoundMarkers... " + loadingOrLoadedSoundFiles.Count() + " SoundClip(s) are loading... "
+            //                            + (sfDict.Values.Count() - loadingOrLoadedSoundFiles.Count()) + " NOT loaded. "
+            //                            + numDestroyed + " DESTROYED!");
+            // layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(
+            //     loadingOrLoadedSoundFiles,
+            //     completion: () => {
+            //         // audioClipLoadingOrUnloadingComplete(completion);
+            //         layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
+            //             hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
+
+            //         if (completion != null) { completion(); }
+            //     }));
         }
 
         // EXCLUSIVLEY load soundClips of the SoundFiles that are in the current layout
         // This also means unloading soundClips if they aren't in the current layout
-        public void LoadSoundClipsExclusivelyForCurrentLayout(Action completion) {
-            if (this.layout == null) {
-                completion();
-                return;
-            }
-            Debug.Log("!!! LoadSoundClipsForCurrentLayout...");
+        // public void LoadSoundClipsExclusivelyForCurrentLayout(Action completion) {
+        //     if (this.layout == null) {
+        //         completion();
+        //         return;
+        //     }
+        //     Debug.Log("!!! LoadSoundClipsForCurrentLayout...");
 
-            Dictionary<string, SoundFile> sfDict = this.soundDictionary;
-            Layout curLayout = this.layout;
+        //     Dictionary<string, SoundFile> sfDict = this.soundDictionary;
+        //     Layout curLayout = this.layout;
 
-            //HashSet<SoundFile> soundFilesToUnload = new HashSet<SoundFile>(sfDict.Values);
-            HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
-            foreach (Hotspot hotspot in this.layout.hotspots) {
-                if (sfDict.TryGetValue(hotspot.soundID, out SoundFile sf)) {
-                    loadingOrLoadedSoundFiles.Add(sf);
+        //     //HashSet<SoundFile> soundFilesToUnload = new HashSet<SoundFile>(sfDict.Values);
+        //     HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
+        //     foreach (Hotspot hotspot in this.layout.hotspots) {
+        //         if (sfDict.TryGetValue(hotspot.soundID, out SoundFile sf)) {
+        //             loadingOrLoadedSoundFiles.Add(sf);
                     
-                    if (sf.loadState != LoadState.Success || sf.clip == null) {
-                        layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(sf));
-                    } else {
-                        Debug.Log("AudioClip ALREADY LOADED: " + sf.filenameWithExtension);
-                    }
-                }
-            }
+        //             if (sf.loadState != LoadState.Success || sf.clip == null) {
+        //                 layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(sf));
+        //             } else {
+        //                 Debug.Log("AudioClip ALREADY LOADED: " + sf.filenameWithExtension);
+        //             }
+        //         }
+        //     }
 
-            // Unload SoundClips that aren't being used in the current layout
-            int numDestroyed = 0;
-            foreach (SoundFile sf in sfDict.Values) {
-                if (sf.clip == null 
-                 || loadingOrLoadedSoundFiles.Contains(sf) 
-                 || sf.isDefaultSoundFile) { continue; }
+        //     // Unload SoundClips that aren't being used in the current layout
+        //     int numDestroyed = unloadSoundFilesExceptThoseInSet(loadingOrLoadedSoundFiles);
 
-                GameObject.DestroyImmediate(sf.clip, allowDestroyingAssets:false);
-                ++numDestroyed;
-                sf.clip = null;
-                sf.loadState = LoadState.NotLoaded;
-            }
-
-            Debug.Log("Load SoundClips for current Layout... " + loadingOrLoadedSoundFiles.Count() + " SoundClip(s) are loading... "
-                                       + ( sfDict.Values.Count() - loadingOrLoadedSoundFiles.Count() ) + " NOT loaded. " 
-                                       + numDestroyed + " DESTROYED!");
-            layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(
-                loadingOrLoadedSoundFiles, 
-                completion: () => audioClipLoadingOrUnloadingComplete(completion)));
-        }
+        //     Debug.Log("Load SoundClips for current Layout... " + loadingOrLoadedSoundFiles.Count() + " SoundClip(s) are loading... "
+        //                                + ( sfDict.Values.Count() - loadingOrLoadedSoundFiles.Count() ) + " NOT loaded. " 
+        //                                + numDestroyed + " DESTROYED!");
+        //     layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(
+        //         loadingOrLoadedSoundFiles, 
+        //         completion: () => audioClipLoadingOrUnloadingComplete(completion)));
+        // }
 
         public void ReloadSoundFiles(Action completion) {
             // LoadSoundFiles(completion);
@@ -399,6 +479,8 @@ namespace SIS {
             // load the latest scene from memory or create new save
             soundDictionary = new Dictionary<string, SoundFile>();
             soundDictionary[SoundFile.DEFAULT_CLIP] = SoundFile.defaultSoundFile;
+
+            onDemandLoadingManager.setDelegate(this);
         }
     }
 

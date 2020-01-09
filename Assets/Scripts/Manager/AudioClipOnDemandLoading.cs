@@ -15,6 +15,7 @@ namespace SIS {
         [Range(1.0f, 4.0f)] public float MaxRadiusFactor = 1f;
         [Range(0.1f, 2.0f)] public float ThresholdDistance = 0.5f;
 
+        // TODO: Comment these out ()
         private float _loadDistance = 0;
         private float _unloadDistance = 0;
 
@@ -23,20 +24,20 @@ namespace SIS {
             _layoutManager = GetComponent<MainController>().layoutManager;
             _camTransform = Camera.main.transform;
 
-            InvokeRepeating("performMarkerProximityChecks", time: CheckFrequency, repeatRate: CheckFrequency);
-            _loadDistance = MaxRadiusFactor * SingletonData.Instance.MaxDiameterForSoundMarkers * 0.5f;
-            _unloadDistance = _loadDistance - ThresholdDistance;
+            // This should all be in the AudioOnDemandColliders class
+            // ......
+
+            // InvokeRepeating("performMarkerProximityChecks", time: CheckFrequency, repeatRate: CheckFrequency);
+            // float loadDistance = MaxRadiusFactor * SingletonData.Instance.MaxDiameterForSoundMarkers * 0.5f;
+            // float unloadDistance = loadDistance - ThresholdDistance;
+
+            // AudioOnDemandColliders cameraColliders = Camera.main.GetComponent<AudioOnDemandColliders>();
+            // cameraColliders.loadAudioCollider.radius = loadDistance;
+            // cameraColliders.unloadAudioCollider.radius = unloadDistance;
         }
 
-        private bool atLeastOneSyncedMarkerShouldBeLoaded(SoundMarker marker) {
-            HashSet<string> syncedMarkerIDs = _layoutManager.layout.getSynchronisedMarkers(marker.hotspot.id);
-            if (syncedMarkerIDs == null) { return false; }
-
-            IEnumerable<SoundMarker> syncedMarkers = MainController.soundMarkers.Where(
-                (sm) => {
-                    return sm.hotspot.id != marker.hotspot.id // Ignore the caller marker
-                        && syncedMarkerIDs.Contains(sm.hotspot.id);
-                });
+        private bool atLeastOneSyncedMarkerShouldBeLoaded(IEnumerable<SoundMarker> syncedMarkers) {
+            if (syncedMarkers == null) { return false; }
 
             foreach (SoundMarker sm in syncedMarkers) {
                 float distToMaxRadius = Vector2.Distance(
@@ -54,7 +55,7 @@ namespace SIS {
             // TODO: 
             foreach (SoundMarker sm in MainController.soundMarkers) {
                 // Sounds that have an infinte range (indicated by a negative maxDistance) can be ignored
-                if (sm.hotspot.maxDistance < 0) { continue; }
+                if (sm.hotspot.hasInfiniteMaxDistance) { continue; }
                 
                 SoundFile sf;
                 if (!_layoutManager.soundDictionary.TryGetValue(sm.hotspot.soundID, out sf)) { continue; }
@@ -66,9 +67,10 @@ namespace SIS {
                 ) - sm.soundMaxDist;
 
                 if (sf.loadState == LoadState.Success && distToMaxRadius > _unloadDistance) {
-                    if (!atLeastOneSyncedMarkerShouldBeLoaded(sm)) {
+                    IEnumerable<SoundMarker> syncedMarkers = _layoutManager.layout.getSynchronisedMarkers(sm.hotspot.id);
+                    if (!atLeastOneSyncedMarkerShouldBeLoaded(syncedMarkers)) {
                         // We should UNLOAD this AudioClip...
-                        _layoutManager.UnloadSoundMarkerAndSyncedClips(sm);
+                        _layoutManager.UnloadSoundMarkerAndSyncedClips(sm, syncedMarkers);
                     }
                 }
                 
