@@ -284,22 +284,22 @@ namespace SIS {
         // --------------------------------------------------------------
 
         public void loadOnDemandAudioForSoundMarker(SoundMarker marker, SoundFile soundFile) {
-            Debug.Log("loadOnDemandAudioForSoundMarker: " + marker.gameObject.name);
+            Debug.Log("loadOnDemandAudioForSoundMarker: " + soundFile.filename);
             layoutManager.LoadSoundMarkerAndSyncedClips(marker, completion:
                 (HashSet<SoundMarker> loadedMarkers) => {
-                    // TODO: Should we stop playing and start playing all clips?
-                    foreach (var loadedMarker in loadedMarkers) {
-                        //loadedMarker.PlayAudioFromBeginning(ignoreTrigger: true);
-                        loadedMarker.SetAudioPauseState(false);
-                    }
+                    Debug.LogWarning(   "loadOnDemandAudioForSoundMarker COMPLETE!");
+                    
+                    // foreach (var loadedMarker in loadedMarkers) {
+                    //     loadedMarker.SetAudioPauseState(false);
+                    // }
                 });
         }
         public bool unloadOnDemandAudioForSoundMarkerIsPossible(SoundMarker marker, SoundFile soundFile) {
             IEnumerable<SoundMarker> syncedMarkers = layoutManager.layout.getSynchronisedMarkers(marker.hotspot.id);
-            Debug.Log("unloadOnDemandAudioForSoundMarkerIsPossible: " + marker.gameObject.name);
+            Debug.LogError("unloadOnDemandAudioForSoundMarkerIsPossible: " + marker.gameObject.name);
 
             if (syncedMarkers == null || !atLeastOneSyncedMarkerClipShouldBeLoaded(syncedMarkers)) {
-                Debug.Log ("   UNLOAD ON DEMAND!");
+                Debug.LogError ("   UNLOAD ON DEMAND!");
                 // We should UNLOAD this AudioClip...
                 layoutManager.UnloadSoundMarkerAndSyncedClips(marker, syncedMarkers);
                 

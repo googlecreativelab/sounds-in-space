@@ -487,7 +487,12 @@ namespace SIS {
         public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
             Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
             _audioSrc.clip = sf.clip;
+
             _audioSrc.UnPause();
+            if (!_audioSrc.isPlaying) {
+                _audioSrc.Play();
+            }
+            soundIcons.rotateFast = true;
         }
 
         public void LaunchNewClip(AudioClip clip, bool playAudio = true) {

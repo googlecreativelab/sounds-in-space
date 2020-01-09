@@ -26,8 +26,12 @@ namespace SIS {
 
         public Sprite[] sprites;
         public Sprite[] soundShapeSprites;
-        public float MinDiameterForSoundMarkers = 0.2f;
-        public float MaxDiameterForSoundMarkers = 21.1f;
+
+        public float InnerRadiusMinDiameter = 0.25f;
+        public float InnerRadiusMaxDiameter = 14f;
+
+        public float OuterRadiusMinDiameter = 0.5f;
+        public float OuterRadiusMaxDiameter = 20.1f;
 
         void Awake() {
             if (Instance != null) {

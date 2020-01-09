@@ -44,6 +44,7 @@ namespace SIS {
 
         public Dictionary<string, SoundFile> soundDictionary;
         public Dictionary<string, SoundFile> getSoundDictionary() { return soundDictionary; }
+        public int getNumLoadedInSoundDictionary() { return loadedAudioClipCount; }
         public int loadingAudioClipCount {
             get {
                 return soundDictionary.Values.Aggregate(0, (acc, x) => {

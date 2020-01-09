@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8840246764415035120}
   - component: {fileID: 4934547731395968457}
   m_Layer: 0
-  m_Name: ColourPalette
+  m_Name: SingletonData
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -75,3 +75,5 @@ MonoBehaviour:
   soundShapeSprites:
   - {fileID: 21300000, guid: 921fac401f1b6426e94ecffaa244e421, type: 3}
   - {fileID: 21300000, guid: 9e2f1ae8b72a747c2ab44e54d1d0062d, type: 3}
+  MinDiameterForSoundMarkers: 0.4
+  MaxDiameterForSoundMarkers: 21.1

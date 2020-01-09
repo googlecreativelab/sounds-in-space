@@ -94,10 +94,10 @@ namespace SIS {
         }
 
         public string soundFilepath {
-            get { return Path.Combine(saveDirectory, UnityWebRequest.EscapeURL(filename) + SoundFileExtension); }
+            get { return Path.Combine(saveDirectory, filename + SoundFileExtension); }
         }
         public string jsonPath {
-            get { return Path.Combine(saveDirectory, UnityWebRequest.EscapeURL(filename) + MetaFileExtension); }
+            get { return Path.Combine(saveDirectory, filename + MetaFileExtension); }
         }
 
         public static string[] metaFiles {
@@ -146,6 +146,7 @@ namespace SIS {
         }
 
         public static IEnumerator AwaitLoading(IEnumerable<SoundFile> soundFilesThatAreLoading, Action completion) {
+            Debug.LogWarning("AwaitLoading...");
             foreach (SoundFile sf in soundFilesThatAreLoading) {
                 if (sf.loadState == LoadState.Fail) { continue; }
                 if (sf.loadState != LoadState.Success) {
@@ -153,7 +154,7 @@ namespace SIS {
                     yield return new WaitForSeconds(0.1f);
                 }
             }
-
+            Debug.LogWarning("AwaitLoading COMPLETE!");
             completion();
         }
 
@@ -187,7 +188,7 @@ namespace SIS {
                 } else {
                     AudioClip ac = DownloadHandlerAudioClip.GetContent(req);
                     if (ac != null) {
-                        Debug.Log("AudioClip loadState: " + ac.loadState + " - " + url);
+                        Debug.Log("AudioClip loadState: " + ac.loadState + " - " + sf.filename);
 
                         sf.clip = ac;
                         sf.loadState = LoadState.Success;

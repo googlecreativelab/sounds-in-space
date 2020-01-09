@@ -56,7 +56,7 @@ namespace SIS {
         }
 
         public override void CanvasWillAppear() {
-            maxRadiusSlider.SetSliderDiameter(maxRadiusSlider.minDiameter);
+            maxRadiusSlider.SetSliderDiameter(SingletonData.Instance.OuterRadiusMinDiameter);
             placeModeToggle.isOn = false;
         }
 
