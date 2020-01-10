@@ -172,7 +172,7 @@ namespace SIS {
             if (syncedMarkers != null) {
 
                 foreach (SoundMarker syncedMarker in syncedMarkers) {
-                    SoundFile syncedSF = marker.hotspot.soundFile;
+                    SoundFile syncedSF = syncedMarker.hotspot.soundFile;
                     loadingOrLoadedSoundFiles.Add(syncedSF);
                     loadingOrLoadedMarkers.Add(syncedMarker);
                     if (!markerSF.isDefaultSoundFile && (syncedSF.loadState != LoadState.Success || syncedSF.clip == null)) {
@@ -206,13 +206,12 @@ namespace SIS {
             // - - - - - - - - - - - - - - - - - - -
             // Unload Synced Markers
             if (syncedMarkers != null) {
-                foreach (SoundMarker sm in syncedMarkers) {
-                    SoundFile syncedSF = marker.hotspot.soundFile;
+                foreach (SoundMarker syncedMarker in syncedMarkers) {
+                    SoundFile syncedSF = syncedMarker.hotspot.soundFile;
 
                     if (!syncedSF.isDefaultSoundFile && (syncedSF.loadState == LoadState.Success || syncedSF.clip != null)) {
-                        // GameObject.DestroyImmediate(syncedSF.clip, allowDestroyingAssets: false);
-                        sm.SetAudioPauseState(true);
-                        UnityEngine.GameObject.Destroy(syncedSF.clip);
+                        syncedMarker.SetAudioPauseState(true);
+                        UnityEngine.GameObject.DestroyImmediate(syncedSF.clip, allowDestroyingAssets: false);
                         syncedSF.clip = null;
                         syncedSF.loadState = LoadState.NotLoaded;
                     }
@@ -228,7 +227,7 @@ namespace SIS {
             Dictionary<string, SoundFile> sfDict = _managerDelegate.getSoundDictionary();
             int numLoaded = _managerDelegate.getNumLoadedInSoundDictionary();
 
-            UnityEngine.Debug.LogError("refreshLoadStateForSoundMarkers NumLoadedAudioClips: " + numLoaded);
+            // UnityEngine.Debug.LogWarning("refreshLoadStateForSoundMarkers NumLoadedAudioClips: " + numLoaded);
 
             HashSet<string> loadingOrLoadedMarkerIDs = new HashSet<string>();
             HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
@@ -238,11 +237,11 @@ namespace SIS {
                 SoundFile sf;
                 if (!sfDict.TryGetValue(marker.hotspot.soundID, out sf)) { continue; }
                 
-                if (marker.onDemandAudioShouldBeLoaded) {
-                    UnityEngine.Debug.LogWarning("   Marker " + sf.filename + " onDemandAudioShouldBeLoaded: " + marker.onDemandAudioShouldBeLoaded);
-                } else {
-                    UnityEngine.Debug.LogError("   Marker " + sf.filename + " onDemandAudioShouldBeLoaded: " + marker.onDemandAudioShouldBeLoaded);
-                }
+                // if (marker.onDemandAudioShouldBeLoaded) {
+                //     UnityEngine.Debug.LogWarning("   Marker " + sf.filename + " onDemandAudioShouldBeLoaded: " + marker.onDemandAudioShouldBeLoaded);
+                // } else {
+                //     UnityEngine.Debug.LogWarning("   Marker " + sf.filename + " onDemandAudioShouldBeLoaded: " + marker.onDemandAudioShouldBeLoaded);
+                // }
                 if (!marker.onDemandAudioShouldBeLoaded) { continue; }
 
                 // The Marker SHOULD be loaded
@@ -267,7 +266,7 @@ namespace SIS {
                     SoundFile syncedSoundFile;
                     if (!sfDict.TryGetValue(syncedMarker.hotspot.soundID, out syncedSoundFile)) { continue; }
 
-                    UnityEngine.Debug.Log("   SyncedMarker " + sf.filename + " SHOULD be loaded");
+                    // UnityEngine.Debug.Log("   SyncedMarker " + sf.filename + " SHOULD be loaded");
                     loadingOrLoadedSoundFiles.Add(syncedSoundFile);
                     loadingOrLoadedMarkerIDs.Add(syncedMarker.hotspot.id);
 

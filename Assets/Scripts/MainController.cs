@@ -289,8 +289,9 @@ namespace SIS {
                 (HashSet<SoundMarker> loadedMarkers) => {
                     Debug.LogWarning(   "loadOnDemandAudioForSoundMarker COMPLETE!");
                     
+                    canvasControl.editSoundOverlay.refreshDebugText();
                     // foreach (var loadedMarker in loadedMarkers) {
-                    //     loadedMarker.SetAudioPauseState(false);
+                        
                     // }
                 });
         }
@@ -302,6 +303,7 @@ namespace SIS {
                 Debug.LogError ("   UNLOAD ON DEMAND!");
                 // We should UNLOAD this AudioClip...
                 layoutManager.UnloadSoundMarkerAndSyncedClips(marker, syncedMarkers);
+                canvasControl.editSoundOverlay.refreshDebugText();
                 
                 return true;
             }
@@ -478,7 +480,11 @@ namespace SIS {
         }
 
         public void RefreshLoadStateForSoundMarkers(System.Action completion) {
-            layoutManager.RefreshLoadStateForSoundMarkers(MainController.soundMarkers, completion);
+            layoutManager.RefreshLoadStateForSoundMarkers(MainController.soundMarkers, 
+            () => {
+                canvasControl.editSoundOverlay.refreshDebugText();
+                completion();
+            });
         }
 
         // public void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion) {

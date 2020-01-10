@@ -76,7 +76,10 @@ namespace SIS {
 
         public SoundMarkerTrigger markerTrigger;
         public bool userIsInsideTriggerRange { get; private set; } = false;
-        public bool onDemandAudioShouldBeLoaded { get; private set; } = false;
+        private bool _onDemandAudioShouldBeLoaded = false;
+        public bool onDemandAudioShouldBeLoaded { 
+            get { return hotspot.hasInfiniteMaxDistance || _onDemandAudioShouldBeLoaded; }
+        }
 
         public static float SoundDistBuffer = 0.2f; // The min distance between min. and max.
         public static float SoundMultiplierBuffer = 2f;
@@ -484,15 +487,26 @@ namespace SIS {
 
         // -     -     -     -     -     -     -
 
-        public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
-            Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
-            _audioSrc.clip = sf.clip;
+        private System.Collections.IEnumerator UnPauseOrPlayAfterNumFrames(int frameCount = 1) {
+            while (frameCount > 0) {
+                --frameCount;
+                yield return null;
+            }
 
             _audioSrc.UnPause();
-            if (!_audioSrc.isPlaying) {
-                _audioSrc.Play();
-            }
+            if (!_audioSrc.isPlaying) { _audioSrc.Play(); }
             soundIcons.rotateFast = true;
+        }
+
+        public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
+            Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
+            _audioSrc.Pause();
+            _audioSrc.clip = sf.clip;
+
+            StartCoroutine(UnPauseOrPlayAfterNumFrames(frameCount: 1));
+            // _audioSrc.UnPause();
+            // if (!_audioSrc.isPlaying) { _audioSrc.Play(); }
+            // soundIcons.rotateFast = true;
         }
 
         public void LaunchNewClip(AudioClip clip, bool playAudio = true) {
@@ -510,9 +524,9 @@ namespace SIS {
         #region OnDemandAudioClipLoading
 
         private void UserDidEnterOnDemandLoadTrigger() {
-            if (onDemandAudioShouldBeLoaded) { return; }
+            if (_onDemandAudioShouldBeLoaded) { return; }
 
-            onDemandAudioShouldBeLoaded = true;
+            _onDemandAudioShouldBeLoaded = true;
             Debug.LogWarning("ON-DEMAND SHOULD be Loaded: " + this.hotspot.soundFile.filename, this);
 
             // Markers with Infinite Max Distance should be ignored
@@ -536,9 +550,9 @@ namespace SIS {
         // }
 
         private void UserDidExitOnDemandUnloadTrigger() {
-            if (!onDemandAudioShouldBeLoaded) { return; }
+            if (!_onDemandAudioShouldBeLoaded) { return; }
 
-            onDemandAudioShouldBeLoaded = false;
+            _onDemandAudioShouldBeLoaded = false;
             Debug.LogWarning("ON-DEMAND should NOT be Loaded: " + this.hotspot.soundFile.filename, this);
 
             // Markers with Infinite Max Distance should be ignored

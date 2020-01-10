@@ -121,39 +121,39 @@ namespace SIS {
             }
         }
 
-        public void SoundMarkerSelected(SoundMarker selectedSound) {
+        public void SoundMarkerSelected(SoundMarker selectedMarker) {
             // Change the InputField text
-            soundNameInputField.text = selectedSound.hotspot.name;
-            soundLabelResizeText.text = selectedSound.hotspot.name;
+            soundNameInputField.text = selectedMarker.hotspot.name;
+            soundLabelResizeText.text = selectedMarker.hotspot.name;
 
             // Change the 2D UI representation
-            soundAppearanceImage.sprite = selectedSound.iconSprite;
-            soundShapeImage.sprite = selectedSound.soundShapeSprite;
+            soundAppearanceImage.sprite = selectedMarker.iconSprite;
+            soundShapeImage.sprite = selectedMarker.soundShapeSprite;
 
             // Set the trigger and loop toggles
-            triggerPlaybackToggle.isOn = selectedSound.hotspot.triggerPlayback;
-            playOnceToggle.isOn = selectedSound.hotspot.playOnce;
-            loopAudioToggle.isOn = selectedSound.hotspot.loopAudio;
+            triggerPlaybackToggle.isOn = selectedMarker.hotspot.triggerPlayback;
+            playOnceToggle.isOn = selectedMarker.hotspot.playOnce;
+            loopAudioToggle.isOn = selectedMarker.hotspot.loopAudio;
             
-            bool loopAudioInteractable = selectedSound.hotspot.triggerPlayback;
-            if (selectedSound.hotspot.playOnce) { loopAudioInteractable = false; }
+            bool loopAudioInteractable = selectedMarker.hotspot.triggerPlayback;
+            if (selectedMarker.hotspot.playOnce) { loopAudioInteractable = false; }
             loopAudioToggle.interactable = loopAudioInteractable;
 
-            SetTriggerVisualInteractiveState(loopAudioToggle, loopAudioInteractable, selectedSound.hotspot.loopAudio);
+            SetTriggerVisualInteractiveState(loopAudioToggle, loopAudioInteractable, selectedMarker.hotspot.loopAudio);
 
-            pitchSlider.value = selectedSound.hotspot.pitchBend;
-            volumeSlider.value = selectedSound.hotspot.soundVolume;
+            pitchSlider.value = selectedMarker.hotspot.pitchBend;
+            volumeSlider.value = selectedMarker.hotspot.soundVolume;
 
             // Filter values
-            freqCutoffSlider.value = selectedSound.hotspot.freqCutoff;
-            phaserSlider.value = selectedSound.hotspot.phaserLevel;
-            distortionSlider.value = selectedSound.hotspot.distortion;
-            echoSlider.value = selectedSound.hotspot.echoMagnitude;
+            freqCutoffSlider.value = selectedMarker.hotspot.freqCutoff;
+            phaserSlider.value = selectedMarker.hotspot.phaserLevel;
+            distortionSlider.value = selectedMarker.hotspot.distortion;
+            echoSlider.value = selectedMarker.hotspot.echoMagnitude;
 
-            updateSyncedMarkersUI(selectedSound);
+            updateSyncedMarkersUI(selectedMarker);
 
             // Change the colour of the UI
-            updateUIColor(selectedSound.color, notifyDelegate: false);
+            updateUIColor(selectedMarker.color, notifyDelegate: false);
             // Color newCol = selectedSound.color;
             // repositionImage.color = newCol;
             // soundAppearanceImage.color = newCol;
@@ -168,13 +168,15 @@ namespace SIS {
             // cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
             // soundSrcButton.colors = cols;
 
-            minRadiusSlider.SetSliderRadius(selectedSound.soundMinDist, notifyDelegate: false);
-            maxRadiusSlider.SetSliderRadius(selectedSound.soundMaxDist, notifyDelegate: false);
+            minRadiusSlider.SetSliderRadius(selectedMarker.soundMinDist, notifyDelegate: false);
+            maxRadiusSlider.SetSliderRadius(selectedMarker.soundMaxDist, notifyDelegate: false);
 
-            if (selectedSound.hotspot.soundFile.isDefaultSoundFile) {
+            SoundFile markerSoundFile = selectedMarker.hotspot.soundFile;
+
+            if (markerSoundFile.isDefaultSoundFile) {
                 soundFilenameText.text = "Tap to change sound";
             } else {
-                soundFilenameText.text = "\"" + selectedSound.hotspot.soundFile.filenameWithExtension + "\"";
+                soundFilenameText.text = "\"" + markerSoundFile.filenameWithExtension + "\"";
             }
 
             int charLimit = 21;
@@ -182,7 +184,17 @@ namespace SIS {
             float percentOverCharLimit = (charsOver > 0) ? (charsOver / 8f) : 0;
             soundFilenameText.fontSize = 36 - (int)(8 * percentOverCharLimit);
 
-            debugText.text = selectedSound.userHasHeardSound ? "User HAS heard" : "NOT heard";
+            refreshDebugText();
+            // debugText.text = selectedMarker.userHasHeardSound ? "User HAS heard" : "NOT heard";
+        }
+
+        public void refreshDebugText() {
+            if (canvasDelegate == null || canvasDelegate.objectSelection == null || canvasDelegate.objectSelection.selectedMarker == null 
+             || canvasDelegate.objectSelection.selectedMarker.hotspot == null) { return; }
+
+            SoundFile markerSoundFile = canvasDelegate.objectSelection.selectedMarker.hotspot.soundFile;
+            if (markerSoundFile == null) { return; }
+            debugText.text = markerSoundFile.filename + (markerSoundFile.loadState == LoadState.Success ? " is LOADED" : " is NOT loaded");
         }
 
         public void SetMinRadiusSliderDistanceValue(float dist) {
