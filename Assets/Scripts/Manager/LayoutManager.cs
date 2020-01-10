@@ -159,6 +159,12 @@ namespace SIS {
             return SoundFile.defaultSoundFile;
         }
 
+        public IEnumerable<SoundMarker> SoundMarkersUsingSoundFileID(string soundFileID, string hotspotIDToExclude = null) {
+            return hotspotIDToExclude == null ? 
+                MainController.soundMarkers.Where(marker => marker.hotspot.soundID == soundFileID) 
+              : MainController.soundMarkers.Where(marker => marker.hotspot.id != hotspotIDToExclude && marker.hotspot.soundID == soundFileID);
+        }
+
         // ============
         // IO METHODS]
         private static Regex jsonRegex = new Regex("json$"); // Ends in json

@@ -295,7 +295,16 @@ namespace SIS {
                     // }
                 });
         }
-        public bool unloadOnDemandAudioForSoundMarkerIsPossible(SoundMarker marker, SoundFile soundFile) {
+        public bool unloadOnDemandAudioForSoundMarkerIfAllowed(SoundMarker marker, SoundFile soundFile) {
+            // FIRST - make sure no other SoundMarkers are using the SoundFile
+            IEnumerable<SoundMarker> otherMarkersUsingSoundFile = layoutManager.SoundMarkersUsingSoundFileID(
+                soundFile.filename, 
+                hotspotIDToExclude: marker.hotspot.id);
+            foreach (SoundMarker otherMarker in otherMarkersUsingSoundFile) {
+                if (otherMarker.onDemandAudioShouldBeLoaded) { return false; }
+            }
+
+            // UNLOAD Synced Marker friends if none of them need to be loaded
             IEnumerable<SoundMarker> syncedMarkers = layoutManager.layout.getSynchronisedMarkers(marker.hotspot.id);
             Debug.LogError("unloadOnDemandAudioForSoundMarkerIsPossible: " + marker.gameObject.name);
 

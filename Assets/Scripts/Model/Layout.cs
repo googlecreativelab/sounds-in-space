@@ -102,6 +102,7 @@ namespace SIS {
         }
 
         // =========
+        // Synchronised Markers
 
         public void printSyncedMarkers() {
             for (int i = 0; i < this.syncedMarkerIDs.Count; ++i) {

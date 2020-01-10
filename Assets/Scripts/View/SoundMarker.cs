@@ -26,7 +26,7 @@ namespace SIS {
         bool shouldSoundMarkerStopPlaybackAfterUserLeftTriggerRange(SoundMarker marker);
 
         void loadOnDemandAudioForSoundMarker(SoundMarker marker, SoundFile soundFile);
-        bool unloadOnDemandAudioForSoundMarkerIsPossible(SoundMarker marker, SoundFile soundFile);
+        bool unloadOnDemandAudioForSoundMarkerIfAllowed(SoundMarker marker, SoundFile soundFile);
         
         // DEBUG
         void soundMarkerDebugLog(string debugStr);
@@ -562,7 +562,7 @@ namespace SIS {
             if (sf.isDefaultSoundFile) { return; } // Skip the default soundFile
 
             // We should UNLOAD this AudioClip... (if all other Synced SoundMarkers shouldBeUnloaded)
-            markerDelegate?.unloadOnDemandAudioForSoundMarkerIsPossible(this, sf); // This will also load synchronised SoundMarkers
+            markerDelegate?.unloadOnDemandAudioForSoundMarkerIfAllowed(this, sf); // This will also load synchronised SoundMarkers
         }
 
         #endregion
