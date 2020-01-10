@@ -40,6 +40,15 @@ namespace SIS {
         public CanvasController canvasControl;
         public Camera firstPersonCamera;
         public static List<SoundMarker> soundMarkers;
+        public static IEnumerable<SoundMarker> soundMarkersForSoundFileIDs(HashSet<string> soundFileIDs) {
+            return soundMarkers.Where( sm => soundFileIDs.Contains(sm.hotspot.soundID) );
+        }
+        public static IEnumerable<SoundMarker> soundMarkersNotUsingSoundFileIDs(HashSet<SoundFile> soundFileSetToKeepLoaded) {
+            return soundMarkersNotUsingSoundFileIDs(new HashSet<string> (soundFileSetToKeepLoaded.Select(sf => sf.filename)));
+        }
+        public static IEnumerable<SoundMarker> soundMarkersNotUsingSoundFileIDs(HashSet<string> soundFileIDsToAvoid) {
+            return soundMarkers.Where(sm => !soundFileIDsToAvoid.Contains(sm.hotspot.soundID));
+        }
 
         public SoundPlacement soundPlacementRef;
         public SoundPlacement soundPlacement { get { return soundPlacementRef; } }
@@ -414,6 +423,11 @@ namespace SIS {
                 soundPlacement.SetCursorModelHidden(true);
                 objectSelection.SetSelectionMinRadiusVisible(false);
                 objectSelection.SetSelectionMaxRadiusVisible(false);
+                
+                canvasControl.mainScreen.UpdateMarkerCountLabel(
+                    MainController.soundMarkers.Count, 
+                    layoutManager.loadedAudioClipCount, 
+                    layoutManager.soundDictionary.Count);
             }
         }
 

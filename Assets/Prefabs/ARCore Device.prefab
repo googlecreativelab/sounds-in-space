@@ -370,7 +370,7 @@ MonoBehaviour:
   loadAudioCollider: {fileID: 2178864027974220717}
   unloadAudioCollider: {fileID: 7830663141985967298}
   ThresholdDistance: 0.2
-  DistanceFromUser: 0.8
+  DistanceFromUser: 1.3
 --- !u!1 &4434737162872493883
 GameObject:
   m_ObjectHideFlags: 0

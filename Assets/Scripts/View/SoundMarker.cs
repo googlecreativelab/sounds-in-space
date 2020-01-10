@@ -42,6 +42,8 @@ namespace SIS {
 
         public ISoundMarkerDelegate markerDelegate = null;
 
+        private ResonanceAudioSource resonance;
+
         private AudioLowPassFilter filterLowPass;
         private AudioHighPassFilter filterHighPass;
         private AudioDistortionFilter filterDistortion;
@@ -146,30 +148,28 @@ namespace SIS {
         public void SetAudioPauseState(bool isPaused) {
             if (isPaused) {
                 _audioSrc.Pause();
-                soundIcons.rotateFast = false;
             } else {
                 _audioSrc.UnPause();
-                soundIcons.rotateFast = true;
             }
+            soundIcons.rotateFast = _audioSrc.isPlaying;
         }
 
         public void PlayAudioFromBeginning(bool ignoreTrigger = false) {
             if (_audioSrc == null) return;
             if (_audioSrc.isPlaying) { 
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
             }
             if (ignoreTrigger || !hotspot.triggerPlayback || userIsInsideTriggerRange) { 
                 _audioSrc.Play();
-                soundIcons.rotateFast = true;
             }
+            soundIcons.rotateFast = _audioSrc.isPlaying;
         }
         public void StopAudioPlayback() {
             if (_audioSrc == null) return;
             if (_audioSrc.isPlaying) { 
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
             }
+            soundIcons.rotateFast = _audioSrc.isPlaying;
         }
 
         public void SetAudioShouldLoop(bool shouldLoop) {
@@ -338,7 +338,9 @@ namespace SIS {
             _audioSrc = GetComponent<AudioSource>();
             soundIcons = GetComponentInChildren<SoundIcons>();
             followCameraYPos = GetComponent<FollowMainCameraYPosition>();
-            
+
+            resonance = GetComponent<ResonanceAudioSource>();
+
             filterLowPass = GetComponent<AudioLowPassFilter>();
             filterHighPass = GetComponent<AudioHighPassFilter>();
             filterDistortion = GetComponent<AudioDistortionFilter>();
@@ -487,38 +489,42 @@ namespace SIS {
 
         // -     -     -     -     -     -     -
 
-        private System.Collections.IEnumerator UnPauseOrPlayAfterNumFrames(int frameCount = 1) {
-            while (frameCount > 0) {
-                --frameCount;
-                yield return null;
-            }
-
-            _audioSrc.UnPause();
-            if (!_audioSrc.isPlaying) { _audioSrc.Play(); }
-            soundIcons.rotateFast = true;
+        public void OnDemandNullifyAudioClip() {
+            _audioSrc.Pause();
+            
+            _audioSrc.clip = null;
+            soundIcons.rotateFast = _audioSrc.isPlaying;
         }
 
         public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
             Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
-            _audioSrc.Pause();
+
+            // ----------------------
+            // !!! This is important, otherwise we hear an artifact when the clip is assigned (Caused by Resonance)
+            resonance.enabled = false;
+            // ----------------------
             _audioSrc.clip = sf.clip;
 
-            StartCoroutine(UnPauseOrPlayAfterNumFrames(frameCount: 1));
-            // _audioSrc.UnPause();
-            // if (!_audioSrc.isPlaying) { _audioSrc.Play(); }
-            // soundIcons.rotateFast = true;
+            if (!_audioSrc.isPlaying) { _audioSrc.Play(); }
+            soundIcons.rotateFast = _audioSrc.isPlaying;
+            
+            // ----------------------
+            // !!! This is important, otherwise we hear an artifact when the clip is assigned (Caused by Resonance)
+            resonance.enabled = true;
+            // ----------------------
         }
 
         public void LaunchNewClip(AudioClip clip, bool playAudio = true) {
+            if (clip == null) { return; }
             _audioSrc.clip = clip;
             if (playAudio) {
                 if (!hotspot.triggerPlayback || userIsInsideTriggerRange) {
                     _audioSrc.Play();
-                    soundIcons.rotateFast = true;
+                    soundIcons.rotateFast = _audioSrc.isPlaying;
                 }
             } else {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
+                soundIcons.rotateFast = _audioSrc.isPlaying;
             }
         }
         #region OnDemandAudioClipLoading
@@ -611,13 +617,13 @@ namespace SIS {
 
             if (markerDelegate == null) {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
+                soundIcons.rotateFast = _audioSrc.isPlaying;
                 return;
             }
 
             if (markerDelegate.shouldSoundMarkerStopPlaybackAfterUserLeftTriggerRange(this)) {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
+                soundIcons.rotateFast = _audioSrc.isPlaying;
             }
         }
 

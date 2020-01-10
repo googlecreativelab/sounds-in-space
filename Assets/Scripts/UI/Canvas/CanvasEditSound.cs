@@ -47,6 +47,7 @@ namespace SIS {
         public override CanvasController.CanvasUIScreen canvasID { get { return CanvasController.CanvasUIScreen.EditSound; } }
 
         [SerializeField] EditSoundPanel _bottomPanel;
+        public EditSoundPanel.Visibility BottomPanelState { get { return _bottomPanel.botPanelState; } }
 
         [SerializeField] UnityEngine.UI.Button topBackButton = null;
         [SerializeField] UnityEngine.UI.Button placeNewSoundButton = null;

@@ -20,6 +20,7 @@ namespace SIS {
         public void setDelegate(IOnDemandLoadingDelegate newDel) { _managerDelegate = newDel; }
 
         private Queue<AudioClipOperation> _operationQueue = new Queue<AudioClipOperation>();
+        private static bool destroyImmediate = false;
 
         // --------------------------
 
@@ -197,8 +198,15 @@ namespace SIS {
             SoundFile markerSF = marker.hotspot.soundFile;
             if (!markerSF.isDefaultSoundFile && (markerSF.loadState == LoadState.Success || markerSF.clip != null)) {
                 // Unload the first marker
-                marker.SetAudioPauseState(true);
-                UnityEngine.GameObject.DestroyImmediate(markerSF.clip, allowDestroyingAssets: false);
+                // marker.SetAudioPauseState(true);
+                marker.OnDemandNullifyAudioClip();
+
+                if (destroyImmediate) {
+                    UnityEngine.GameObject.DestroyImmediate(markerSF.clip, allowDestroyingAssets: false);
+                } else {
+                    UnityEngine.GameObject.Destroy(markerSF.clip);
+                }
+                
                 markerSF.clip = null;
                 markerSF.loadState = LoadState.NotLoaded;
             }
@@ -210,8 +218,14 @@ namespace SIS {
                     SoundFile syncedSF = syncedMarker.hotspot.soundFile;
 
                     if (!syncedSF.isDefaultSoundFile && (syncedSF.loadState == LoadState.Success || syncedSF.clip != null)) {
-                        syncedMarker.SetAudioPauseState(true);
-                        UnityEngine.GameObject.DestroyImmediate(syncedSF.clip, allowDestroyingAssets: false);
+                        // syncedMarker.SetAudioPauseState(true);
+                        syncedMarker.OnDemandNullifyAudioClip();
+
+                        if (destroyImmediate) {
+                            UnityEngine.GameObject.DestroyImmediate(syncedSF.clip, allowDestroyingAssets: false);
+                        } else {
+                            UnityEngine.GameObject.Destroy(syncedSF.clip);
+                        }
                         syncedSF.clip = null;
                         syncedSF.loadState = LoadState.NotLoaded;
                     }
@@ -322,12 +336,19 @@ namespace SIS {
 
         private int unloadSoundFilesExceptThoseInSet(HashSet<SoundFile> soundFileSetToKeepLoaded, Dictionary<string, SoundFile> sfDict) {
             int numDestroyed = 0;
-            foreach (SoundFile sf in sfDict.Values) {
-                if (sf.clip == null
-                 || soundFileSetToKeepLoaded.Contains(sf)
-                 || sf.isDefaultSoundFile) { continue; }
+            IEnumerable<SoundMarker> soundMarkersToUnload = MainController.soundMarkersNotUsingSoundFileIDs(soundFileSetToKeepLoaded);
 
-                UnityEngine.GameObject.DestroyImmediate(sf.clip, allowDestroyingAssets: false);
+            foreach (SoundMarker marker in soundMarkersToUnload) {
+                SoundFile sf;
+                if (!sfDict.TryGetValue(marker.hotspot.soundID, out sf)) { continue; }
+                if (sf.isDefaultSoundFile) { continue; }
+
+                marker.OnDemandNullifyAudioClip();
+                if (destroyImmediate) {
+                    UnityEngine.GameObject.DestroyImmediate(sf.clip, allowDestroyingAssets: false);
+                } else {
+                    UnityEngine.GameObject.Destroy(sf.clip);
+                }
                 ++numDestroyed;
                 sf.clip = null;
                 sf.loadState = LoadState.NotLoaded;

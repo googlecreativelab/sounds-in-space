@@ -356,13 +356,13 @@ namespace SIS {
 
         public void BackButtonClicked(CanvasUIScreen fromScreen) {
 
-            // if (fromScreen == CanvasUIScreen.SoundMarkerList 
-            // && soundMarkerList.listMode == CanvasSoundMarkerList.Mode.SyncronisedMarkers) {
+            
+            if (fromScreen == CanvasUIScreen.EditSound && editSoundOverlay.BottomPanelState == EditSoundPanel.Visibility.Fullscreen) {
+                editSoundOverlay.BackButtonClicked();
+                return;
+            }
 
-            // } else {
-            //     objectSelection.ReturnSelectedSoundIconFromCursor();
-            //     objectSelection.DeselectSound();
-            // }
+            // ==========================================
 
             bool returnToEditSound = canvasDelegate.SoundMarkerIsSelected() 
             && (fromScreen == CanvasUIScreen.SoundFileList 

@@ -114,7 +114,10 @@ namespace SIS {
 
         public void UpdateMarkerCountLabel(int hotspotCount, int loadedAudioFileCount, int uniqueAudioFileCount) {
             numSoundMarkersText.text = "" + hotspotCount + " Marker" + (hotspotCount == 1 ? "" : "s") 
-            + " (" + loadedAudioFileCount + "/" + uniqueAudioFileCount + ") Clips Loaded";
+            + " (" + loadedAudioFileCount + "/" + uniqueAudioFileCount + ") Clips Loaded [" 
+            + (UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576) + "mb/" 
+            + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]";
+            // + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]";
         }
 
         public void LayoutChanged(Layout layout, int loadedAudioFileCount, int uniqueAudioFileCount) {
