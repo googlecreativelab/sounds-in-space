@@ -160,7 +160,7 @@ namespace SIS {
             SoundFile markerSF = marker.hotspot.soundFile;
             loadingOrLoadedSoundFiles.Add(markerSF);
             loadingOrLoadedMarkers.Add(marker);
-            if (!markerSF.isDefaultSoundFile && (markerSF.loadState != LoadState.Success || markerSF.clip == null)) {
+            if (!markerSF.isDefaultSoundFile) {
                 LoadClipInSoundFileOnCoroutine(markerSF, marker,
                     completion: (SoundFile returnedSoundFile) => {
 
@@ -176,7 +176,7 @@ namespace SIS {
                     SoundFile syncedSF = syncedMarker.hotspot.soundFile;
                     loadingOrLoadedSoundFiles.Add(syncedSF);
                     loadingOrLoadedMarkers.Add(syncedMarker);
-                    if (!markerSF.isDefaultSoundFile && (syncedSF.loadState != LoadState.Success || syncedSF.clip == null)) {
+                    if (!markerSF.isDefaultSoundFile) {
                         LoadClipInSoundFileOnCoroutine(syncedSF, syncedMarker,
                             completion: (SoundFile returnedSoundFile) => {
 
@@ -262,12 +262,10 @@ namespace SIS {
                 loadingOrLoadedSoundFiles.Add(sf);
                 loadingOrLoadedMarkerIDs.Add(marker.hotspot.id);
 
-                if (sf.loadState != LoadState.Success || sf.clip == null) {
-                    LoadClipInSoundFileOnCoroutine(sf, marker,
-                        completion: (SoundFile returnedSoundFile) => {
+                LoadClipInSoundFileOnCoroutine(sf, marker,
+                    completion: (SoundFile returnedSoundFile) => {
 
-                        });
-                }
+                    });
 
                 // Also make sure any synced markers are loaded or loading...
                 // IEnumerable<string> syncedMarkerIDs = layout.getSynchronisedMarkerIDs(marker.hotspot.id);
@@ -284,7 +282,7 @@ namespace SIS {
                     loadingOrLoadedSoundFiles.Add(syncedSoundFile);
                     loadingOrLoadedMarkerIDs.Add(syncedMarker.hotspot.id);
 
-                    if (!(syncedSoundFile.loadState != LoadState.Success || syncedSoundFile.clip == null)) { continue; }
+                    if (syncedSoundFile.isDefaultSoundFile) { continue; }
                     // Execute the below if the AudioClip is not loaded
                     LoadClipInSoundFileOnCoroutine(syncedSoundFile, syncedMarker, 
                         completion: (SoundFile returnedSoundFile) => {

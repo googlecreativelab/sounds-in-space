@@ -27,12 +27,13 @@ namespace SIS {
         int curIndex = 0;
 
         private bool _rotateFast = false;
-        private float _rotMultiplier = 1f;
+        private float _rotMultiplier = 0.5f;
         public bool rotateFast {
             get { return _rotateFast; }
             set { 
+                if (_rotateFast == value) { return; }
                 _rotateFast = value;
-                _rotMultiplier = _rotateFast ? 3f : 0.7f;
+                _rotMultiplier = _rotateFast ? 4f : 0.5f;
             }
         }
 

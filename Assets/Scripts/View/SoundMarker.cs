@@ -151,25 +151,24 @@ namespace SIS {
             } else {
                 _audioSrc.UnPause();
             }
-            soundIcons.rotateFast = _audioSrc.isPlaying;
         }
 
         public void PlayAudioFromBeginning(bool ignoreTrigger = false) {
             if (_audioSrc == null) return;
+            
+            _audioSrc.UnPause();
             if (_audioSrc.isPlaying) { 
                 _audioSrc.Stop();
             }
-            if (ignoreTrigger || !hotspot.triggerPlayback || userIsInsideTriggerRange) { 
+            if (ignoreTrigger || !hotspot.triggerPlayback || userIsInsideTriggerRange) {
                 _audioSrc.Play();
             }
-            soundIcons.rotateFast = _audioSrc.isPlaying;
         }
         public void StopAudioPlayback() {
             if (_audioSrc == null) return;
             if (_audioSrc.isPlaying) { 
                 _audioSrc.Stop();
             }
-            soundIcons.rotateFast = _audioSrc.isPlaying;
         }
 
         public void SetAudioShouldLoop(bool shouldLoop) {
@@ -366,6 +365,8 @@ namespace SIS {
         }
 
         private void Update() {
+            soundIcons.rotateFast = _audioSrc.isPlaying;
+
             if (userIsInsideTriggerRange) {
                 float percentageToEdge = percentToEdge();
                 // Debug.Log ("percentageToEdge: " + percentageToEdge);
@@ -493,7 +494,6 @@ namespace SIS {
             _audioSrc.Pause();
             
             _audioSrc.clip = null;
-            soundIcons.rotateFast = _audioSrc.isPlaying;
         }
 
         public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
@@ -505,8 +505,10 @@ namespace SIS {
             // ----------------------
             _audioSrc.clip = sf.clip;
 
-            if (!_audioSrc.isPlaying) { _audioSrc.Play(); }
-            soundIcons.rotateFast = _audioSrc.isPlaying;
+            if (!_audioSrc.isPlaying) {
+                _audioSrc.UnPause();
+                _audioSrc.Play();
+            }
             
             // ----------------------
             // !!! This is important, otherwise we hear an artifact when the clip is assigned (Caused by Resonance)
@@ -519,12 +521,11 @@ namespace SIS {
             _audioSrc.clip = clip;
             if (playAudio) {
                 if (!hotspot.triggerPlayback || userIsInsideTriggerRange) {
+                    _audioSrc.UnPause();
                     _audioSrc.Play();
-                    soundIcons.rotateFast = _audioSrc.isPlaying;
                 }
             } else {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = _audioSrc.isPlaying;
             }
         }
         #region OnDemandAudioClipLoading
@@ -617,13 +618,11 @@ namespace SIS {
 
             if (markerDelegate == null) {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = _audioSrc.isPlaying;
                 return;
             }
 
             if (markerDelegate.shouldSoundMarkerStopPlaybackAfterUserLeftTriggerRange(this)) {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = _audioSrc.isPlaying;
             }
         }
 
