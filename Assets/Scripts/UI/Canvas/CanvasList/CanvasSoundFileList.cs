@@ -18,6 +18,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using UnityEngine.UI;
+using System.Linq;
 
 namespace SIS {
     public class CanvasSoundFileList : CanvasListBase<SoundFile> {
@@ -25,6 +26,10 @@ namespace SIS {
 
         public ScrollRect scrollRect;
         public Button refreshButton;
+        [UnityEngine.SerializeField] InputField searchTextfield;
+        [UnityEngine.SerializeField] public Button clearSearchButton;
+
+        private string _searchString = null;
 
         private void Awake() {
 
@@ -35,6 +40,9 @@ namespace SIS {
             base.CanvasWillAppear();
 
             confirmButton.interactable = false;
+            searchTextfield.text = "";
+            _searchString = null;
+            clearSearchButton.gameObject.SetActive(false);
 
             ReloadSoundFiles();
         }
@@ -45,14 +53,52 @@ namespace SIS {
             scrollRect.enabled = false;
 
             canvasDelegate?.ReloadSoundFiles(() => {
-                data = canvasDelegate?.AllSoundFiles();
-                if (data != null) data.Sort((a, b) => { return string.Compare(a.filenameWithExtension, b.filenameWithExtension); });
-                RefreshCells();
+                refreshCellsUsingData();
 
                 refreshButton.enabled = true;
                 scrollRect.enabled = true;
             });
         }
+
+        private void refreshCellsUsingData() {
+            data = canvasDelegate?.AllSoundFiles();
+            if (data != null) {
+                if (_searchString != null && _searchString.Length > 0) {
+                    data = data.Where(sf => sf.filenameWithExtension.ToLower().Contains(_searchString)).ToList();
+                }
+                data.Sort((a, b) => { return string.Compare(a.filenameWithExtension, b.filenameWithExtension); });
+            }
+            RefreshCells();
+        }
+
+        // ----------------------------------
+
+        public void onSearchTextChanged(string searchString) {
+            if (searchString == null) {
+                clearSearchButton.gameObject.SetActive(false);
+                _searchString = null;
+            } else {
+                _searchString = searchString.ToLower();
+                clearSearchButton.gameObject.SetActive(_searchString.Length > 0);
+            }
+
+            // ReloadSoundFiles();
+            refreshCellsUsingData();
+        }
+
+        public void onSearchEndEdit(string searchString) {
+
+        }
+
+        public void clearSearchFieldButtonClicked() {
+            clearSearchButton.gameObject.SetActive(false);
+            searchTextfield.text = "";
+            _searchString = null;
+            // ReloadSoundFiles();
+            refreshCellsUsingData();
+        }
+        
+        // ----------------------------------
 
         public void RefreshSoundFileListBtnClicked() {
             ClearCells();
