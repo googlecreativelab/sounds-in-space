@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="SoundIconData.cs" company="Google">
+// <copyright file="SingletonData.cs" company="Google">
 //
 // Copyright 2019 Google Inc. All Rights Reserved.
 //
@@ -21,11 +21,17 @@ using UnityEngine;
 
 namespace SIS {
 
-    public class SoundIconData : MonoBehaviour {
-        public static SoundIconData Instance;
+    public class SingletonData : MonoBehaviour {
+        public static SingletonData Instance;
 
         public Sprite[] sprites;
         public Sprite[] soundShapeSprites;
+
+        public float InnerRadiusMinDiameter = 0.25f;
+        public float InnerRadiusMaxDiameter = 14f;
+
+        public float OuterRadiusMinDiameter = 0.5f;
+        public float OuterRadiusMaxDiameter = 20.1f;
 
         void Awake() {
             if (Instance != null) {

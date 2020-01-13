@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8840246764415035120}
   - component: {fileID: 4934547731395968457}
   m_Layer: 0
-  m_Name: ColourPalette
+  m_Name: SingletonData
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -63,7 +63,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7994065471992340091}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2393ba1171594838a37187736eb441c, type: 3}
+  m_Script: {fileID: 11500000, guid: d9621dbfe08ea4a47ba3c5eac345abc3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   sprites:
@@ -75,3 +75,5 @@ MonoBehaviour:
   soundShapeSprites:
   - {fileID: 21300000, guid: 921fac401f1b6426e94ecffaa244e421, type: 3}
   - {fileID: 21300000, guid: 9e2f1ae8b72a747c2ab44e54d1d0062d, type: 3}
+  MinDiameterForSoundMarkers: 0.4
+  MaxDiameterForSoundMarkers: 21.1

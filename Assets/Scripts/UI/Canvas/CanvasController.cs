@@ -53,6 +53,9 @@ namespace SIS {
 
         List<SoundFile> AllSoundFiles();
         void ReloadSoundFiles(System.Action completion);
+        void LoadClipInSoundFile(SoundFile soundFile, System.Action<SoundFile> completion);
+        // void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion);
+        void RefreshLoadStateForSoundMarkers(System.Action completion);
 
     }
 
@@ -213,29 +216,40 @@ namespace SIS {
 
         public void SyncPlaybackButtonClicked() {
             SoundMarker selMarker = objectSelection.selectedMarker;
-            HashSet<string> syncedMarkerIDs = GetCurrentLayout().getSynchronisedMarkers(selMarker.hotspot.id);
+            HashSet<string> syncedMarkerIDs = GetCurrentLayout().getSynchronisedMarkerIDs(selMarker.hotspot.id);
 
             soundMarkerList.setMode(CanvasSoundMarkerList.Mode.SyncronisedMarkers, 
                                     selectedMarker:selMarker, syncedMarkerIDs:syncedMarkerIDs);
             SetCanvasScreenActive(CanvasUIScreen.SoundMarkerList);
         }
 
-    public void PlaceNewSoundsButtonClickedFromSoundEdit() {
-        objectSelection.ReturnSelectedSoundIconFromCursor();
-        objectSelection.DeselectSound();
+        public void PlaceNewSoundsButtonClickedFromSoundEdit() {
+            objectSelection.ReturnSelectedSoundIconFromCursor();
+            objectSelection.DeselectSound();
 
-        PlaceSoundsBTNClicked();
-    }
+            PlaceSoundsBTNClicked();
+        }
 
-    #endregion
-    #region ICanvasListDelegate
+        #endregion
+        #region ICanvasListDelegate
 
 
         public void ListCellClicked(CanvasListCell<Layout> listCell, Layout layout) {
 
         }
         public void ListCellClicked(CanvasListCell<SoundFile> listCell, SoundFile sf) {
-            // !!! OCCURS ON ConfirmButtonClicked()
+            // !!! SoundFile binding OCCURS ON ConfirmButtonClicked()
+            if (canvasDelegate == null) { return; }
+
+            VoiceOver.main.StopPreview();
+            //canvasDelegate.LoadSoundClipsExclusivelyForCurrentLayout(
+            canvasDelegate.RefreshLoadStateForSoundMarkers(
+            completion: () => {
+                canvasDelegate.LoadClipInSoundFile(sf, completion: (SoundFile returnedSoundFile) => {
+                    VoiceOver.main.PlayPreview(returnedSoundFile);
+                    listCell.ReloadUI();
+                });
+            });
         }
         public void ListCellClicked(CanvasListCell<SoundMarker> listCell, SoundMarker sso) {
         }
@@ -311,7 +325,7 @@ namespace SIS {
         // -------------------
 
         public HashSet<string> SynchronisedMarkerIDsWithMarkerID(string markerID) {
-            return GetCurrentLayout().getSynchronisedMarkers(markerID);
+            return GetCurrentLayout().getSynchronisedMarkerIDs(markerID);
         }
 
         public void RemoveAnySynchronisationWithOtherMarkers(string markerID) {
@@ -342,13 +356,13 @@ namespace SIS {
 
         public void BackButtonClicked(CanvasUIScreen fromScreen) {
 
-            // if (fromScreen == CanvasUIScreen.SoundMarkerList 
-            // && soundMarkerList.listMode == CanvasSoundMarkerList.Mode.SyncronisedMarkers) {
+            
+            if (fromScreen == CanvasUIScreen.EditSound && editSoundOverlay.BottomPanelState == EditSoundPanel.Visibility.Fullscreen) {
+                editSoundOverlay.BackButtonClicked();
+                return;
+            }
 
-            // } else {
-            //     objectSelection.ReturnSelectedSoundIconFromCursor();
-            //     objectSelection.DeselectSound();
-            // }
+            // ==========================================
 
             bool returnToEditSound = canvasDelegate.SoundMarkerIsSelected() 
             && (fromScreen == CanvasUIScreen.SoundFileList 

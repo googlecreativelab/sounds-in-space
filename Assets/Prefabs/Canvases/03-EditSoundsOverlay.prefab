@@ -5063,7 +5063,7 @@ GameObject:
   - component: {fileID: 367961196746758820}
   - component: {fileID: 3030716805577898812}
   m_Layer: 5
-  m_Name: MaxSliderWrapper
+  m_Name: OuterRadiusSliderWrapper
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5103,8 +5103,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86e59ce80fcdd4526bf9a887087a1181, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minDiameter: 0.5
-  maxDiameter: 20.1
+  isInnerOtherwiseOuterRadius: 0
   maxGoesToInfinity: 1
   radiusText: {fileID: 2188513804749911856}
   minRadiusText: {fileID: 2188513804014330563}
@@ -9462,7 +9461,7 @@ GameObject:
   - component: {fileID: 811258986745160307}
   - component: {fileID: 2790932808351267486}
   m_Layer: 5
-  m_Name: MinSliderWrapper
+  m_Name: InnerRadiusSliderWrapper
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9502,8 +9501,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86e59ce80fcdd4526bf9a887087a1181, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minDiameter: 0.25
-  maxDiameter: 14
+  isInnerOtherwiseOuterRadius: 1
   maxGoesToInfinity: 0
   radiusText: {fileID: 514239515349206649}
   minRadiusText: {fileID: 4053979744738595128}

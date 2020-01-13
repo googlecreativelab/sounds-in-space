@@ -112,11 +112,19 @@ namespace SIS {
             }
         }
 
-        public void LayoutChanged(Layout layout) {
+        public void UpdateMarkerCountLabel(int hotspotCount, int loadedAudioFileCount, int uniqueAudioFileCount) {
+            numSoundMarkersText.text = "" + hotspotCount + " Marker" + (hotspotCount == 1 ? "" : "s") 
+            + " (" + loadedAudioFileCount + "/" + uniqueAudioFileCount + ") Clips Loaded [" 
+            + (UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576) + "mb/" 
+            + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]";
+            // + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]";
+        }
+
+        public void LayoutChanged(Layout layout, int loadedAudioFileCount, int uniqueAudioFileCount) {
             if (layout == null) { return; }
 
             layoutNameInputField.text = layout.layoutName;
-            numSoundMarkersText.text = "" + layout.hotspots.Count + " Sound Marker" + (layout.hotspots.Count == 1 ? "" : "s");
+            UpdateMarkerCountLabel(layout.hotspots.Count, loadedAudioFileCount, uniqueAudioFileCount);
             playbackButton.gameObject.SetActive(layout.hotspots.Count > 0);
         }
 

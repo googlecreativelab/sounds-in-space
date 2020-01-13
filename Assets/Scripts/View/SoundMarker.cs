@@ -24,6 +24,9 @@ namespace SIS {
     public interface ISoundMarkerDelegate {
         bool shouldSoundMarkerTriggerPlayback(SoundMarker marker);
         bool shouldSoundMarkerStopPlaybackAfterUserLeftTriggerRange(SoundMarker marker);
+
+        void loadOnDemandAudioForSoundMarker(SoundMarker marker, SoundFile soundFile);
+        bool unloadOnDemandAudioForSoundMarkerIfAllowed(SoundMarker marker, SoundFile soundFile);
         
         // DEBUG
         void soundMarkerDebugLog(string debugStr);
@@ -38,6 +41,8 @@ namespace SIS {
     public class SoundMarker : MonoBehaviour, ISoundMarkerTriggerDelegate {
 
         public ISoundMarkerDelegate markerDelegate = null;
+
+        private ResonanceAudioSource resonance;
 
         private AudioLowPassFilter filterLowPass;
         private AudioHighPassFilter filterHighPass;
@@ -73,6 +78,10 @@ namespace SIS {
 
         public SoundMarkerTrigger markerTrigger;
         public bool userIsInsideTriggerRange { get; private set; } = false;
+        private bool _onDemandAudioShouldBeLoaded = false;
+        public bool onDemandAudioShouldBeLoaded { 
+            get { return hotspot.hasInfiniteMaxDistance || _onDemandAudioShouldBeLoaded; }
+        }
 
         public static float SoundDistBuffer = 0.2f; // The min distance between min. and max.
         public static float SoundMultiplierBuffer = 2f;
@@ -81,8 +90,8 @@ namespace SIS {
         public SoundIcons SoundIcons { get { return soundIcons; } }
 
         public Color color { get { return ColorThemeData.Instance.soundColors[colorIndex]; } }
-        public Sprite iconSprite { get { return SoundIconData.Instance.sprites[iconIndex]; } }
-        public Sprite soundShapeSprite { get { return SoundIconData.Instance.soundShapeSprites[(int)soundShape]; } }
+        public Sprite iconSprite { get { return SingletonData.Instance.sprites[iconIndex]; } }
+        public Sprite soundShapeSprite { get { return SingletonData.Instance.soundShapeSprites[(int)soundShape]; } }
 
         public float soundMinDist {
             get { return hotspot != null ? hotspot.minDistance : _audioSrc.minDistance; }
@@ -136,22 +145,29 @@ namespace SIS {
             }
         }
 
+        public void SetAudioPauseState(bool isPaused) {
+            if (isPaused) {
+                _audioSrc.Pause();
+            } else {
+                _audioSrc.UnPause();
+            }
+        }
+
         public void PlayAudioFromBeginning(bool ignoreTrigger = false) {
             if (_audioSrc == null) return;
+            
+            _audioSrc.UnPause();
             if (_audioSrc.isPlaying) { 
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
             }
-            if (ignoreTrigger || !hotspot.triggerPlayback || userIsInsideTriggerRange) { 
+            if (ignoreTrigger || !hotspot.triggerPlayback || userIsInsideTriggerRange) {
                 _audioSrc.Play();
-                soundIcons.rotateFast = true;
             }
         }
         public void StopAudioPlayback() {
             if (_audioSrc == null) return;
             if (_audioSrc.isPlaying) { 
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
             }
         }
 
@@ -321,7 +337,9 @@ namespace SIS {
             _audioSrc = GetComponent<AudioSource>();
             soundIcons = GetComponentInChildren<SoundIcons>();
             followCameraYPos = GetComponent<FollowMainCameraYPosition>();
-            
+
+            resonance = GetComponent<ResonanceAudioSource>();
+
             filterLowPass = GetComponent<AudioLowPassFilter>();
             filterHighPass = GetComponent<AudioHighPassFilter>();
             filterDistortion = GetComponent<AudioDistortionFilter>();
@@ -347,6 +365,8 @@ namespace SIS {
         }
 
         private void Update() {
+            soundIcons.rotateFast = _audioSrc.isPlaying;
+
             if (userIsInsideTriggerRange) {
                 float percentageToEdge = percentToEdge();
                 // Debug.Log ("percentageToEdge: " + percentageToEdge);
@@ -378,7 +398,7 @@ namespace SIS {
 
         public void SetIconAndRangeToRandomValue() {
             colorIndex = Random.Range(0, ColorThemeData.Instance.soundColors.Length - 1);
-            iconIndex = Random.Range(0, SoundIconData.Instance.sprites.Length - 1);
+            iconIndex = Random.Range(0, SingletonData.Instance.sprites.Length - 1);
         }
 
         public void SetHotspot(Hotspot newHotspot, bool overrideInteralData = true) {
@@ -423,11 +443,11 @@ namespace SIS {
         }
 
         public void SetToNextIcon() {
-            iconIndex = (iconIndex + 1) % SoundIconData.Instance.sprites.Length;
+            iconIndex = (iconIndex + 1) % SingletonData.Instance.sprites.Length;
         }
 
         public void SetToNextSoundShape() {
-            soundShape = (SoundShape)(((int)soundShape + 1) % SoundIconData.Instance.soundShapeSprites.Length);
+            soundShape = (SoundShape)(((int)soundShape + 1) % SingletonData.Instance.soundShapeSprites.Length);
         }
 
         // -     -     -     -     -     -     -
@@ -470,21 +490,102 @@ namespace SIS {
 
         // -     -     -     -     -     -     -
 
+        public void OnDemandNullifyAudioClip() {
+            _audioSrc.Pause();
+            
+            _audioSrc.clip = null;
+        }
+
+        public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
+            Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
+
+            // ----------------------
+            // !!! This is important, otherwise we hear an artifact when the clip is assigned (Caused by Resonance)
+            resonance.enabled = false;
+            // ----------------------
+            _audioSrc.clip = sf.clip;
+
+            if (!_audioSrc.isPlaying) {
+                _audioSrc.UnPause();
+                _audioSrc.Play();
+            }
+            
+            // ----------------------
+            // !!! This is important, otherwise we hear an artifact when the clip is assigned (Caused by Resonance)
+            resonance.enabled = true;
+            // ----------------------
+        }
+
         public void LaunchNewClip(AudioClip clip, bool playAudio = true) {
+            if (clip == null) { return; }
             _audioSrc.clip = clip;
             if (playAudio) {
                 if (!hotspot.triggerPlayback || userIsInsideTriggerRange) {
+                    _audioSrc.UnPause();
                     _audioSrc.Play();
-                    soundIcons.rotateFast = true;
                 }
             } else {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
             }
         }
+        #region OnDemandAudioClipLoading
+
+        private void UserDidEnterOnDemandLoadTrigger() {
+            if (_onDemandAudioShouldBeLoaded) { return; }
+
+            _onDemandAudioShouldBeLoaded = true;
+            Debug.LogWarning("ON-DEMAND SHOULD be Loaded: " + this.hotspot.soundFile.filename, this);
+
+            // Markers with Infinite Max Distance should be ignored
+            if (hotspot.hasInfiniteMaxDistance) { return; }
+
+            SoundFile sf = hotspot.soundFile;
+            if (sf.isDefaultSoundFile) { return; } // Skip the default soundFile
+
+            // We should LOAD this AudioClip...
+            markerDelegate?.loadOnDemandAudioForSoundMarker(this, sf); // This will also load synchronised SoundMarkers
+        }
+
+        // private void UserDidEnterOnDemandUnloadTrigger() {
+
+        // }
+
+        // - - - - - - - - - - - - - - - - - - - - - - -
+
+        // private void UserDidExitOnDemandLoadTrigger() {
+
+        // }
+
+        private void UserDidExitOnDemandUnloadTrigger() {
+            if (!_onDemandAudioShouldBeLoaded) { return; }
+
+            _onDemandAudioShouldBeLoaded = false;
+            Debug.LogWarning("ON-DEMAND should NOT be Loaded: " + this.hotspot.soundFile.filename, this);
+
+            // Markers with Infinite Max Distance should be ignored
+            if (hotspot.hasInfiniteMaxDistance) { return; }
+
+            SoundFile sf = hotspot.soundFile;
+            if (sf.isDefaultSoundFile) { return; } // Skip the default soundFile
+
+            // We should UNLOAD this AudioClip... (if all other Synced SoundMarkers shouldBeUnloaded)
+            markerDelegate?.unloadOnDemandAudioForSoundMarkerIfAllowed(this, sf); // This will also load synchronised SoundMarkers
+        }
+
+        #endregion
         #region ISoundMarkerTriggerDelegate
 
-        public void UserDidEnterMarkerTrigger() {
+        public void UserDidEnterMarkerTrigger(SoundMarkerTrigger.Type triggerType) {
+            // -----------------------------
+            switch (triggerType) {
+                case SoundMarkerTrigger.Type.OnDemandLoad: UserDidEnterOnDemandLoadTrigger(); return;
+                // case SoundMarkerTrigger.Type.OnDemandUnload: UserDidEnterOnDemandUnloadTrigger(); return;
+                case SoundMarkerTrigger.Type.Playback: break;
+                default: return;
+            }
+            // -----------------------------
+            // BELOW - the Playback trigger
+
             userIsInsideTriggerRange = true;
             timeUserHasHeardSound = 0; // Restart time hearing the sound
 
@@ -500,20 +601,28 @@ namespace SIS {
             }
         }
 
-        public void UserDidExitMarkerTrigger() {
+        public void UserDidExitMarkerTrigger(SoundMarkerTrigger.Type triggerType) {
+            // -----------------------------
+            switch (triggerType) {
+                // case SoundMarkerTrigger.Type.OnDemandLoad: UserDidExitOnDemandLoadTrigger(); return;
+                case SoundMarkerTrigger.Type.OnDemandUnload: UserDidExitOnDemandUnloadTrigger(); return;
+                case SoundMarkerTrigger.Type.Playback: break;
+                default: return;
+            }
+            // -----------------------------
+            // BELOW - the Playback trigger
+
             userIsInsideTriggerRange = false;
             // if (!hotspot.triggerPlayback && !userHasHeardSound) { return; }
             if (!(hotspot.triggerPlayback || (hotspot.playOnce && userHasHeardSound))) { return; }
 
             if (markerDelegate == null) {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
                 return;
             }
 
             if (markerDelegate.shouldSoundMarkerStopPlaybackAfterUserLeftTriggerRange(this)) {
                 _audioSrc.Stop();
-                soundIcons.rotateFast = false;
             }
         }
 

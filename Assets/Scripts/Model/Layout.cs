@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SIS {
 
@@ -101,6 +102,7 @@ namespace SIS {
         }
 
         // =========
+        // Synchronised Markers
 
         public void printSyncedMarkers() {
             for (int i = 0; i < this.syncedMarkerIDs.Count; ++i) {
@@ -116,7 +118,7 @@ namespace SIS {
             }
         }
 
-        public HashSet<string> getSynchronisedMarkers(string forMarkerID) {
+        public HashSet<string> getSynchronisedMarkerIDs(string forMarkerID) {
             foreach (HashSet<string> syncedMarkerIDs in this.syncedMarkerIDSets) {
                 if (syncedMarkerIDs.Contains(forMarkerID)) {
                     return syncedMarkerIDs;
@@ -124,6 +126,18 @@ namespace SIS {
             }
 
             return null;
+        }
+
+        // Returns Synced Markers - NOT INCLUDING the marker that was passed in
+        public IEnumerable<SoundMarker> getSynchronisedMarkers(string forMarkerID) {
+            HashSet<string> syncedMarkerIDs = getSynchronisedMarkerIDs(forMarkerID);
+            if (syncedMarkerIDs == null || syncedMarkerIDs.Count < 1) { return null; }
+
+            return MainController.soundMarkers.Where(
+                (sm) => {
+                    return sm.hotspot.id != forMarkerID // Ignore the caller marker
+                        && syncedMarkerIDs.Contains(sm.hotspot.id);
+                });
         }
 
         public void setSynchronisedMarkerIDs(HashSet<string> markers) {
