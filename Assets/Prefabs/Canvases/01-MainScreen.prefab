@@ -1687,6 +1687,7 @@ MonoBehaviour:
   - {fileID: 6251367957777658931}
   - {fileID: 6403633391172372210}
   - {fileID: 7543703259211583829}
+  - {fileID: 8308775482622942262}
   menuBtnImg: {fileID: 6251367958296870228}
   menuNormalSprite: {fileID: 21300010, guid: 0eac3ef67041a4791a5581c63dcb1a41, type: 3}
   menuCloseSprite: {fileID: 21300006, guid: 0eac3ef67041a4791a5581c63dcb1a41, type: 3}
@@ -2384,7 +2385,7 @@ PrefabInstance:
     - target: {fileID: 3389781034912595101, guid: 591d5b79603774f22b38d7a5b02caa11,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3389781034912595098, guid: 591d5b79603774f22b38d7a5b02caa11,
         type: 3}
@@ -2499,7 +2500,7 @@ PrefabInstance:
     - target: {fileID: 3389781034912595099, guid: 591d5b79603774f22b38d7a5b02caa11,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: BtnClickedRecordSounds
+      value: BtnClickedKioskMode
       objectReference: {fileID: 0}
     - target: {fileID: 2226877413457298610, guid: 591d5b79603774f22b38d7a5b02caa11,
         type: 3}
@@ -2519,18 +2520,18 @@ PrefabInstance:
     - target: {fileID: 2226877413457298610, guid: 591d5b79603774f22b38d7a5b02caa11,
         type: 3}
       propertyPath: m_Text
-      value: Record sounds
+      value: Lock Screen
       objectReference: {fileID: 0}
     - target: {fileID: 3389781035210781755, guid: 591d5b79603774f22b38d7a5b02caa11,
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300008, guid: 0eac3ef67041a4791a5581c63dcb1a41,
+      objectReference: {fileID: 21300000, guid: 0eac3ef67041a4791a5581c63dcb1a41,
         type: 3}
     - target: {fileID: 3389781035708224608, guid: 591d5b79603774f22b38d7a5b02caa11,
         type: 3}
       propertyPath: m_Text
-      value: Record sounds
+      value: Lock Screen
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 591d5b79603774f22b38d7a5b02caa11, type: 3}
@@ -2540,6 +2541,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 6648536409900916909}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8308775482622942262 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3389781034912595099, guid: 591d5b79603774f22b38d7a5b02caa11,
+    type: 3}
+  m_PrefabInstance: {fileID: 6648536409900916909}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &8634716876049152617
 PrefabInstance:
   m_ObjectHideFlags: 0

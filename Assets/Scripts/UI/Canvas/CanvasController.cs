@@ -63,7 +63,7 @@ namespace SIS {
     public class CanvasController : MonoBehaviour,
     ICanvasCreateSoundsDelegate, ICanvasMainMenuDelegate, ICanvasEditSoundDelegate,
     ICanvasListDelegate<Layout>, ICanvasListDelegate<SoundFile>, ICanvasListDelegate<SoundMarker>, 
-    ICanvasSettingsDelegate {
+    ICanvasSettingsDelegate, ICanvasKioskDelegate {
         public ICanvasControllerDelegate canvasDelegate = null;
         public SoundMarkerSelection objectSelection { get { return canvasDelegate != null ? canvasDelegate?.objectSelection : null; } }
         public SoundPlacement soundPlacement { get { return canvasDelegate != null ? canvasDelegate?.soundPlacement : null; } }
@@ -75,8 +75,9 @@ namespace SIS {
         public CanvasSoundFileList soundFileList;
         public CanvasSoundMarkerList soundMarkerList;
         public CanvasSettings settings;
+        public CanvasKiosk kiosk;
 
-        public enum CanvasUIScreen { Main, AddSounds, EditSound, LayoutList, SoundFileList, SoundMarkerList, Settings, None }
+        public enum CanvasUIScreen { Main, AddSounds, EditSound, LayoutList, SoundFileList, SoundMarkerList, Settings, Kiosk, None }
         private CanvasUIScreen _activeScreen = CanvasUIScreen.Main;
         public CanvasUIScreen activeScreen { get { return _activeScreen; } }
         public int activeScreenIndex { get { return (int)_activeScreen; } }
@@ -90,6 +91,7 @@ namespace SIS {
             soundFileList.gameObject.SetActive(false);
             soundMarkerList.gameObject.SetActive(false);
             settings.gameObject.SetActive(false);
+            kiosk.gameObject.SetActive(false);
 
             mainScreen.canvasDelegate = this;
             placeSoundsOverlay.canvasDelegate = this;
@@ -98,6 +100,7 @@ namespace SIS {
             soundFileList.canvasDelegate = this;
             soundMarkerList.canvasDelegate = this;
             settings.canvasDelegate = this;
+            kiosk.canvasDelegate = this;
         }
 
         void Update() {
@@ -127,6 +130,7 @@ namespace SIS {
                     case CanvasUIScreen.SoundFileList: soundFileList.CanvasWillAppear(); break;
                     case CanvasUIScreen.SoundMarkerList: soundMarkerList.CanvasWillAppear(); break;
                     case CanvasUIScreen.Settings: settings.CanvasWillAppear(); break;
+                    case CanvasUIScreen.Kiosk: kiosk.CanvasWillAppear(); break;
                     default: break;
                 }
             }
@@ -138,12 +142,15 @@ namespace SIS {
             soundFileList.gameObject.SetActive(screen == CanvasUIScreen.SoundFileList);
             soundMarkerList.gameObject.SetActive(screen == CanvasUIScreen.SoundMarkerList);
             settings.gameObject.SetActive(screen == CanvasUIScreen.Settings);
+            kiosk.gameObject.SetActive(screen == CanvasUIScreen.Kiosk);
             canvasDelegate?.CanvasBecameActive(screen, _activeScreen);
 
             if (_activeScreen == CanvasUIScreen.Settings) {
                 Layout curLayout = GetCurrentLayout();
-                MainController.OnDemandColliders.DistanceFromUser = curLayout.onDemandRadius;
-                canvasDelegate?.OnDemandActiveWasChanged(curLayout.onDemandActive);
+                if (curLayout != null) {
+                    MainController.OnDemandColliders.DistanceFromUser = curLayout.onDemandRadius;
+                    canvasDelegate?.OnDemandActiveWasChanged(curLayout.onDemandActive);
+                }
             }
 
             _activeScreen = screen;
@@ -161,6 +168,10 @@ namespace SIS {
 
         public void MainMenuResetCameraBTNClicked() {
             canvasDelegate?.ResetCameraTapped();
+        }
+
+        public void MainMenuKioskBTNClicked() {
+            SetCanvasScreenActive(CanvasUIScreen.Kiosk);
         }
 
         public void MainMenuSettingsBTNClicked() {

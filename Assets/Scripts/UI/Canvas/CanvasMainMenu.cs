@@ -30,6 +30,7 @@ namespace SIS {
         void MainMenuPlaceSoundsBTNClicked();
         void MainMenuLoadLayoutBTNClicked();
         void MainMenuSoundMarkersBTNClicked();
+        void MainMenuKioskBTNClicked();
         void MainMenuCurrentLayoutWasRenamed(string layoutName);
         Layout GetCurrentLayout();
     }
@@ -292,7 +293,9 @@ namespace SIS {
         }
 
         public void BtnClickedKioskMode() {
-            ShowNativeUnsupportedDialog();
+            if (canvasDelegate == null) { return; }
+            canvasDelegate.MainMenuKioskBTNClicked();
+            CloseMenu();
         }
 
         #endregion
