@@ -34,7 +34,7 @@ namespace SIS {
         void BackButtonClicked(CanvasController.CanvasUIScreen fromScreen);
         void SoundFileButtonClicked();
         void SyncPlaybackButtonClicked();
-        void ResetCameraBTNClicked();
+        void MainMenuResetCameraBTNClicked();
         void PlaceNewSoundsButtonClickedFromSoundEdit();
         
         // Synced Markers
@@ -282,7 +282,7 @@ namespace SIS {
 
         // ------------------------------------------------
 
-        private Color bgColorForToggle(bool interactable, bool isOn) {
+        public static Color bgColorForToggle(bool interactable, bool isOn) {
             Color interactiveCol = ColorThemeData.Instance.interactionColor;
             Color onButNotInteractiveColor = new Color(interactiveCol.r, interactiveCol.g, interactiveCol.b, 0.25f);
 
@@ -291,7 +291,7 @@ namespace SIS {
                 : (interactable ? new Color(0.632f, 0.632f, 0.632f) : new Color(0.87f, 0.87f, 0.87f));
         }
 
-        void AnimateToggle(UnityEngine.UI.Toggle toggle, bool isOn, float animDuration = 0.36f) {
+        public static void AnimateToggle(UnityEngine.UI.Toggle toggle, bool isOn, float animDuration = 0.36f) {
             
 
             Color bgCol = bgColorForToggle(toggle.interactable, isOn);

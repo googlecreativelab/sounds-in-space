@@ -56,12 +56,14 @@ namespace SIS {
         void LoadClipInSoundFile(SoundFile soundFile, System.Action<SoundFile> completion);
         // void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion);
         void RefreshLoadStateForSoundMarkers(System.Action completion);
+        void OnDemandActiveWasChanged(bool onDemandIsActive);
 
     }
 
     public class CanvasController : MonoBehaviour,
     ICanvasCreateSoundsDelegate, ICanvasMainMenuDelegate, ICanvasEditSoundDelegate,
-    ICanvasListDelegate<Layout>, ICanvasListDelegate<SoundFile>, ICanvasListDelegate<SoundMarker> {
+    ICanvasListDelegate<Layout>, ICanvasListDelegate<SoundFile>, ICanvasListDelegate<SoundMarker>, 
+    ICanvasSettingsDelegate {
         public ICanvasControllerDelegate canvasDelegate = null;
         public SoundMarkerSelection objectSelection { get { return canvasDelegate != null ? canvasDelegate?.objectSelection : null; } }
         public SoundPlacement soundPlacement { get { return canvasDelegate != null ? canvasDelegate?.soundPlacement : null; } }
@@ -72,8 +74,9 @@ namespace SIS {
         public CanvasLayoutList layoutList;
         public CanvasSoundFileList soundFileList;
         public CanvasSoundMarkerList soundMarkerList;
+        public CanvasSettings settings;
 
-        public enum CanvasUIScreen { Main, AddSounds, EditSound, LayoutList, SoundFileList, SoundMarkerList, None }
+        public enum CanvasUIScreen { Main, AddSounds, EditSound, LayoutList, SoundFileList, SoundMarkerList, Settings, None }
         private CanvasUIScreen _activeScreen = CanvasUIScreen.Main;
         public CanvasUIScreen activeScreen { get { return _activeScreen; } }
         public int activeScreenIndex { get { return (int)_activeScreen; } }
@@ -86,6 +89,7 @@ namespace SIS {
             layoutList.gameObject.SetActive(false);
             soundFileList.gameObject.SetActive(false);
             soundMarkerList.gameObject.SetActive(false);
+            settings.gameObject.SetActive(false);
 
             mainScreen.canvasDelegate = this;
             placeSoundsOverlay.canvasDelegate = this;
@@ -93,6 +97,7 @@ namespace SIS {
             layoutList.canvasDelegate = this;
             soundFileList.canvasDelegate = this;
             soundMarkerList.canvasDelegate = this;
+            settings.canvasDelegate = this;
         }
 
         void Update() {
@@ -121,6 +126,7 @@ namespace SIS {
                     case CanvasUIScreen.LayoutList: layoutList.CanvasWillAppear(); break;
                     case CanvasUIScreen.SoundFileList: soundFileList.CanvasWillAppear(); break;
                     case CanvasUIScreen.SoundMarkerList: soundMarkerList.CanvasWillAppear(); break;
+                    case CanvasUIScreen.Settings: settings.CanvasWillAppear(); break;
                     default: break;
                 }
             }
@@ -131,7 +137,14 @@ namespace SIS {
             layoutList.gameObject.SetActive(screen == CanvasUIScreen.LayoutList);
             soundFileList.gameObject.SetActive(screen == CanvasUIScreen.SoundFileList);
             soundMarkerList.gameObject.SetActive(screen == CanvasUIScreen.SoundMarkerList);
+            settings.gameObject.SetActive(screen == CanvasUIScreen.Settings);
             canvasDelegate?.CanvasBecameActive(screen, _activeScreen);
+
+            if (_activeScreen == CanvasUIScreen.Settings) {
+                Layout curLayout = GetCurrentLayout();
+                MainController.OnDemandColliders.DistanceFromUser = curLayout.onDemandRadius;
+                canvasDelegate?.OnDemandActiveWasChanged(curLayout.onDemandActive);
+            }
 
             _activeScreen = screen;
         }
@@ -142,25 +155,30 @@ namespace SIS {
 
         #region ICanvasMainMenuDelegate
 
-        public void SoundPlaybackBTNClicked(bool playbackIsStopped) {
+        public void MainMenuSoundPlaybackBTNClicked(bool playbackIsStopped) {
             canvasDelegate?.PlaybackStateChanged(playbackIsStopped);
         }
 
-        public void ResetCameraBTNClicked() {
+        public void MainMenuResetCameraBTNClicked() {
             canvasDelegate?.ResetCameraTapped();
         }
 
-        public void PlaceSoundsBTNClicked() {
+        public void MainMenuSettingsBTNClicked() {
+            // soundMarkerList.setMode(CanvasSoundMarkerList.Mode.FromMainMenu);
+            SetCanvasScreenActive(CanvasUIScreen.Settings);
+        }
+
+        public void MainMenuPlaceSoundsBTNClicked() {
             float defaultRadius = placeSoundsOverlay.maxRadiusSlider.minRadius;
             placeSoundsOverlay.maxRadiusSlider.SetSliderDiameter(defaultRadius);
             canvasDelegate?.EditSoundMaxRadiusSliderValueChanged(0, defaultRadius);
 
             SetCanvasScreenActive(CanvasUIScreen.AddSounds);
         }
-        public void LoadLayoutBTNClicked() {
+        public void MainMenuLoadLayoutBTNClicked() {
             SetCanvasScreenActive(CanvasUIScreen.LayoutList);
         }
-        public void SoundMarkersBTNClicked() {
+        public void MainMenuSoundMarkersBTNClicked() {
             soundMarkerList.setMode(CanvasSoundMarkerList.Mode.FromMainMenu);
             SetCanvasScreenActive(CanvasUIScreen.SoundMarkerList);
         }
@@ -168,7 +186,7 @@ namespace SIS {
             SetCanvasScreenActive(CanvasUIScreen.SoundFileList);
         }
 
-        public void CurrentLayoutWasRenamed(string layoutName) {
+        public void MainMenuCurrentLayoutWasRenamed(string layoutName) {
             canvasDelegate?.CurrentLayoutWasRenamed(layoutName);
         }
 
@@ -227,7 +245,7 @@ namespace SIS {
             objectSelection.ReturnSelectedSoundIconFromCursor();
             objectSelection.DeselectSound();
 
-            PlaceSoundsBTNClicked();
+            MainMenuPlaceSoundsBTNClicked();
         }
 
         #endregion
@@ -257,7 +275,7 @@ namespace SIS {
         // -----------------------
 
         public void NewSoundMarkerButtonClickedInSoundMarkerList() {
-            PlaceSoundsBTNClicked();
+            MainMenuPlaceSoundsBTNClicked();
         }
 
         // -------------------
@@ -356,7 +374,6 @@ namespace SIS {
 
         public void BackButtonClicked(CanvasUIScreen fromScreen) {
 
-            
             if (fromScreen == CanvasUIScreen.EditSound && editSoundOverlay.BottomPanelState == EditSoundPanel.Visibility.Fullscreen) {
                 editSoundOverlay.BackButtonClicked();
                 return;
@@ -384,6 +401,7 @@ namespace SIS {
 
             } else {
                 // BASE CASE:
+                if (fromScreen == CanvasUIScreen.Settings) { settings.SaveToCurrentLayout(); }
                 SetCanvasScreenActive(CanvasUIScreen.Main);
             }
         }
@@ -397,6 +415,10 @@ namespace SIS {
             canvasDelegate?.NewLayout();
             BackButtonClicked(CanvasUIScreen.LayoutList);
         }
+
+        #endregion
+
+        #region ICanvasEditSoundDelegate
 
         #endregion
 

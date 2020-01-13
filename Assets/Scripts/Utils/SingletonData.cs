@@ -24,6 +24,10 @@ namespace SIS {
     public class SingletonData : MonoBehaviour {
         public static SingletonData Instance;
 
+        public static float OnDemandDefaultDistFromUser = 3f;
+        public static float OnDemandMinDistFromUser = 1f;
+        public static float OnDemandMaxDistFromUser = 8f;
+
         public Sprite[] sprites;
         public Sprite[] soundShapeSprites;
 

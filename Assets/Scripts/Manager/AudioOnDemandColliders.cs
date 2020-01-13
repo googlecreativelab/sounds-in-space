@@ -9,18 +9,27 @@ namespace SIS {
         public SphereCollider unloadAudioCollider;
 
         [Range(0.1f, 2.0f)] public float ThresholdDistance = 0.5f;
-        [Range(0.2f, 10.0f)] public float DistanceFromUser = 4f;
-        // [Range(1.0f, 4.0f)] public float MaxRadiusFactor = 1f;
+        private float _distanceFromUser = 4f;
+        public float DistanceFromUser {
+            set {
+                updateCollidersWithDistFromUser(value);
+                _distanceFromUser = value;
+            }
+        }
+
+        private void updateCollidersWithDistFromUser(float dist) {
+            // float loadDistance = _distanceFromUser;
+            float unloadDistance = dist + ThresholdDistance;
+
+            loadAudioCollider.radius = dist;
+            unloadAudioCollider.radius = unloadDistance;
+        }
 
         private void Awake() {
             // float loadDistance = MaxRadiusFactor * SingletonData.Instance.MaxDiameterForSoundMarkers * 0.5f;
             // float unloadDistance = loadDistance - ThresholdDistance;
 
-            float loadDistance = DistanceFromUser;
-            float unloadDistance = loadDistance + ThresholdDistance;
-
-            loadAudioCollider.radius = loadDistance;
-            unloadAudioCollider.radius = unloadDistance;
+            updateCollidersWithDistFromUser(_distanceFromUser);
         }
 
         // Start is called before the first frame update

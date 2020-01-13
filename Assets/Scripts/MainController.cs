@@ -32,7 +32,6 @@ namespace SIS {
         private SessionStatus arCoreSessionStatus = SessionStatus.None;
         private GameObject arCoreDevice;
 
-
         public GameObject soundMarkerPrefab;
         public GameObject originMarkerPrefab;
 
@@ -63,6 +62,9 @@ namespace SIS {
 
         public LayoutManager layoutManager;
         public bool playbackIsStopped { get { return canvasControl.mainScreen.playbackIsStopped; } }
+
+        public static AudioOnDemandColliders OnDemandColliders { get { return Camera.main.GetComponent<AudioOnDemandColliders>(); } }
+        public bool onDemandIsActive { get { return GetCurrentLayout().onDemandActive; } }
 
         // Serialize so that it can be set in the editor without being public
         [SerializeField] float defaultMinDistance = 0.25f;
@@ -217,12 +219,7 @@ namespace SIS {
                 soundMarkers.Add(pf);
             }
 
-            RefreshLoadStateForSoundMarkers(() => {
-                canvasControl.mainScreen.LayoutChanged(
-                    layoutManager.layout,
-                    layoutManager.loadedAudioClipCount, 
-                    layoutManager.soundDictionary.Count);
-            });
+            OnDemandActiveWasChanged(GetCurrentLayout().onDemandActive);
         }
 
         /// <summary>
@@ -292,7 +289,30 @@ namespace SIS {
 
         // --------------------------------------------------------------
 
+        public void OnDemandActiveWasChanged(bool onDemandIsActive) {
+            Debug.Log("OnDemandActiveWasChanged active: " + onDemandIsActive);
+            if (onDemandIsActive) {
+                RefreshLoadStateForSoundMarkers(() => {
+                    canvasControl.mainScreen.LayoutChanged(
+                        layoutManager.layout,
+                        layoutManager.loadedAudioClipCount,
+                        layoutManager.soundDictionary.Count - 1);
+                });
+            } else {
+                // TODO: Load all AudioClips into memory
+                layoutManager.LoadAllAudioClipsIntoMemory(MainController.soundMarkers, 
+                completion: () => {
+                    canvasControl.mainScreen.LayoutChanged(
+                        layoutManager.layout,
+                        layoutManager.loadedAudioClipCount,
+                        layoutManager.soundDictionary.Count - 1);
+                });
+            }
+        }
+
         public void loadOnDemandAudioForSoundMarker(SoundMarker marker, SoundFile soundFile) {
+            if (!onDemandIsActive) { return; }
+
             Debug.Log("loadOnDemandAudioForSoundMarker: " + soundFile.filename);
             layoutManager.LoadSoundMarkerAndSyncedClips(marker, completion:
                 (HashSet<SoundMarker> loadedMarkers) => {
@@ -305,6 +325,8 @@ namespace SIS {
                 });
         }
         public bool unloadOnDemandAudioForSoundMarkerIfAllowed(SoundMarker marker, SoundFile soundFile) {
+            if (!onDemandIsActive) { return false; }
+
             // FIRST - make sure no other SoundMarkers are using the SoundFile
             IEnumerable<SoundMarker> otherMarkersUsingSoundFile = layoutManager.SoundMarkersUsingSoundFileID(
                 soundFile.filename, 
@@ -427,7 +449,7 @@ namespace SIS {
                 canvasControl.mainScreen.UpdateMarkerCountLabel(
                     MainController.soundMarkers.Count, 
                     layoutManager.loadedAudioClipCount, 
-                    layoutManager.soundDictionary.Count);
+                    layoutManager.soundDictionary.Count - 1);
             }
         }
 

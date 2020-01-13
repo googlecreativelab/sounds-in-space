@@ -24,12 +24,13 @@ using DG.Tweening;
 
 namespace SIS {
     public interface ICanvasMainMenuDelegate {
-        void SoundPlaybackBTNClicked(bool playbackIsStopped);
-        void ResetCameraBTNClicked();
-        void PlaceSoundsBTNClicked();
-        void LoadLayoutBTNClicked();
-        void SoundMarkersBTNClicked();
-        void CurrentLayoutWasRenamed(string layoutName);
+        void MainMenuSoundPlaybackBTNClicked(bool playbackIsStopped);
+        void MainMenuResetCameraBTNClicked();
+        void MainMenuSettingsBTNClicked();
+        void MainMenuPlaceSoundsBTNClicked();
+        void MainMenuLoadLayoutBTNClicked();
+        void MainMenuSoundMarkersBTNClicked();
+        void MainMenuCurrentLayoutWasRenamed(string layoutName);
         Layout GetCurrentLayout();
     }
 
@@ -221,7 +222,7 @@ namespace SIS {
         }
 
         public void LayoutNameTextfieldFinishedEditing(string str) {
-            canvasDelegate?.CurrentLayoutWasRenamed(str);
+            canvasDelegate?.MainMenuCurrentLayoutWasRenamed(str);
         }
 
         #endregion
@@ -250,33 +251,39 @@ namespace SIS {
             }
 
             if (canvasDelegate == null) { return; }
-            canvasDelegate.ResetCameraBTNClicked();
+            canvasDelegate.MainMenuResetCameraBTNClicked();
         }
 
         public void BtnClickedPlayback() {
             playbackIsStopped = !playbackIsStopped; // setter updates the view state
 
             if (canvasDelegate == null) { return; }
-            canvasDelegate.SoundPlaybackBTNClicked(playbackIsStopped);
+            canvasDelegate.MainMenuSoundPlaybackBTNClicked(playbackIsStopped);
         }
 
         // - - - - - - - - - -
 
         public void BtnClickedLoadLayout() {
             if (canvasDelegate == null) { return; }
-            canvasDelegate.LoadLayoutBTNClicked();
+            canvasDelegate.MainMenuLoadLayoutBTNClicked();
+            CloseMenu();
+        }
+
+        public void BtnClickedSettings() {
+            if (canvasDelegate == null) { return; }
+            canvasDelegate.MainMenuSettingsBTNClicked();
             CloseMenu();
         }
 
         public void BtnClickedPlaceSounds() {
             if (canvasDelegate == null) { return; }
-            canvasDelegate.PlaceSoundsBTNClicked();
+            canvasDelegate.MainMenuPlaceSoundsBTNClicked();
             CloseMenu();
         }
 
         public void BtnClickedSoundList() {
             if (canvasDelegate == null) { return; }
-            canvasDelegate.SoundMarkersBTNClicked();
+            canvasDelegate.MainMenuSoundMarkersBTNClicked();
             CloseMenu();
         }
 

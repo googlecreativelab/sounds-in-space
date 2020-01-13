@@ -295,6 +295,10 @@ namespace SIS {
             onDemandLoadingManager.RefreshLoadStateForSoundMarkers(markers, this.layout, completion);
         }
 
+        public void LoadAllAudioClipsIntoMemory(List<SoundMarker> markers, Action completion) {
+            onDemandLoadingManager.LoadAllAudioClipsIntoMemory(markers, this.layout, completion);
+        }
+
         public void ReloadSoundFiles(Action completion) {
             // LoadSoundFiles(completion);
             LoadSoundMetaFiles(completion);

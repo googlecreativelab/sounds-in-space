@@ -47,6 +47,11 @@ namespace SIS {
                     refreshOp.completion();
                     performNextOperationInQueue();
                 });
+            } else if (nextOperation is LoadAllAudioClipsOperation loadAllOp) {
+                loadAllAudioClipsIntoMemory(loadAllOp.markers, loadAllOp.layout, completion: () => {
+                    loadAllOp.completion();
+                    performNextOperationInQueue();
+                });
             }
         }
 
@@ -98,6 +103,18 @@ namespace SIS {
             }
         }
 
+        public void LoadAllAudioClipsIntoMemory(List<SoundMarker> markers, Layout layout, Action completion) {
+            if (_operationQueue.Count < 1) {
+                loadAllAudioClipsIntoMemory(markers, layout, completion: () => {
+                    completion();
+                    this.performNextOperationInQueue();
+                });
+            } else {
+                UnityEngine.Debug.LogWarning("ENQUEUE LoadAllAudioClipsIntoMemory");
+                _operationQueue.Enqueue(new LoadAllAudioClipsOperation(markers, layout, completion));
+            }
+        }
+
         // ===================================================
 
         class AudioClipOperation {
@@ -134,6 +151,17 @@ namespace SIS {
             public Layout layout;
             public Action completion;
             public RefreshMarkerClipLoadStatesOperation(List<SoundMarker> markers, Layout layout, Action completion) {
+                this.markers = markers;
+                this.layout = layout;
+                this.completion = completion;
+            }
+        }
+
+        class LoadAllAudioClipsOperation : AudioClipOperation {
+            public List<SoundMarker> markers;
+            public Layout layout;
+            public Action completion;
+            public LoadAllAudioClipsOperation(List<SoundMarker> markers, Layout layout, Action completion) {
                 this.markers = markers;
                 this.layout = layout;
                 this.completion = completion;
@@ -336,6 +364,7 @@ namespace SIS {
             int numDestroyed = 0;
             IEnumerable<SoundMarker> soundMarkersToUnload = MainController.soundMarkersNotUsingSoundFileIDs(soundFileSetToKeepLoaded);
 
+            HashSet<SoundFile> soundFileUnloadedWithMarker = new HashSet<SoundFile>();
             foreach (SoundMarker marker in soundMarkersToUnload) {
                 SoundFile sf;
                 if (!sfDict.TryGetValue(marker.hotspot.soundID, out sf)) { continue; }
@@ -350,9 +379,64 @@ namespace SIS {
                 ++numDestroyed;
                 sf.clip = null;
                 sf.loadState = LoadState.NotLoaded;
+                soundFileUnloadedWithMarker.Add(sf);
             }
+
+            // Take care of any other SoundFiles that are lying around
+            foreach (SoundFile sf in sfDict.Values) {
+                if (sf.isDefaultSoundFile) { continue; }
+                if (soundFileSetToKeepLoaded.Contains(sf) || soundFileUnloadedWithMarker.Contains(sf)) { continue; }
+                
+                if (destroyImmediate) {
+                    UnityEngine.GameObject.DestroyImmediate(sf.clip, allowDestroyingAssets: false);
+                } else {
+                    UnityEngine.GameObject.Destroy(sf.clip);
+                }
+                ++numDestroyed;
+                sf.clip = null;
+                sf.loadState = LoadState.NotLoaded;
+            }
+
             return numDestroyed;
         }
 
+        private void loadAllAudioClipsIntoMemory(List<SoundMarker> markers, Layout layout, Action completion) {
+            if (_managerDelegate == null || layout == null) { return; }
+            Dictionary<string, SoundFile> sfDict = _managerDelegate.getSoundDictionary();
+            int numLoaded = _managerDelegate.getNumLoadedInSoundDictionary();
+
+            // UnityEngine.Debug.LogWarning("loadAllAudioClipsIntoMemory: " + numLoaded);
+
+            HashSet<SoundFile> loadingOrLoadedSoundFiles = new HashSet<SoundFile>();
+            foreach (SoundMarker marker in markers) {
+
+                SoundFile sf;
+                if (!sfDict.TryGetValue(marker.hotspot.soundID, out sf)) { continue; }
+
+                // The Marker SHOULD be loaded
+                loadingOrLoadedSoundFiles.Add(sf);
+
+                LoadClipInSoundFileOnCoroutine(sf, marker,
+                    completion: (SoundFile returnedSoundFile) => {
+
+                    });
+            }
+
+            foreach (SoundFile sf in sfDict.Values) {
+                if (loadingOrLoadedSoundFiles.Contains(sf)) { continue; }
+                loadingOrLoadedSoundFiles.Add(sf);
+
+                sf.loadState = LoadState.Loading;
+                _managerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(sf,
+                    completion: (SoundFile returnedSoundFile) => {
+
+                    }));
+            }
+
+            AwaitLoadinggOnCoroutine(loadingOrLoadedSoundFiles, notifyDelegate: true,
+                completion: () => {
+                    if (completion != null) { completion(); }
+                });
+        }
     }
 }

@@ -55,6 +55,9 @@ namespace SIS {
         public List<SyncedMarkers> syncedMarkerIDs;
         [NonSerialized] public HashSet<HashSet<string>> syncedMarkerIDSets;
 
+        public bool onDemandActive;
+        public float onDemandRadius;
+
         public long lastSaveDate;
         [NonSerialized] public string filename;
 
@@ -71,6 +74,12 @@ namespace SIS {
             Save();
         }
 
+        public void SetOnDemand(bool isActive, float radius) {
+            onDemandActive = isActive;
+            onDemandRadius = radius;
+            Save();
+        }
+
         public static string saveDirectory {
             get {
                 return DirectoryManager.layoutSaveDirectory;
@@ -82,6 +91,8 @@ namespace SIS {
             this.layoutName = string.Format("New Layout {0}", id);
             this.hotspots = new List<Hotspot>();
             this.syncedMarkerIDs = new List<SyncedMarkers>();
+            this.onDemandActive = true;
+            this.onDemandRadius = SingletonData.OnDemandDefaultDistFromUser;
             this.lastSaveDate = DateTime.Now.Ticks;
             this.syncedMarkerIDSets = new HashSet<HashSet<string>>();
         }
@@ -98,6 +109,10 @@ namespace SIS {
                 this.syncedMarkerIDs = new List<SyncedMarkers>();
             } else {
                 updateSyncedMarkerSets();
+            }
+            if (this.onDemandRadius < SingletonData.OnDemandMinDistFromUser) {
+                this.onDemandActive = true;
+                this.onDemandRadius = SingletonData.OnDemandDefaultDistFromUser;
             }
         }
 
