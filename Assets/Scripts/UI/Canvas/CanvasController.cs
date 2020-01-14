@@ -111,6 +111,9 @@ namespace SIS {
             // Go back one canvas when tapped
             if (Input.GetKeyDown(KeyCode.Escape)) {
                 // call top-most back action
+                if (_activeScreen == CanvasUIScreen.Settings) { settings.SaveToCurrentLayout(); }
+                else if (_activeScreen == CanvasUIScreen.Kiosk) { return; }
+
                 BackButtonClicked(_activeScreen); // will use the active canvas
             }
         }
@@ -412,7 +415,6 @@ namespace SIS {
 
             } else {
                 // BASE CASE:
-                if (fromScreen == CanvasUIScreen.Settings) { settings.SaveToCurrentLayout(); }
                 SetCanvasScreenActive(CanvasUIScreen.Main);
             }
         }

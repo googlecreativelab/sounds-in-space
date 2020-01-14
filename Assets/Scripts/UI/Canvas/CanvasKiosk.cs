@@ -18,6 +18,8 @@ namespace SIS {
         private ushort _numIndex = 0;
         private int[] _numberData = new int[4];
 
+        private int _camOriginalCullingMask = 0;
+
         private void Awake() {
             numPad.setNumPadDelegate(this);
         }
@@ -32,6 +34,17 @@ namespace SIS {
 
             _numIndex = 0;
             updatePasscodeLabel();
+
+            #if UNITY_ANDROID
+            Screen.fullScreen = true;
+            #endif
+
+            // Make the rendering more efficient by turning rendering off that isn't required
+            _camOriginalCullingMask = Camera.main.cullingMask;
+            Camera.main.cullingMask = 0;
+
+            GoogleARCore.ARCoreBackgroundRenderer arBGRend = Camera.main.GetComponent<GoogleARCore.ARCoreBackgroundRenderer>();
+            arBGRend.enabled = false;
         }
 
         private void updatePasscodeLabel() {
@@ -70,6 +83,15 @@ namespace SIS {
 
                     if (canvasDelegate == null) { return; }
                     canvasDelegate.BackButtonClicked(this.canvasID);
+
+                    #if UNITY_ANDROID
+                    Screen.fullScreen = false;
+                    #endif
+
+                    // Turn rendering back on...
+                    Camera.main.cullingMask = _camOriginalCullingMask;
+                    GoogleARCore.ARCoreBackgroundRenderer arBGRend = Camera.main.GetComponent<GoogleARCore.ARCoreBackgroundRenderer>();
+                    arBGRend.enabled = true;
                 }
                 _numIndex = 0;
             } else {
