@@ -65,6 +65,7 @@ namespace SIS {
 
         public static AudioOnDemandColliders OnDemandColliders { get { return Camera.main.GetComponent<AudioOnDemandColliders>(); } }
         public bool onDemandIsActive { get { return GetCurrentLayout().onDemandActive; } }
+        public bool IsOnDemandActive() { return onDemandIsActive; }
 
         // Serialize so that it can be set in the editor without being public
         [SerializeField] float defaultMinDistance = 0.25f;
@@ -525,11 +526,16 @@ namespace SIS {
         }
 
         public void RefreshLoadStateForSoundMarkers(System.Action completion) {
-            layoutManager.RefreshLoadStateForSoundMarkers(MainController.soundMarkers, 
-            () => {
-                canvasControl.editSoundOverlay.refreshDebugText();
+            if (!onDemandIsActive) {
                 completion();
-            });
+                return;
+            }
+
+            layoutManager.RefreshLoadStateForSoundMarkers(MainController.soundMarkers,
+                () => {
+                    canvasControl.editSoundOverlay.refreshDebugText();
+                    completion();
+                });
         }
 
         // public void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion) {

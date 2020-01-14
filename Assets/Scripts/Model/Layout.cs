@@ -111,7 +111,7 @@ namespace SIS {
                 updateSyncedMarkerSets();
             }
             if (this.onDemandRadius < SingletonData.OnDemandMinDistFromUser) {
-                this.onDemandActive = true;
+                this.onDemandActive = false; // Off by default
                 this.onDemandRadius = SingletonData.OnDemandDefaultDistFromUser;
             }
         }

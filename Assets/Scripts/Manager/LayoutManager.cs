@@ -113,7 +113,7 @@ namespace SIS {
             
             // When a new binding occurs, we SHOULD refresh the loaded sound clips
             // if (reloadSoundClips) { LoadSoundClipsExclusivelyForCurrentLayout(() => { }); }
-            if (reloadSoundClips) { RefreshLoadStateForSoundMarkers(MainController.soundMarkers, () => { }); }
+            if (reloadSoundClips && layout.onDemandActive) { RefreshLoadStateForSoundMarkers(MainController.soundMarkers, () => { }); }
         }
 
         // =================

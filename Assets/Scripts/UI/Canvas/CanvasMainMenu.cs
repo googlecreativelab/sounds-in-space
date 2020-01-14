@@ -98,27 +98,27 @@ namespace SIS {
         }
 
         void Update() {
-            DetectFlicIntent();
+            // DetectFlicIntent();
         }
 
-        private void DetectFlicIntent() {
-            // Flic button resets camera on android
-            try {
-                if (jc.GetStatic<string>("text") == "clicked") {
-                    // Simulate clicking the reset button
-                    BtnClickedResetCamera();
-                    jc.CallStatic("clearText");
-                }
-            } catch (NullReferenceException e) {
-                Debug.Log(e); // Not sure why we're getting a null exception here. Pass over it for now.
-            }
-        }
+        // private void DetectFlicIntent() {
+        //     // Flic button resets camera on android
+        //     try {
+        //         if (jc.GetStatic<string>("text") == "clicked") {
+        //             // Simulate clicking the reset button
+        //             BtnClickedResetCamera();
+        //             jc.CallStatic("clearText");
+        //         }
+        //     } catch (NullReferenceException e) {
+        //         Debug.Log(e); // Not sure why we're getting a null exception here. Pass over it for now.
+        //     }
+        // }
 
         public void UpdateMarkerCountLabel(int hotspotCount, int loadedAudioFileCount, int uniqueAudioFileCount) {
             numSoundMarkersText.text = "" + hotspotCount + " Marker" + (hotspotCount == 1 ? "" : "s") 
             + " (" + loadedAudioFileCount + "/" + uniqueAudioFileCount + ") Clips Loaded [" 
             + (UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576) + "mb/" 
-            + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]";
+            + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]\n";
             // + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]";
         }
 
@@ -168,7 +168,8 @@ namespace SIS {
                 numSoundMarkersText.gameObject.SetActive(initialStartPosHasBeenSet);
                 menuButton.gameObject.SetActive(initialStartPosHasBeenSet);
                 playbackButton.gameObject.SetActive(initialStartPosHasBeenSet && hotspotCount > 0);
-                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
+                // placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
+                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet);
 
                 menuBtnImg.sprite = menuIsOpen ? menuCloseSprite : menuNormalSprite;
 
@@ -190,7 +191,8 @@ namespace SIS {
 
                 menuBtnImg.sprite = menuIsOpen ? menuCloseSprite : menuNormalSprite;
                 playbackButton.gameObject.SetActive(initialStartPosHasBeenSet && hotspotCount > 0);
-                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
+                // placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
+                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet);
 
                 menuBGIMG.raycastTarget = initialStartPosHasBeenSet && menuIsOpen;
 

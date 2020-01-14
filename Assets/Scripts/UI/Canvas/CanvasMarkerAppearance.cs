@@ -25,7 +25,7 @@ namespace SIS {
         public int SelectedColourIndex { get { return _selectedColour; } }
         public int SelectedIconIndex { get { return _selectedIcon; } }
 
-        private void updateSelectionPositions() {
+        public void UpdateSelectionPositions() {
             colourSelectTransform.position = colourButtons[_selectedColour].transform.position;
             iconSelectTransform.position = iconsButtons[_selectedIcon].transform.position;
             
@@ -45,12 +45,12 @@ namespace SIS {
         }
 
         private void Awake() {
-            updateSelectionPositions();
+            UpdateSelectionPositions();
         }
 
         // Start is called before the first frame update
         void Start() {
-            updateSelectionPositions();
+            UpdateSelectionPositions();
         }
 
         public void setSelectedProperties(int colourIndex, int iconIndex) {
@@ -61,7 +61,7 @@ namespace SIS {
         override public void CanvasWillAppear() {
             base.CanvasWillAppear();
 
-            updateSelectionPositions();
+            UpdateSelectionPositions();
         }
 
         public void colourButtonClicked(int index) {

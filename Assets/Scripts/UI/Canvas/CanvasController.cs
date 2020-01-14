@@ -57,6 +57,7 @@ namespace SIS {
         // void LoadSoundClipsExclusivelyForCurrentLayout(System.Action completion);
         void RefreshLoadStateForSoundMarkers(System.Action completion);
         void OnDemandActiveWasChanged(bool onDemandIsActive);
+        bool IsOnDemandActive();
 
     }
 
@@ -116,6 +117,10 @@ namespace SIS {
                 // call top-most back action
                 if (_activeScreen == CanvasUIScreen.Settings) { settings.SaveToCurrentLayout(); }
                 else if (_activeScreen == CanvasUIScreen.Kiosk) { return; }
+                else if (_activeScreen == CanvasUIScreen.EditSound && editSoundOverlay.BottomPanelState == EditSoundPanel.Visibility.Fullscreen) {
+                    editSoundOverlay.BackButtonClicked();
+                    return;
+                }
 
                 BackButtonClicked(_activeScreen); // will use the active canvas
             }
@@ -285,13 +290,21 @@ namespace SIS {
 
             VoiceOver.main.StopPreview();
             //canvasDelegate.LoadSoundClipsExclusivelyForCurrentLayout(
-            canvasDelegate.RefreshLoadStateForSoundMarkers(
-            completion: () => {
-                canvasDelegate.LoadClipInSoundFile(sf, completion: (SoundFile returnedSoundFile) => {
-                    VoiceOver.main.PlayPreview(returnedSoundFile);
-                    listCell.ReloadUI();
+            if (canvasDelegate.IsOnDemandActive()) {
+                canvasDelegate.RefreshLoadStateForSoundMarkers(
+                completion: () => {
+                    if (sf.loadState == LoadState.Success && sf.clip != null) { return; }
+                    canvasDelegate.LoadClipInSoundFile(sf, completion: (SoundFile returnedSoundFile) => {
+                        VoiceOver.main.PlayPreview(returnedSoundFile);
+                        listCell.ReloadUI();
+                    });
                 });
-            });
+            } else {
+                // ON-DEMAND is NOT active
+                VoiceOver.main.PlayPreview(sf);
+                listCell.ReloadUI();
+            }
+            
         }
         public void ListCellClicked(CanvasListCell<SoundMarker> listCell, SoundMarker sso) {
         }
@@ -398,10 +411,7 @@ namespace SIS {
 
         public void BackButtonClicked(CanvasUIScreen fromScreen) {
 
-            if (fromScreen == CanvasUIScreen.EditSound && editSoundOverlay.BottomPanelState == EditSoundPanel.Visibility.Fullscreen) {
-                editSoundOverlay.BackButtonClicked();
-                return;
-            } else if (fromScreen == CanvasUIScreen.MarkerAppearance) {
+            if (fromScreen == CanvasUIScreen.MarkerAppearance) {
                 editSoundOverlay.setSelectedMarkersColourAndIcon(markerAppearance.SelectedColourIndex, markerAppearance.SelectedIconIndex);
                 markerAppearance.gameObject.SetActive(false);
                 _activeScreen = CanvasUIScreen.EditSound;
