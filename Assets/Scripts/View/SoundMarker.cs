@@ -374,7 +374,8 @@ namespace SIS {
 
             if (userIsInsideTriggerRange) {
                 float percentageToEdge = percentToEdge();
-                // Debug.Log ("percentageToEdge: " + percentageToEdge);
+                _audioSrc.priority = (int)(percentageToEdge * 222f);
+                // Debug.Log ("_audioSrc.priority: " + _audioSrc.priority);
                 
                 if (hotspot.playOnce) {
                     updatePlayOnce(percentageToEdge);
@@ -597,6 +598,7 @@ namespace SIS {
             // BELOW - the Playback trigger
 
             userIsInsideTriggerRange = true;
+            _audioSrc.priority = 254;
             timeUserHasHeardSound = 0; // Restart time hearing the sound
 
             if ((hotspot.playOnce && userHasHeardSound) || !hotspot.triggerPlayback) { return; }
@@ -623,6 +625,7 @@ namespace SIS {
             // BELOW - the Playback trigger
 
             userIsInsideTriggerRange = false;
+            _audioSrc.priority = 255;
             // if (!hotspot.triggerPlayback && !userHasHeardSound) { return; }
             if (!(hotspot.triggerPlayback || (hotspot.playOnce && userHasHeardSound))) { return; }
 
