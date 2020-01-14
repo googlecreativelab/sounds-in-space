@@ -190,7 +190,9 @@ namespace SIS {
                     if (ac != null) {
                         Debug.Log("AudioClip loadState: " + ac.loadState + " - " + sf.filename);
 
+                        if (sf.clip != null) { GameObject.Destroy(sf.clip); }
                         sf.clip = ac;
+                        
                         sf.loadState = LoadState.Success;
                         sf.duration = Mathf.RoundToInt(ac.length);
                         sf.Save();

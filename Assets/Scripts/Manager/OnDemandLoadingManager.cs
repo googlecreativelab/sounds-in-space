@@ -371,11 +371,14 @@ namespace SIS {
                 if (sf.isDefaultSoundFile) { continue; }
 
                 marker.OnDemandNullifyAudioClip();
-                if (destroyImmediate) {
-                    UnityEngine.GameObject.DestroyImmediate(sf.clip, allowDestroyingAssets: false);
-                } else {
-                    UnityEngine.GameObject.Destroy(sf.clip);
+                if (sf.clip != null) {
+                    if (destroyImmediate) {
+                        UnityEngine.GameObject.DestroyImmediate(sf.clip, allowDestroyingAssets: false);
+                    } else {
+                        UnityEngine.GameObject.Destroy(sf.clip);
+                    }
                 }
+                
                 ++numDestroyed;
                 sf.clip = null;
                 sf.loadState = LoadState.NotLoaded;
@@ -426,7 +429,7 @@ namespace SIS {
                 if (loadingOrLoadedSoundFiles.Contains(sf)) { continue; }
                 loadingOrLoadedSoundFiles.Add(sf);
 
-                sf.loadState = LoadState.Loading;
+                // sf.loadState = LoadState.Loading;
                 _managerDelegate?.StartCoroutineOn(SoundFile.LoadClipInSoundFile(sf,
                     completion: (SoundFile returnedSoundFile) => {
 

@@ -111,6 +111,7 @@ namespace SIS {
                     if (value < 0) {
                         _audioSrc.spatialBlend = 0;
                         _audioSrc.pitch = 1.0f;
+                        _audioSrc.priority = 0;
                     } else {
                         _audioSrc.spatialBlend = 1;
                         _audioSrc.maxDistance = value;
@@ -149,13 +150,13 @@ namespace SIS {
             }
         }
 
-        public void SetAudioPauseState(bool isPaused) {
-            if (isPaused) {
-                _audioSrc.Pause();
-            } else {
-                _audioSrc.UnPause();
-            }
-        }
+        // public void SetAudioPauseState(bool isPaused) {
+        //     if (isPaused) {
+        //         _audioSrc.Pause();
+        //     } else {
+        //         _audioSrc.UnPause();
+        //     }
+        // }
 
         public void PlayAudioFromBeginning(bool ignoreTrigger = false) {
             if (_audioSrc == null) return;
@@ -374,7 +375,10 @@ namespace SIS {
 
             if (userIsInsideTriggerRange) {
                 float percentageToEdge = percentToEdge();
-                _audioSrc.priority = (int)(percentageToEdge * 222f);
+                if (_audioSrc.spatialBlend > 0.5f) {
+                    _audioSrc.priority = (int)(percentageToEdge * 7f);
+                }
+                
                 // Debug.Log ("_audioSrc.priority: " + _audioSrc.priority);
                 
                 if (hotspot.playOnce) {
@@ -545,7 +549,7 @@ namespace SIS {
             if (_onDemandAudioShouldBeLoaded) { return; }
 
             _onDemandAudioShouldBeLoaded = true;
-            Debug.LogWarning("ON-DEMAND SHOULD be Loaded: " + this.hotspot.soundFile.filename, this);
+            // Debug.LogWarning("ON-DEMAND SHOULD be Loaded: " + this.hotspot.soundFile.filename, this);
 
             // Markers with Infinite Max Distance should be ignored
             if (hotspot.hasInfiniteMaxDistance) { return; }
@@ -571,7 +575,7 @@ namespace SIS {
             if (!_onDemandAudioShouldBeLoaded) { return; }
 
             _onDemandAudioShouldBeLoaded = false;
-            Debug.LogWarning("ON-DEMAND should NOT be Loaded: " + this.hotspot.soundFile.filename, this);
+            // Debug.LogWarning("ON-DEMAND should NOT be Loaded: " + this.hotspot.soundFile.filename, this);
 
             // Markers with Infinite Max Distance should be ignored
             if (hotspot.hasInfiniteMaxDistance) { return; }
@@ -587,6 +591,8 @@ namespace SIS {
         #region ISoundMarkerTriggerDelegate
 
         public void UserDidEnterMarkerTrigger(SoundMarkerTrigger.Type triggerType) {
+            _audioSrc.priority = 8;
+
             // -----------------------------
             switch (triggerType) {
                 case SoundMarkerTrigger.Type.OnDemandLoad: UserDidEnterOnDemandLoadTrigger(); return;
@@ -598,7 +604,7 @@ namespace SIS {
             // BELOW - the Playback trigger
 
             userIsInsideTriggerRange = true;
-            _audioSrc.priority = 254;
+            
             timeUserHasHeardSound = 0; // Restart time hearing the sound
 
             if ((hotspot.playOnce && userHasHeardSound) || !hotspot.triggerPlayback) { return; }
@@ -614,6 +620,8 @@ namespace SIS {
         }
 
         public void UserDidExitMarkerTrigger(SoundMarkerTrigger.Type triggerType) {
+            _audioSrc.priority = hotspot.hasInfiniteMaxDistance ? 0 : 8;
+
             // -----------------------------
             switch (triggerType) {
                 // case SoundMarkerTrigger.Type.OnDemandLoad: UserDidExitOnDemandLoadTrigger(); return;
@@ -625,7 +633,7 @@ namespace SIS {
             // BELOW - the Playback trigger
 
             userIsInsideTriggerRange = false;
-            _audioSrc.priority = 255;
+            
             // if (!hotspot.triggerPlayback && !userHasHeardSound) { return; }
             if (!(hotspot.triggerPlayback || (hotspot.playOnce && userHasHeardSound))) { return; }
 

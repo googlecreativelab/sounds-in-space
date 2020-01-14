@@ -91,7 +91,7 @@ namespace SIS {
             this.layoutName = string.Format("New Layout {0}", id);
             this.hotspots = new List<Hotspot>();
             this.syncedMarkerIDs = new List<SyncedMarkers>();
-            this.onDemandActive = true;
+            this.onDemandActive = false;
             this.onDemandRadius = SingletonData.OnDemandDefaultDistFromUser;
             this.lastSaveDate = DateTime.Now.Ticks;
             this.syncedMarkerIDSets = new HashSet<HashSet<string>>();

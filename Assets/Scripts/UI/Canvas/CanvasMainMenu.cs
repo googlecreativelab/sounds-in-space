@@ -114,8 +114,8 @@ namespace SIS {
         //     }
         // }
 
-        public void UpdateMarkerCountLabel(int hotspotCount, int loadedAudioFileCount, int uniqueAudioFileCount) {
-            numSoundMarkersText.text = "" + hotspotCount + " Marker" + (hotspotCount == 1 ? "" : "s") 
+        public void UpdateMarkerCountLabel(int markerCount, int loadedAudioFileCount, int uniqueAudioFileCount) {
+            numSoundMarkersText.text = "" + markerCount + " Marker" + (markerCount == 1 ? "" : "s") 
             + " (" + loadedAudioFileCount + "/" + uniqueAudioFileCount + ") Clips Loaded [" 
             + (UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576) + "mb/" 
             + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]\n";
@@ -126,7 +126,7 @@ namespace SIS {
             if (layout == null) { return; }
 
             layoutNameInputField.text = layout.layoutName;
-            UpdateMarkerCountLabel(layout.hotspots.Count, loadedAudioFileCount, uniqueAudioFileCount);
+            UpdateMarkerCountLabel(MainController.soundMarkers.Count, loadedAudioFileCount, uniqueAudioFileCount);
             playbackButton.gameObject.SetActive(layout.hotspots.Count > 0);
         }
 

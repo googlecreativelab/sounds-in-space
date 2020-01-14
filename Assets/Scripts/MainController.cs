@@ -71,6 +71,9 @@ namespace SIS {
         [SerializeField] float defaultMinDistance = 0.25f;
         [SerializeField] float defaultMaxDistance = 0.5f;
 
+        public GameObject loadingOverlay;
+        public UnityEngine.UI.Text loadingOverlayText;
+
         // True if the app is in the process of quitting due to an ARCore
         bool isQuitting = false;
 
@@ -90,6 +93,7 @@ namespace SIS {
             // #if UNITY_ANDROID
             // Screen.fullScreen = false;
             // #endif
+            loadingOverlay.gameObject.SetActive(false);
 
             myObjectSelection = GetComponent<SoundMarkerSelection>();
             myObjectSelection.selectionDelegate = this;
@@ -204,12 +208,60 @@ namespace SIS {
         /// Update the scene data and place the corresponding sources
         /// </summary>
         public void LoadLayoutData() {
+            loadingOverlayText.text = "Loading... (0%)";
+            loadingOverlay.gameObject.SetActive(true);
+
             // remove the previous
             UnloadCurrentSoundMarkers();
             // set up all the hotspots
             layoutManager.LoadCurrentLayout();
+            
+            if (onDemandIsActive) {
+                loadSoundMarkersOnCoroutine(complete: () => {
+                    OnDemandActiveWasChanged(GetCurrentLayout().onDemandActive);
+                    Debug.Log("FINISHED loading markers [OnDemand ON]");
+                });
+            } else {
+                layoutManager.LoadAllAudioClipsIntoMemory(MainController.soundMarkers,
+                    completion: () => {
+                        // Load the SoundMarkers on a CoRoutine
+                        loadSoundMarkersOnCoroutine(complete: () => {
+                            Debug.Log("FINISHED loading clips and markers [OnDemand OFF]");
+                        });
+                    });
+            }
+        }
+
+        private void loadSoundMarkersOnCoroutine(System.Action complete) {
+            int hotspotCount = layoutManager.layout.hotspots.Count;
+            StartCoroutine(InitSoundMarkers(layoutManager.layout.hotspots,
+                progressCallback: (int numComplete) => {
+                    float progress = (float)numComplete / (float)hotspotCount;
+                    // Debug.Log (progress);
+                    loadingOverlayText.text = string.Format("Loading... ({0:0}%)", progress * 100f);
+                }, completeCallback: () => {
+                    loadingOverlay.gameObject.SetActive(false);
+
+                    // Update the UI
+                    canvasControl.mainScreen.LayoutChanged(
+                        layoutManager.layout,
+                        layoutManager.loadedAudioClipCount,
+                        layoutManager.soundDictionary.Count - 1);
+
+                    complete();
+                }));
+        }
+
+        private IEnumerator InitSoundMarkers(
+            List<Hotspot> hotspots, 
+            System.Action<int> progressCallback = null, 
+            System.Action completeCallback = null) {
+            
+            float waitTime = 2f / hotspots.Count;
+
+            int index = 0;
             // Bind all the sounds to their game objects
-            foreach (Hotspot h in layoutManager.layout.hotspots) {
+            foreach (Hotspot h in hotspots) {
                 var pf = SoundMarker.CreatePrefab(
                   anchorWrapperTransform.TransformPoint(h.positon),
                   h.rotation, soundMarkerPrefab, anchorWrapperTransform);
@@ -218,9 +270,13 @@ namespace SIS {
 
                 pf.markerDelegate = this;
                 soundMarkers.Add(pf);
+                ++index;
+                Debug.Log(index + " - Marker('" + h.soundID + "')");
+                if (progressCallback != null) { progressCallback(index); }
+                // yield return null;
+                yield return new WaitForSeconds(waitTime);
             }
-
-            OnDemandActiveWasChanged(GetCurrentLayout().onDemandActive);
+            completeCallback();
         }
 
         /// <summary>
@@ -300,21 +356,22 @@ namespace SIS {
                         layoutManager.soundDictionary.Count - 1);
                 });
             } else {
-                // TODO: Load all AudioClips into memory
+                // Load all AudioClips into memory
                 layoutManager.LoadAllAudioClipsIntoMemory(MainController.soundMarkers, 
-                completion: () => {
-                    canvasControl.mainScreen.LayoutChanged(
-                        layoutManager.layout,
-                        layoutManager.loadedAudioClipCount,
-                        layoutManager.soundDictionary.Count - 1);
-                });
+                    completion: () => {
+                        canvasControl.mainScreen.LayoutChanged(
+                            layoutManager.layout,
+                            layoutManager.loadedAudioClipCount,
+                            layoutManager.soundDictionary.Count - 1);
+                    });
             }
         }
 
         public void loadOnDemandAudioForSoundMarker(SoundMarker marker, SoundFile soundFile) {
             if (!onDemandIsActive) { return; }
 
-            Debug.Log("loadOnDemandAudioForSoundMarker: " + soundFile.filename);
+            Debug.LogWarning("ON-DEMAND SHOULD be Loaded: " + soundFile.filename);
+            // Debug.Log("loadOnDemandAudioForSoundMarker: " + soundFile.filename);
             layoutManager.LoadSoundMarkerAndSyncedClips(marker, completion:
                 (HashSet<SoundMarker> loadedMarkers) => {
                     Debug.LogWarning(   "loadOnDemandAudioForSoundMarker COMPLETE!");
@@ -328,6 +385,7 @@ namespace SIS {
         public bool unloadOnDemandAudioForSoundMarkerIfAllowed(SoundMarker marker, SoundFile soundFile) {
             if (!onDemandIsActive) { return false; }
 
+            Debug.LogWarning("ON-DEMAND should NOT be Loaded: " + soundFile.filename, this);
             // FIRST - make sure no other SoundMarkers are using the SoundFile
             IEnumerable<SoundMarker> otherMarkersUsingSoundFile = layoutManager.SoundMarkersUsingSoundFileID(
                 soundFile.filename, 
@@ -479,7 +537,6 @@ namespace SIS {
         public void LoadLayout(Layout layout) {
             layoutManager.currentLayoutId = layout.id;
             LoadLayoutData();
-
         }
 
         public void DuplicateLayout(Layout layout) {

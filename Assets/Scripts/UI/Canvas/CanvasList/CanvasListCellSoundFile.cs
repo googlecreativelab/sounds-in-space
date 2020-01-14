@@ -34,6 +34,7 @@ namespace SIS {
             }
 
             int durSecs = datum.durationSafe;
+            string durationStr;
             if (durSecs > 0) {
                 int durMins = durSecs / 60;
                 durSecs = durSecs % 60;
@@ -42,14 +43,17 @@ namespace SIS {
                     // More than an hour!
                     int durHours = durMins / 60;
                     durMins = durMins % 60;
-                    subtitleLabel.text = string.Format("{0:00}:{1:00}:{2:00}", durHours, durMins, durSecs);
+                    durationStr = string.Format("{0:00}:{1:00}:{2:00}", durHours, durMins, durSecs);
                 } else {
-                    subtitleLabel.text = string.Format("{0:00}:{1:00}", durMins, durSecs);
+                    durationStr = string.Format("{0:00}:{1:00}", durMins, durSecs);
                 }
                 
             } else {
-                subtitleLabel.text = "Unknown duration";
+                durationStr = "Unknown duration";
             }
+            if (datum.loadState != LoadState.Success) { durationStr += " - NOT LOADED"; }
+            if (datum.clip == null) { durationStr += " - CLIP NULL"; }
+            subtitleLabel.text = durationStr;
         }
 
         public override void SetDatum(SoundFile newDatum) {

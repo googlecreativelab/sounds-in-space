@@ -319,7 +319,9 @@ namespace SIS {
 
         public void ConfirmButtonClicked(CanvasUIScreen fromScreen, HashSet<CanvasListCell<Layout>> currentSelectedCells) {
             if (currentSelectedCells.Count > 0) {
-                canvasDelegate?.LoadLayout(currentSelectedCells.First().datum);
+                Layout layout = currentSelectedCells.First().datum;
+                Debug.Log("Load layout: " + layout.filename);
+                canvasDelegate?.LoadLayout(layout);
             }
             
             BackButtonClicked(CanvasUIScreen.LayoutList);

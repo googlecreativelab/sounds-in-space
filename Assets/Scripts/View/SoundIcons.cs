@@ -34,7 +34,7 @@ namespace SIS {
         public bool FlashBlack {
             get { return _flashBlack; }
             set {
-                if (_flashBlack == value) { return; }
+                if (_flashBlack == true && value == true) { return; }
                 _flashBlack = value;
                 if (value) {
                     _flashTimer = 0;
@@ -99,6 +99,9 @@ namespace SIS {
                     _isBlack = !_isBlack;
                     _flashTimer = 0;
                 }
+            } else if (_isBlack) {
+                setMaterialColor(_mainColor);
+                _isBlack = false;
             }
 
             transform.Rotate(

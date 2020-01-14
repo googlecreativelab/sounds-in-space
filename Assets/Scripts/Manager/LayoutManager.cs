@@ -138,6 +138,7 @@ namespace SIS {
         }
 
         public void DuplicateLayout(Layout layout) {
+            Debug.Log("DuplicateLayout: " + layout.filename);
             // to duplicate, take all data of the current layout, but overwrite the id
             // to the next available
             var newLayout = layout;
@@ -190,9 +191,11 @@ namespace SIS {
             var layouts = AllLayouts();
             var withID = layouts.Where( l => { return l.id == LayoutID; } );
             if (withID.Count() < 1) {
+                Debug.LogError(string.Format("There is no file with the id {}.", LayoutID));
                 throw new Exception(string.Format("There is no file with the id {}.", LayoutID));
             }
             if (withID.Count() > 1) {
+                Debug.LogError(string.Format("There are multiple files with id: {}.", LayoutID));
                 throw new Exception(string.Format("There are multiple files with id: {}.", LayoutID));
             }
             // Nice, exactly one
@@ -214,6 +217,7 @@ namespace SIS {
             try {
                 this.layout = LayoutWithId(currentLayoutId);
             } catch {
+                Debug.LogError("FAILED to create layout with currentLayoutId: " + currentLayoutId);
                 // Create a new layout instead
                 this.currentLayoutId = NextLayoutId();
                 this.layout = new Layout(currentLayoutId);
