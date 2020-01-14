@@ -36,6 +36,7 @@ namespace SIS {
         void SyncPlaybackButtonClicked();
         void MainMenuResetCameraBTNClicked();
         void PlaceNewSoundsButtonClickedFromSoundEdit();
+        void SoundMarkerAppearanceButtonClicked(int colourIndex, int iconIndex);
         
         // Synced Markers
         System.Collections.Generic.HashSet<string> SynchronisedMarkerIDsWithMarkerID(string markerID);
@@ -120,6 +121,16 @@ namespace SIS {
                                             syncedMarkers.Count - 1, (syncedMarkers.Count == 2 ? "" : "s"));
                 }
             }
+        }
+
+        public void setSelectedMarkersColourAndIcon(int colourIndex, int iconIndex) {
+            SoundMarker selectedMarker = canvasDelegate.objectSelection.selectedMarker;
+            if (selectedMarker == null) { return; }
+            
+            selectedMarker.SetIconColourAndIndex(colourIndex, iconIndex);
+
+            soundAppearanceImage.sprite = selectedMarker.iconSprite;
+            updateUIColor(selectedMarker.color);
         }
 
         public void SoundMarkerSelected(SoundMarker selectedMarker) {
@@ -582,13 +593,13 @@ namespace SIS {
             SoundMarker selectedSound = canvasDelegate.objectSelection.selectedMarker;
             if (selectedSound == null) { return; }
 
-            // TODO: selectedSound.SetToRandomDifferentColor();
-            // TODO: selectedSound.SetToRandomDifferentIcon();
-            selectedSound.SetToNextColor();
-            selectedSound.SetToNextIcon();
+            canvasDelegate?.SoundMarkerAppearanceButtonClicked(selectedSound.colorIndex, selectedSound.iconIndex);
 
-            soundAppearanceImage.sprite = selectedSound.iconSprite;
-            updateUIColor(selectedSound.color);
+            // selectedSound.SetToNextColor();
+            // selectedSound.SetToNextIcon();
+
+            // soundAppearanceImage.sprite = selectedSound.iconSprite;
+            // updateUIColor(selectedSound.color);
         }
 
         void DeleteSelectedSound() {

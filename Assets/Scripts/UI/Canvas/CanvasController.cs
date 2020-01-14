@@ -63,7 +63,7 @@ namespace SIS {
     public class CanvasController : MonoBehaviour,
     ICanvasCreateSoundsDelegate, ICanvasMainMenuDelegate, ICanvasEditSoundDelegate,
     ICanvasListDelegate<Layout>, ICanvasListDelegate<SoundFile>, ICanvasListDelegate<SoundMarker>, 
-    ICanvasSettingsDelegate, ICanvasKioskDelegate {
+    ICanvasSettingsDelegate, ICanvasKioskDelegate, ICanvasMarkerAppearanceDelegate {
         public ICanvasControllerDelegate canvasDelegate = null;
         public SoundMarkerSelection objectSelection { get { return canvasDelegate != null ? canvasDelegate?.objectSelection : null; } }
         public SoundPlacement soundPlacement { get { return canvasDelegate != null ? canvasDelegate?.soundPlacement : null; } }
@@ -76,8 +76,9 @@ namespace SIS {
         public CanvasSoundMarkerList soundMarkerList;
         public CanvasSettings settings;
         public CanvasKiosk kiosk;
+        public CanvasMarkerAppearance markerAppearance;
 
-        public enum CanvasUIScreen { Main, AddSounds, EditSound, LayoutList, SoundFileList, SoundMarkerList, Settings, Kiosk, None }
+        public enum CanvasUIScreen { Main, AddSounds, EditSound, LayoutList, SoundFileList, SoundMarkerList, Settings, Kiosk, MarkerAppearance, None }
         private CanvasUIScreen _activeScreen = CanvasUIScreen.Main;
         public CanvasUIScreen activeScreen { get { return _activeScreen; } }
         public int activeScreenIndex { get { return (int)_activeScreen; } }
@@ -92,6 +93,7 @@ namespace SIS {
             soundMarkerList.gameObject.SetActive(false);
             settings.gameObject.SetActive(false);
             kiosk.gameObject.SetActive(false);
+            markerAppearance.gameObject.SetActive(false);
 
             mainScreen.canvasDelegate = this;
             placeSoundsOverlay.canvasDelegate = this;
@@ -101,6 +103,7 @@ namespace SIS {
             soundMarkerList.canvasDelegate = this;
             settings.canvasDelegate = this;
             kiosk.canvasDelegate = this;
+            markerAppearance.canvasDelegate = this;
         }
 
         void Update() {
@@ -134,18 +137,20 @@ namespace SIS {
                     case CanvasUIScreen.SoundMarkerList: soundMarkerList.CanvasWillAppear(); break;
                     case CanvasUIScreen.Settings: settings.CanvasWillAppear(); break;
                     case CanvasUIScreen.Kiosk: kiosk.CanvasWillAppear(); break;
+                    case CanvasUIScreen.MarkerAppearance: markerAppearance.CanvasWillAppear(); break;
                     default: break;
                 }
             }
 
             mainScreen.gameObject.SetActive(screen == CanvasUIScreen.Main);
             placeSoundsOverlay.gameObject.SetActive(screen == CanvasUIScreen.AddSounds);
-            editSoundOverlay.gameObject.SetActive(screen == CanvasUIScreen.EditSound);
+            editSoundOverlay.gameObject.SetActive(screen == CanvasUIScreen.EditSound || screen == CanvasUIScreen.MarkerAppearance);
             layoutList.gameObject.SetActive(screen == CanvasUIScreen.LayoutList);
             soundFileList.gameObject.SetActive(screen == CanvasUIScreen.SoundFileList);
             soundMarkerList.gameObject.SetActive(screen == CanvasUIScreen.SoundMarkerList);
             settings.gameObject.SetActive(screen == CanvasUIScreen.Settings);
             kiosk.gameObject.SetActive(screen == CanvasUIScreen.Kiosk);
+            markerAppearance.gameObject.SetActive(screen == CanvasUIScreen.MarkerAppearance);
             canvasDelegate?.CanvasBecameActive(screen, _activeScreen);
 
             if (_activeScreen == CanvasUIScreen.Settings) {
@@ -260,6 +265,11 @@ namespace SIS {
             objectSelection.DeselectSound();
 
             MainMenuPlaceSoundsBTNClicked();
+        }
+
+        public void SoundMarkerAppearanceButtonClicked(int colourIndex, int iconIndex) {
+            markerAppearance.setSelectedProperties(colourIndex, iconIndex);
+            SetCanvasScreenActive(CanvasUIScreen.MarkerAppearance);
         }
 
         #endregion
@@ -390,6 +400,11 @@ namespace SIS {
 
             if (fromScreen == CanvasUIScreen.EditSound && editSoundOverlay.BottomPanelState == EditSoundPanel.Visibility.Fullscreen) {
                 editSoundOverlay.BackButtonClicked();
+                return;
+            } else if (fromScreen == CanvasUIScreen.MarkerAppearance) {
+                editSoundOverlay.setSelectedMarkersColourAndIcon(markerAppearance.SelectedColourIndex, markerAppearance.SelectedIconIndex);
+                markerAppearance.gameObject.SetActive(false);
+                _activeScreen = CanvasUIScreen.EditSound;
                 return;
             }
 

@@ -146,7 +146,7 @@ namespace SIS {
         }
 
         public static IEnumerator AwaitLoading(IEnumerable<SoundFile> soundFilesThatAreLoading, Action completion) {
-            Debug.LogWarning("AwaitLoading...");
+            // Debug.LogWarning("AwaitLoading...");
             foreach (SoundFile sf in soundFilesThatAreLoading) {
                 if (sf.loadState == LoadState.Fail) { continue; }
                 if (sf.loadState != LoadState.Success) {
@@ -154,7 +154,7 @@ namespace SIS {
                     yield return new WaitForSeconds(0.1f);
                 }
             }
-            Debug.LogWarning("AwaitLoading COMPLETE!");
+            // Debug.LogWarning("AwaitLoading COMPLETE!");
             completion();
         }
 

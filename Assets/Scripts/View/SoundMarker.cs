@@ -446,6 +446,11 @@ namespace SIS {
             iconIndex = (iconIndex + 1) % SingletonData.Instance.sprites.Length;
         }
 
+        public void SetIconColourAndIndex(int colI, int iconI) {
+            colorIndex = colI;
+            iconIndex = iconI;
+        }
+
         public void SetToNextSoundShape() {
             soundShape = (SoundShape)(((int)soundShape + 1) % SingletonData.Instance.soundShapeSprites.Length);
         }

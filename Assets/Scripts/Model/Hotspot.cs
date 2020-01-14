@@ -104,6 +104,12 @@ namespace SIS {
         // =============
         // SETTERS
 
+        public void SetColorAndIconIndex(int newColorIndex, int newIconIndex) {
+            _colorIndex = newColorIndex;
+            _iconIndex = newIconIndex;
+            hotspotDelegate?.Save();
+        }
+
         public void SetIconIndex(int newIconIndex) {
             _iconIndex = newIconIndex;
             hotspotDelegate?.Save();
