@@ -52,6 +52,10 @@ namespace SIS {
 
         [HideInInspector] private AudioSource _audioSrc;
         [HideInInspector] public Hotspot hotspot { get; private set; }
+        private void setAudioClip(AudioClip clip) {
+            _audioSrc.clip = clip;
+            soundIcons.FlashBlack = _audioSrc.clip == null;
+        }
 
         public float lowestPitch = 0.3f;
         public float highestPitch = 3f;
@@ -366,6 +370,7 @@ namespace SIS {
 
         private void Update() {
             soundIcons.rotateFast = _audioSrc.isPlaying;
+            soundIcons.FlashBlack = _audioSrc.clip == null;
 
             if (userIsInsideTriggerRange) {
                 float percentageToEdge = percentToEdge();
@@ -498,7 +503,7 @@ namespace SIS {
         public void OnDemandNullifyAudioClip() {
             _audioSrc.Pause();
             
-            _audioSrc.clip = null;
+            setAudioClip(null);
         }
 
         public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
@@ -508,7 +513,7 @@ namespace SIS {
             // !!! This is important, otherwise we hear an artifact when the clip is assigned (Caused by Resonance)
             resonance.enabled = false;
             // ----------------------
-            _audioSrc.clip = sf.clip;
+            setAudioClip(sf.clip);
 
             if (!_audioSrc.isPlaying) {
                 _audioSrc.UnPause();
@@ -523,7 +528,7 @@ namespace SIS {
 
         public void LaunchNewClip(AudioClip clip, bool playAudio = true) {
             if (clip == null) { return; }
-            _audioSrc.clip = clip;
+            setAudioClip(clip);
             if (playAudio) {
                 if (!hotspot.triggerPlayback || userIsInsideTriggerRange) {
                     _audioSrc.UnPause();
