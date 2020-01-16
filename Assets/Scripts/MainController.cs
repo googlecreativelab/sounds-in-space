@@ -71,8 +71,7 @@ namespace SIS {
         [SerializeField] float defaultMinDistance = 0.25f;
         [SerializeField] float defaultMaxDistance = 0.5f;
 
-        private bool _blockingLoadingActive = false;
-        public bool shouldAllowEscapeKeyToTriggerBack() { return !_blockingLoadingActive; }
+        public bool shouldAllowEscapeKeyToTriggerBack() { return !loadingOverlay.activeInHierarchy; }
         public GameObject loadingOverlay;
         public UnityEngine.UI.Text loadingOverlayText;
 
@@ -210,7 +209,6 @@ namespace SIS {
         /// Update the scene data and place the corresponding sources
         /// </summary>
         public void LoadLayoutData() {
-            _blockingLoadingActive = true;
             #if UNITY_ANDROID
             Screen.fullScreen = true;
             #endif
@@ -230,7 +228,6 @@ namespace SIS {
                     #if UNITY_ANDROID
                     Screen.fullScreen = false;
                     #endif
-                    _blockingLoadingActive = true;
                 });
             } else {
                 layoutManager.LoadAllAudioClipsIntoMemory(MainController.soundMarkers,
@@ -242,7 +239,6 @@ namespace SIS {
                             #if UNITY_ANDROID
                             Screen.fullScreen = false;
                             #endif
-                            _blockingLoadingActive = true;
                         });
                     });
             }
