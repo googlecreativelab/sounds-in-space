@@ -59,6 +59,7 @@ namespace SIS {
         void OnDemandActiveWasChanged(bool onDemandIsActive);
         bool IsOnDemandActive();
 
+        bool shouldAllowEscapeKeyToTriggerBack();
     }
 
     public class CanvasController : MonoBehaviour,
@@ -108,7 +109,10 @@ namespace SIS {
         }
 
         void Update() {
-            CheckBackButton();
+            if (canvasDelegate != null 
+             && canvasDelegate.shouldAllowEscapeKeyToTriggerBack()) {
+                CheckBackButton();
+            }
         }
 
         private void CheckBackButton() {
