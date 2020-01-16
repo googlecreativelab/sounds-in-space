@@ -179,7 +179,7 @@ namespace SIS {
 
         #region ICanvasMainMenuDelegate
 
-        public void MainMenuSoundPlaybackBTNClicked(bool playbackIsStopped) {
+        public void MainMenuSoundPlaybackStateChanged(bool playbackIsStopped) {
             canvasDelegate?.PlaybackStateChanged(playbackIsStopped);
         }
 

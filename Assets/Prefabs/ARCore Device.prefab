@@ -142,8 +142,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79fd7242c76f64dd197a8d9b8f9b4930, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mixer: {fileID: 24100000, guid: 248799cb4acba48f7b3ee842a80f788c, type: 2}
   anchorWrapper: {fileID: 0}
+  mixer: {fileID: 24100000, guid: 248799cb4acba48f7b3ee842a80f788c, type: 2}
 --- !u!114 &234
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -290,10 +290,10 @@ Camera:
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
-  m_AllowMSAA: 1
+  m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
-  m_OcclusionCulling: 1
+  m_OcclusionCulling: 0
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
 --- !u!114 &204
@@ -370,7 +370,6 @@ MonoBehaviour:
   loadAudioCollider: {fileID: 2178864027974220717}
   unloadAudioCollider: {fileID: 7830663141985967298}
   ThresholdDistance: 0.2
-  DistanceFromUser: 1.3
 --- !u!1 &4434737162872493883
 GameObject:
   m_ObjectHideFlags: 0

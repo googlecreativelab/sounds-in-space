@@ -150,13 +150,13 @@ namespace SIS {
             }
         }
 
-        // public void SetAudioPauseState(bool isPaused) {
-        //     if (isPaused) {
-        //         _audioSrc.Pause();
-        //     } else {
-        //         _audioSrc.UnPause();
-        //     }
-        // }
+        public void SetAudioPauseState(bool isPaused) {
+            if (isPaused) {
+                _audioSrc.Pause();
+            } else {
+                _audioSrc.UnPause();
+            }
+        }
 
         public void PlayAudioFromBeginning(bool ignoreTrigger = false) {
             if (_audioSrc == null) return;

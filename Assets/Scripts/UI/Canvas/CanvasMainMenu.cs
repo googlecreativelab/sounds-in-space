@@ -24,7 +24,7 @@ using DG.Tweening;
 
 namespace SIS {
     public interface ICanvasMainMenuDelegate {
-        void MainMenuSoundPlaybackBTNClicked(bool playbackIsStopped);
+        void MainMenuSoundPlaybackStateChanged(bool playbackIsStopped);
         void MainMenuResetCameraBTNClicked();
         void MainMenuSettingsBTNClicked();
         void MainMenuPlaceSoundsBTNClicked();
@@ -257,11 +257,15 @@ namespace SIS {
             canvasDelegate.MainMenuResetCameraBTNClicked();
         }
 
-        public void BtnClickedPlayback() {
-            playbackIsStopped = !playbackIsStopped; // setter updates the view state
+        public void SetAllMarkerPlaybackState(bool stopPlayback) {
+            playbackIsStopped = stopPlayback;
 
             if (canvasDelegate == null) { return; }
-            canvasDelegate.MainMenuSoundPlaybackBTNClicked(playbackIsStopped);
+            canvasDelegate.MainMenuSoundPlaybackStateChanged(playbackIsStopped);
+        }
+
+        public void BtnClickedPlayback() {
+            SetAllMarkerPlaybackState(!playbackIsStopped);
         }
 
         // - - - - - - - - - -

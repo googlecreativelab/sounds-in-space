@@ -26,7 +26,9 @@ using UnityEngine;
 namespace SIS {
 
     [RequireComponent(typeof(SoundMarkerSelection))]
-    public class MainController : MonoBehaviour, IObjectSelectionDelegate, ICanvasControllerDelegate, ILayoutManagerDelegate, ISoundMarkerDelegate {
+    [RequireComponent(typeof(ARCoreTracking))]
+    public class MainController : MonoBehaviour, IObjectSelectionDelegate, ICanvasControllerDelegate, 
+        ILayoutManagerDelegate, ISoundMarkerDelegate, IARCoreTrackingDelegate, IVoiceOverDelegate {
 
         // Used to reset the ARCore device.
         private SessionStatus arCoreSessionStatus = SessionStatus.None;
@@ -91,10 +93,10 @@ namespace SIS {
         }
 
         void Start() {
-            // #if UNITY_ANDROID
-            // Screen.fullScreen = false;
-            // #endif
             loadingOverlay.gameObject.SetActive(false);
+
+            VoiceOver.main.setDelegate(this);
+            GetComponent<ARCoreTracking>().setDelegate(this);
 
             myObjectSelection = GetComponent<SoundMarkerSelection>();
             myObjectSelection.selectionDelegate = this;
@@ -106,6 +108,48 @@ namespace SIS {
             firstPersonCamera = arCoreDevice.gameObject.transform.GetChild(0).GetComponent<Camera>();
             soundPlacement.SetCursorModelHidden(true);
         }
+
+        #region IARCoreTrackingDelegate
+
+        public void arCoreTrackingResumedTracking() {
+            Debug.LogError("!!! arCoreTrackingResumedTracking");
+            VoiceOver.main.StopWarning();
+
+            canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: false);
+        }
+
+        public void arCoreTrackingPausedTracking() {
+            Debug.LogError("!!! arCoreTrackingPausedTracking");
+            VoiceOver.main.PlayWarning();
+
+            canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
+        }
+
+        public void arCoreTrackingStoppedTracking() {
+            Debug.LogError("!!! arCoreTrackingStoppedTracking");
+            VoiceOver.main.PlayWarning();
+
+            canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
+        }
+
+        #endregion
+        #region IVoiceOverDelegate
+
+        private void pauseSoundMarkers(bool pause) {
+            foreach (SoundMarker marker in MainController.soundMarkers) {
+                // If we are going to voice over mode, mute all world sounds
+                marker.SetAudioPauseState(pause);
+            }
+        }
+
+        public void voiceOverWillStart() {
+            pauseSoundMarkers(pause: true);
+        }
+        public void voiceOverWillStop() {
+            pauseSoundMarkers(pause: false);
+        }
+
+        #endregion
 
         public void Update() {
             UpdateApplicationLifecycle();
@@ -122,9 +166,7 @@ namespace SIS {
         /// Call when reset or starting scene
         /// </summary>
         private void CreateOriginMarkerAtCameraPosition() {
-            if (originMarker != null) {
-                Destroy(originMarker.transform.parent.gameObject);
-            }
+            if (originMarker != null) { Destroy(originMarker.transform.parent.gameObject); }
             originMarker = OriginMarker.CreatePrefab(firstPersonCamera.transform, originMarkerPrefab, anchorWrapperTransform);
         }
 
@@ -283,7 +325,7 @@ namespace SIS {
                 pf.markerDelegate = this;
                 soundMarkers.Add(pf);
                 ++index;
-                Debug.Log(index + " - Marker('" + h.soundID + "')");
+                Debug.Log("InitSoundMarkers LOADED " + index + " - Marker('" + h.soundID + "')");
                 if (progressCallback != null) { progressCallback(index); }
                 // yield return null;
                 yield return new WaitForSeconds(waitTime);
