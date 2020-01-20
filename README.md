@@ -193,6 +193,12 @@ To avoid repeating the above steps and placing sounds around the room with every
     - The important folders are named ‘sounds’ and ‘layouts’.
 2. Next, copy those folders to each phone you want the experience to run on by repeating Step 2 - ‘Copy sound files to the first phone’.
 
+## Using a FLIC button
+<a name="flic-button"></a>
+
+In the FLIC app, when a button is clicked, double clicked, or held, send an 'Intent' action.
+In the Intent edit menu, set the 'Action (Optional)' field to "com.google.cl.syd.solo.flic.IntentToUnity" and press SAVE ACTION.
+
 ## General Notes
 <a name="general-notes"></a>
 
