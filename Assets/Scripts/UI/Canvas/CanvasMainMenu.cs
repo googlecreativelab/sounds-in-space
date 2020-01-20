@@ -42,6 +42,8 @@ namespace SIS {
         public Button playbackButton = null;
         public Button placeSoundsButton = null;
 
+        public Text arTrackingText = null;
+
         private bool _playbackIsStopped = false;
         public bool playbackIsStopped {
             get { return _playbackIsStopped; }
@@ -51,7 +53,8 @@ namespace SIS {
             }
         }
 
-        AndroidJavaClass jc; // Java class for Flic integration
+        AndroidJavaClass flicJavaReceiver; // Java class for Flic integration
+
         public GameObject layoutNameGameObj = null;
         public InputField layoutNameInputField = null;
         public Text numSoundMarkersText = null;
@@ -93,26 +96,35 @@ namespace SIS {
             // Hide the menu to start, forcing the user to Set Start Position on app startup
             SetResetCamButtonToCenterOrLeft(isCenter: true);
 
-            jc = new AndroidJavaClass("com.google.cl.syd.solo.flic.MyReceiver");
-            jc.CallStatic("createInstance");
+            // com.google.cl.syd.soundsinspace.flic.MyReceiver
+            flicJavaReceiver = new AndroidJavaClass("com.google.cl.syd.solo.flic.MyReceiver");
+            flicJavaReceiver.CallStatic("createInstance");
         }
 
         void Update() {
-            // DetectFlicIntent();
+            DetectFlicIntent();
         }
 
-        // private void DetectFlicIntent() {
-        //     // Flic button resets camera on android
-        //     try {
-        //         if (jc.GetStatic<string>("text") == "clicked") {
-        //             // Simulate clicking the reset button
-        //             BtnClickedResetCamera();
-        //             jc.CallStatic("clearText");
-        //         }
-        //     } catch (NullReferenceException e) {
-        //         Debug.Log(e); // Not sure why we're getting a null exception here. Pass over it for now.
-        //     }
-        // }
+        private void DetectFlicIntent() {
+            // Flic button resets camera on android
+            try {
+
+                string javaReceiverString = flicJavaReceiver.GetStatic<string>("text");
+                if (javaReceiverString != null) {
+                    if (javaReceiverString.Length > 0) { Debug.Log(javaReceiverString); }
+                    if (javaReceiverString == "clicked") {
+                        
+                        // Simulate clicking the reset button
+                        // BtnClickedResetCamera();
+                        BtnClickedPlayback();
+                        
+                        flicJavaReceiver.CallStatic("clearText");
+                    }
+                }
+            } catch (NullReferenceException e) {
+                Debug.Log(e); // Not sure why we're getting a null exception here. Pass over it for now.
+            }
+        }
 
         public void UpdateMarkerCountLabel(int markerCount, int loadedAudioFileCount, int uniqueAudioFileCount) {
             numSoundMarkersText.text = "" + markerCount + " Marker" + (markerCount == 1 ? "" : "s") 
@@ -265,6 +277,7 @@ namespace SIS {
         }
 
         public void BtnClickedPlayback() {
+            if (!playbackButton.interactable) { return; }
             SetAllMarkerPlaybackState(!playbackIsStopped);
         }
 

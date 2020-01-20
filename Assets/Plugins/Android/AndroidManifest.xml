@@ -10,9 +10,9 @@
       </intent-filter>
       <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
     </activity>
-    <receiver android:name="com.google.cl.syd.soundsinspace.flic.MyReceiver">
+    <receiver android:name="com.google.cl.syd.solo.flic.MyReceiver">
       <intent-filter>
-        <action android:name="com.google.cl.syd.soundsinspace.flic.IntentToUnity"></action>
+        <action android:name="com.google.cl.syd.solo.flic.IntentToUnity"></action>
       </intent-filter>
     </receiver>
   </application>

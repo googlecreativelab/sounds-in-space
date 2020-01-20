@@ -115,21 +115,27 @@ namespace SIS {
             Debug.LogError("!!! arCoreTrackingResumedTracking");
             VoiceOver.main.StopWarning();
 
+            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nON";
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: false);
+            canvasControl.mainScreen.playbackButton.interactable = true;
         }
 
         public void arCoreTrackingPausedTracking() {
             Debug.LogError("!!! arCoreTrackingPausedTracking");
             VoiceOver.main.PlayWarning();
 
+            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nPAUSED";
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
+            canvasControl.mainScreen.playbackButton.interactable = false;
         }
 
         public void arCoreTrackingStoppedTracking() {
             Debug.LogError("!!! arCoreTrackingStoppedTracking");
             VoiceOver.main.PlayWarning();
 
+            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nSTOPPED";
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
+            canvasControl.mainScreen.playbackButton.interactable = false;
         }
 
         #endregion
@@ -311,7 +317,7 @@ namespace SIS {
             System.Action<int> progressCallback = null, 
             System.Action completeCallback = null) {
             
-            float waitTime = 2f / hotspots.Count;
+            float waitTime = 1.7f / hotspots.Count;
 
             int index = 0;
             // Bind all the sounds to their game objects
