@@ -17,7 +17,7 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System;
+// using System;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
@@ -52,8 +52,6 @@ namespace SIS {
                 playbackButton.transform.GetChild(0).GetComponent<Image>().sprite = playbackIsStopped ? playSprite : stopSprite;
             }
         }
-
-        AndroidJavaClass flicJavaReceiver; // Java class for Flic integration
 
         public GameObject layoutNameGameObj = null;
         public InputField layoutNameInputField = null;
@@ -96,35 +94,11 @@ namespace SIS {
             // Hide the menu to start, forcing the user to Set Start Position on app startup
             SetResetCamButtonToCenterOrLeft(isCenter: true);
 
-            // com.google.cl.syd.soundsinspace.flic.MyReceiver
-            flicJavaReceiver = new AndroidJavaClass("com.google.cl.syd.solo.flic.MyReceiver");
-            flicJavaReceiver.CallStatic("createInstance");
         }
 
-        void Update() {
-            DetectFlicIntent();
-        }
-
-        private void DetectFlicIntent() {
-            // Flic button resets camera on android
-            try {
-
-                string javaReceiverString = flicJavaReceiver.GetStatic<string>("text");
-                if (javaReceiverString != null) {
-                    if (javaReceiverString.Length > 0) { Debug.Log(javaReceiverString); }
-                    if (javaReceiverString == "clicked") {
-                        
-                        // Simulate clicking the reset button
-                        // BtnClickedResetCamera();
-                        BtnClickedPlayback();
-                        
-                        flicJavaReceiver.CallStatic("clearText");
-                    }
-                }
-            } catch (NullReferenceException e) {
-                Debug.Log(e); // Not sure why we're getting a null exception here. Pass over it for now.
-            }
-        }
+        // void Update() {
+            
+        // }
 
         public void UpdateMarkerCountLabel(int markerCount, int loadedAudioFileCount, int uniqueAudioFileCount) {
             numSoundMarkersText.text = "" + markerCount + " Marker" + (markerCount == 1 ? "" : "s") 

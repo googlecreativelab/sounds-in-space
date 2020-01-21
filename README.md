@@ -197,7 +197,12 @@ To avoid repeating the above steps and placing sounds around the room with every
 <a name="flic-button"></a>
 
 In the FLIC app, when a button is clicked, double clicked, or held, send an 'Intent' action.
-In the Intent edit menu, set the 'Action (Optional)' field to "com.google.cl.syd.solo.flic.IntentToUnity" and press SAVE ACTION.
+In the Intent edit menu, set the 'Action (Optional)' field to "com.google.cl.syd.soundsinspace.flic.click" and press SAVE ACTION.
+
+If you want to use other FLIC events (like 'double click' and 'click and hold'), set an extra key-value pair in the Intent editor.
+- Click: (default)
+- Double click event: ["type" : "double-clicked"]
+- Click and Hold event: ["type" : "click-hold"]
 
 ## General Notes
 <a name="general-notes"></a>

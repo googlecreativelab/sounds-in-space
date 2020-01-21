@@ -861,7 +861,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: On-Demand Audio
+  m_Text: On-Demand Audio (Beta)
 --- !u!1 &4005572715506685094
 GameObject:
   m_ObjectHideFlags: 0

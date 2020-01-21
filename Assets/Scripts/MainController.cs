@@ -27,8 +27,9 @@ namespace SIS {
 
     [RequireComponent(typeof(SoundMarkerSelection))]
     [RequireComponent(typeof(ARCoreTracking))]
+    [RequireComponent(typeof(FlicReceiver))]
     public class MainController : MonoBehaviour, IObjectSelectionDelegate, ICanvasControllerDelegate, 
-        ILayoutManagerDelegate, ISoundMarkerDelegate, IARCoreTrackingDelegate, IVoiceOverDelegate {
+        ILayoutManagerDelegate, ISoundMarkerDelegate, IARCoreTrackingDelegate, IVoiceOverDelegate, IFlicReceiverDelegate {
 
         // Used to reset the ARCore device.
         private SessionStatus arCoreSessionStatus = SessionStatus.None;
@@ -97,6 +98,7 @@ namespace SIS {
 
             VoiceOver.main.setDelegate(this);
             GetComponent<ARCoreTracking>().setDelegate(this);
+            GetComponent<FlicReceiver>().setDelegate(this);
 
             myObjectSelection = GetComponent<SoundMarkerSelection>();
             myObjectSelection.selectionDelegate = this;
@@ -139,6 +141,7 @@ namespace SIS {
         }
 
         #endregion
+        // --------------------------
         #region IVoiceOverDelegate
 
         private void pauseSoundMarkers(bool pause) {
@@ -156,6 +159,24 @@ namespace SIS {
         }
 
         #endregion
+        // --------------------------
+        #region IFlicReceiverDelegate
+
+        public void flicReceiverButtonClicked() {
+            if (!canvasControl.mainScreen.playbackButton.interactable) { return; }
+            canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: false);
+        }
+        public void flicReceiverButtonClickedTwice() {
+            if (!canvasControl.mainScreen.playbackButton.interactable) { return; }
+            canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
+        }
+        public void flicReceiverButtonClickAndHold() {
+            // Simulate clicking the reset button
+            canvasControl.mainScreen.BtnClickedResetCamera();
+        }
+
+        #endregion
+        // --------------------------
 
         public void Update() {
             UpdateApplicationLifecycle();
@@ -173,6 +194,7 @@ namespace SIS {
         /// </summary>
         private void CreateOriginMarkerAtCameraPosition() {
             if (originMarker != null) { Destroy(originMarker.transform.parent.gameObject); }
+            if (originMarkerPrefab == null) { Debug.LogError("originMarkerPrefab is null. Not calling OriginMarker.CreatePrefab"); return; }
             originMarker = OriginMarker.CreatePrefab(firstPersonCamera.transform, originMarkerPrefab, anchorWrapperTransform);
         }
 
@@ -285,6 +307,7 @@ namespace SIS {
                             Debug.Log("FINISHED loading clips and markers [OnDemand OFF]");
                             
                             #if UNITY_ANDROID
+                            if (canvasControl.activeScreen == CanvasController.CanvasUIScreen.Kiosk) { return; }
                             Screen.fullScreen = false;
                             #endif
                         });
