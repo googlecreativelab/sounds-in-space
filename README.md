@@ -10,8 +10,9 @@ Contents:
 - [How does it work?](#how)
 - [Known Issues](#issues)
 - [Developer Setup](#setup)
-- [How to create your own experience](#how-to)
 - [Using a Flic Button](#flic-button)
+- [Kiosk Mode](#kiosk-mode)
+- [How to create your own experience](#how-to)
 - [General Notes](#general-notes)
 - [Contributors](#contributors)
 
@@ -69,6 +70,27 @@ The app has not been released to the public on a mobile app store, but can be do
 5. Have a fun.
 
 ------------
+
+<a name="flic-button"></a>
+
+## Using a FLIC button
+
+In the FLIC app, when a button is clicked, double clicked, or held, send an 'Intent' action.
+In the Intent edit menu, set the 'Action (Optional)' field to "com.google.cl.syd.soundsinspace.flic.click" and press SAVE ACTION.
+
+If you want to use other FLIC events (like 'double click' and 'click and hold'), set an extra key-value pair in the Intent editor.
+- Click: (default)
+- Double click event: ["type" : "double-clicked"]
+- Click and Hold event: ["type" : "click-hold"]
+
+<a name="kiosk-mode"></a>
+
+## Kiosk Mode
+
+Kiosk mode can be accessed from the Main Menu. It will lock out any user interaction, until someone unlocks the mode using the access code.
+The access code is '3491'.
+
+Note: The Flic button can still be used while in Kiosk mode.
 
 <a name="how-to"></a>
 
@@ -198,18 +220,6 @@ To avoid repeating the above steps and placing sounds around the room with every
 1. Using Android File Transfer (on Mac) or the file transfer window (on Windows), and copying the two important folders inside the ‘files’ folder from your phone.
     - The important folders are named ‘sounds’ and ‘layouts’.
 2. Next, copy those folders to each phone you want the experience to run on by repeating Step 2 - ‘Copy sound files to the first phone’.
-
-<a name="flic-button"></a>
-
-## Using a FLIC button
-
-In the FLIC app, when a button is clicked, double clicked, or held, send an 'Intent' action.
-In the Intent edit menu, set the 'Action (Optional)' field to "com.google.cl.syd.soundsinspace.flic.click" and press SAVE ACTION.
-
-If you want to use other FLIC events (like 'double click' and 'click and hold'), set an extra key-value pair in the Intent editor.
-- Click: (default)
-- Double click event: ["type" : "double-clicked"]
-- Click and Hold event: ["type" : "click-hold"]
 
 <a name="general-notes"></a>
 
