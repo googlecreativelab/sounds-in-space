@@ -11,6 +11,7 @@ Contents:
 - [Known Issues](#issues)
 - [Developer Setup](#setup)
 - [How to create your own experience](#how-to)
+- [Using a Flic Button](#flic-button)
 - [General Notes](#general-notes)
 - [Contributors](#contributors)
 
