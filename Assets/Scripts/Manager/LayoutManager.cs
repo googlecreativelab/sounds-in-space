@@ -29,17 +29,38 @@ using UnityEngine;
 namespace SIS {
 
     public interface ILayoutManagerDelegate {
-        void LayoutManagerLoadedNewLayout(Layout newLayout);
-        void LayoutHotspotListChanged(Layout layout);
+        void LayoutManagerLoadedNewLayout(LayoutManager manager, Layout newLayout);
+        void LayoutManagerHotspotListChanged(LayoutManager manager, Layout layout);
+        void LayoutManagerLoadedAudioClipsChanged(LayoutManager manager, int hotspotCount);
         void StartCoroutineOn(IEnumerator e);
     }
 
-    public class LayoutManager : ILayoutDelegate {
+    public class LayoutManager : ILayoutDelegate, IOnDemandLoadingDelegate {
 
         public ILayoutManagerDelegate layoutManagerDelegate = null;
 
         public Layout layout; // Current scene layout in memory
+        public OnDemandLoadingManager onDemandLoadingManager = new OnDemandLoadingManager();
+
         public Dictionary<string, SoundFile> soundDictionary;
+        public Dictionary<string, SoundFile> getSoundDictionary() { return soundDictionary; }
+        public int getNumLoadedInSoundDictionary() { return loadedAudioClipCount; }
+        public int loadingAudioClipCount {
+            get {
+                return soundDictionary.Values.Aggregate(0, (acc, x) => {
+                    // Don't count the loading of the default sound file...
+                    return acc + (!x.isDefaultSoundFile && x.loadState == LoadState.Loading ? 1 : 0);
+                });
+            }
+        }
+        public int loadedAudioClipCount {
+            get { 
+                return soundDictionary.Values.Aggregate(0, (acc, x) => {
+                    // Don't count the loading of the default sound file...
+                    return acc + (!x.isDefaultSoundFile && x.loadState == LoadState.Success ? 1 : 0);
+                });
+            }
+        }
 
         // Top level save state int
         public int currentLayoutId {
@@ -56,7 +77,7 @@ namespace SIS {
         public Hotspot AddNewHotspot(Vector3 localPos, Vector3 rotation, float minDist, float maxDist) {
             Hotspot h = new Hotspot(localPos, rotation, minDist, maxDist);
             layout.AddHotspot(h);
-            layoutManagerDelegate?.LayoutHotspotListChanged(layout);
+            layoutManagerDelegate?.LayoutManagerHotspotListChanged(this, layout);
             return h;
         }
 
@@ -64,18 +85,18 @@ namespace SIS {
             if (layout == null) return;
 
             layout?.EraseHotspot(hotspot);
-            layoutManagerDelegate?.LayoutHotspotListChanged(layout);
+            layoutManagerDelegate?.LayoutManagerHotspotListChanged(this, layout);
         }
 
         public void EraseAllHotspots() {
             layout.EraseHotspots();
-            layoutManagerDelegate?.LayoutHotspotListChanged(layout);
+            layoutManagerDelegate?.LayoutManagerHotspotListChanged(this, layout);
         }
 
 
         // ============
         // SOUND FILE METHODS
-        public void Bind(SoundMarker obj, Hotspot hotspot, bool startPlayback) {
+        public void Bind(SoundMarker obj, Hotspot hotspot, bool startPlayback, bool reloadSoundClips) {
             AudioClip clip = soundDictionary.TryGetValue(hotspot.soundID, out SoundFile sf)
                 ? sf.clip  // If the sound is found, use it
                 : SoundFile.defaultSoundFile.clip; // Fallback to default
@@ -85,10 +106,14 @@ namespace SIS {
             obj.LaunchNewClip(clip, playAudio: startPlayback);
         }
 
-        public void Bind(SoundMarker obj, SoundFile sf) {
+        public void Bind(SoundMarker obj, SoundFile sf, bool reloadSoundClips) {
             // bind these
             obj.hotspot.Set(sf.filename);
             obj.LaunchNewClip(sf.clip);
+            
+            // When a new binding occurs, we SHOULD refresh the loaded sound clips
+            // if (reloadSoundClips) { LoadSoundClipsExclusivelyForCurrentLayout(() => { }); }
+            if (reloadSoundClips && layout.onDemandActive) { RefreshLoadStateForSoundMarkers(MainController.soundMarkers, () => { }); }
         }
 
         // =================
@@ -113,6 +138,7 @@ namespace SIS {
         }
 
         public void DuplicateLayout(Layout layout) {
+            Debug.Log("DuplicateLayout: " + layout.filename);
             // to duplicate, take all data of the current layout, but overwrite the id
             // to the next available
             var newLayout = layout;
@@ -132,6 +158,12 @@ namespace SIS {
         public SoundFile GetSoundFileFromSoundID(string soundID) {
             if (soundID != null && soundDictionary.TryGetValue(soundID, out SoundFile sf)) { return sf; }
             return SoundFile.defaultSoundFile;
+        }
+
+        public IEnumerable<SoundMarker> SoundMarkersUsingSoundFileID(string soundFileID, string hotspotIDToExclude = null) {
+            return hotspotIDToExclude == null ? 
+                MainController.soundMarkers.Where(marker => marker.hotspot.soundID == soundFileID) 
+              : MainController.soundMarkers.Where(marker => marker.hotspot.id != hotspotIDToExclude && marker.hotspot.soundID == soundFileID);
         }
 
         // ============
@@ -159,9 +191,11 @@ namespace SIS {
             var layouts = AllLayouts();
             var withID = layouts.Where( l => { return l.id == LayoutID; } );
             if (withID.Count() < 1) {
+                Debug.LogError(string.Format("There is no file with the id {}.", LayoutID));
                 throw new Exception(string.Format("There is no file with the id {}.", LayoutID));
             }
             if (withID.Count() > 1) {
+                Debug.LogError(string.Format("There are multiple files with id: {}.", LayoutID));
                 throw new Exception(string.Format("There are multiple files with id: {}.", LayoutID));
             }
             // Nice, exactly one
@@ -177,12 +211,13 @@ namespace SIS {
             return lays;
         }
 
-        public void LoadCurrentLoudout() {
+        public void LoadCurrentLayout() {
             // Try to load a single layout with the current id
             // If anything goes wrong, make a new layout with the next valid id
             try {
                 this.layout = LayoutWithId(currentLayoutId);
             } catch {
+                Debug.LogError("FAILED to create layout with currentLayoutId: " + currentLayoutId);
                 // Create a new layout instead
                 this.currentLayoutId = NextLayoutId();
                 this.layout = new Layout(currentLayoutId);
@@ -192,7 +227,7 @@ namespace SIS {
             // Set appropriate references
             layout.layoutDelegate = this;
             layout.SetHotspotDelegates();
-            layoutManagerDelegate?.LayoutManagerLoadedNewLayout(this.layout);
+            layoutManagerDelegate?.LayoutManagerLoadedNewLayout(this, this.layout);
         }
 
         private static void DeleteLayoutsWith(int id) {
@@ -205,28 +240,72 @@ namespace SIS {
             }
         }
 
-        public void LoadSoundFiles(Action completion) {
-            var into = this.soundDictionary; // A nice little alias for it
-                                             // Make sure we have data for every wav
+        // Load all Audio File's into the SoundFile dictionary
+        public void LoadSoundMetaFiles(Action completion) {
+            
+            // Make sure all 'audio files on disk' have meta files
             SoundFile.CreateNewMetas();
 
-            // load all sound files from their metas
+            // Populate the SoundFile dictionary
+            int numLoaded = 0;
+            Dictionary<string, SoundFile> sfDict = this.soundDictionary;
             foreach (var filename in SoundFile.metaFiles) {
-                SoundFile sf = SoundFile.ReadFromMeta(filename);
-                string wavName = sf.filename;
+                SoundFile newSoundFile = SoundFile.ReadFromMeta(filename);
 
                 // If the SoundFile has already been loaded, don't reload it
-                if (soundDictionary.ContainsKey(wavName)) { continue; }
+                if (sfDict.TryGetValue(newSoundFile.filename, out SoundFile sf)) {
+                    if (sf.loadState == LoadState.Success) { ++numLoaded; }
+                    continue;
+                }
 
-                layoutManagerDelegate?.StartCoroutineOn(SoundFile.LoadSoundFileFromMeta(filename, into));
+                newSoundFile.loadState = LoadState.NotLoaded;
+                sfDict[newSoundFile.filename] = newSoundFile;
             }
-            layoutManagerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(into, completion));
 
+            layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this,
+                hotspotCount: layout != null ? layout.hotspots.Count : 0);
+            // Debug.Log("Reloaded Metafiles... " + numLoaded + " SoundClip(s) are loaded. " 
+            //                            + ( SoundFile.metaFiles.Count() - numLoaded ) + " NOT loaded.");
+            completion();
         }
 
+        // - - - - - - - - - - - -
+
+        #region IOnDemandLoadingDelegate
+
+        public void OnDemandLoadingLoadedAudioClipsChanged(OnDemandLoadingManager manager) {
+            layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this, hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
+        }
+        public void StartCoroutineOn(IEnumerator e) {
+            layoutManagerDelegate?.StartCoroutineOn(e);
+        }
+
+        #endregion
+        
+
+        public void LoadClipInSoundFile(SoundFile soundFile, System.Action<SoundFile> completion) {
+            onDemandLoadingManager.LoadClipInSoundFile(soundFile, completion);
+        }
+
+        public void UnloadSoundMarkerAndSyncedClips(SoundMarker marker, IEnumerable<SoundMarker> syncedMarkers) {
+            onDemandLoadingManager.UnloadSoundMarkerAndSyncedClips(marker, syncedMarkers);
+        }
+
+        public void LoadSoundMarkerAndSyncedClips(SoundMarker marker, Action<HashSet<SoundMarker>> completion) {
+            onDemandLoadingManager.LoadSoundMarkerAndSyncedClips(marker, this.layout, completion);
+        }
+
+        public void RefreshLoadStateForSoundMarkers(List<SoundMarker> markers, Action completion) {
+            onDemandLoadingManager.RefreshLoadStateForSoundMarkers(markers, this.layout, completion);
+        }
+
+        public void LoadAllAudioClipsIntoMemory(List<SoundMarker> markers, Action completion) {
+            onDemandLoadingManager.LoadAllAudioClipsIntoMemory(markers, this.layout, completion);
+        }
 
         public void ReloadSoundFiles(Action completion) {
-            LoadSoundFiles(completion);
+            // LoadSoundFiles(completion);
+            LoadSoundMetaFiles(completion);
         }
 
         public List<SoundFile> AllSoundFiles() {
@@ -237,6 +316,8 @@ namespace SIS {
             // load the latest scene from memory or create new save
             soundDictionary = new Dictionary<string, SoundFile>();
             soundDictionary[SoundFile.DEFAULT_CLIP] = SoundFile.defaultSoundFile;
+
+            onDemandLoadingManager.setDelegate(this);
         }
     }
 

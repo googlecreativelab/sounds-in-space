@@ -50,7 +50,11 @@ namespace GoogleARCoreInternal
         public event Action EarlyUpdate;
 
         public event Action<bool> OnSessionSetEnabled;
+
+        public event Action<IntPtr, IntPtr> OnSetConfiguration;
 #pragma warning restore 67, 414
+
+        public event Action OnResetInstance;
 
         public static ARCoreIOSLifecycleManager Instance
         {
@@ -149,7 +153,25 @@ namespace GoogleARCoreInternal
                 m_SessionHandle = IntPtr.Zero;
             }
 
+            if (NativeSession != null)
+            {
+                NativeSession.MarkDestroyed();
+            }
+
             _Initialize();
+        }
+
+        /// <summary>
+        /// Force reset the singleton instance to null. Should only be used in Unit Test.
+        /// </summary>
+        internal static void ResetInstance()
+        {
+            if (s_Instance != null && s_Instance.OnResetInstance != null)
+            {
+                s_Instance.OnResetInstance();
+            }
+
+            s_Instance = null;
         }
 
 #if ARCORE_IOS_SUPPORT

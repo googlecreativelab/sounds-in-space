@@ -53,7 +53,7 @@ To the audience, this is an audio only experience. The phone screen is only requ
 
 The app has not been released to the public on a mobile app store, but can be downloaded and built in Unity. So far the experience has only been tested on fairly recent Android phones, such as a Pixel or Samsung Galaxy 7 or higher.
 
-1. Download Unity version [2018.3.0f2](https://unity3d.com/get-unity/download?thank-you=update&download_nid=59189) for compatibility.
+1. Download Unity version [2018.4.13f1](https://unity3d.com/unity/qa/lts-releases?version=2018.4) for compatibility.
 
 2. Clone this repo to your machine
 
@@ -192,6 +192,17 @@ To avoid repeating the above steps and placing sounds around the room with every
 1. Using Android File Transfer (on Mac) or the file transfer window (on Windows), and copying the two important folders inside the ‘files’ folder from your phone.
     - The important folders are named ‘sounds’ and ‘layouts’.
 2. Next, copy those folders to each phone you want the experience to run on by repeating Step 2 - ‘Copy sound files to the first phone’.
+
+## Using a FLIC button
+<a name="flic-button"></a>
+
+In the FLIC app, when a button is clicked, double clicked, or held, send an 'Intent' action.
+In the Intent edit menu, set the 'Action (Optional)' field to "com.google.cl.syd.soundsinspace.flic.click" and press SAVE ACTION.
+
+If you want to use other FLIC events (like 'double click' and 'click and hold'), set an extra key-value pair in the Intent editor.
+- Click: (default)
+- Double click event: ["type" : "double-clicked"]
+- Click and Hold event: ["type" : "click-hold"]
 
 ## General Notes
 <a name="general-notes"></a>

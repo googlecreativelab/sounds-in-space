@@ -26,13 +26,34 @@ namespace SIS {
         public int Count { get { return meshRends == null ? 0 : meshRends.Length; } }
         int curIndex = 0;
 
+        private Color _mainColor = Color.black;
+
+        private float _flashTimer;
+        private bool _flashBlack = false;
+        private bool _isBlack = false;
+        public bool FlashBlack {
+            get { return _flashBlack; }
+            set {
+                if (_flashBlack == true && value == true) { return; }
+                _flashBlack = value;
+                if (value) {
+                    _flashTimer = 0;
+                    _isBlack = true;
+                    setMaterialColor(Color.gray);
+                } else {
+                    setMaterialColor(_mainColor);
+                }
+            }
+        }
+
         private bool _rotateFast = false;
-        private float _rotMultiplier = 1f;
+        private float _rotMultiplier = 0.5f;
         public bool rotateFast {
             get { return _rotateFast; }
             set { 
+                if (_rotateFast == value) { return; }
                 _rotateFast = value;
-                _rotMultiplier = _rotateFast ? 3f : 0.7f;
+                _rotMultiplier = _rotateFast ? 4f : 0.5f;
             }
         }
 
@@ -49,6 +70,11 @@ namespace SIS {
         }
 
         public void SetSoundIconColour(Color col) {
+            _mainColor = col;
+            setMaterialColor(col);
+        }
+
+        private void setMaterialColor(Color col) {
             for (int i = 0; i < meshRends.Length; i++) {
                 meshRends[i].GetPropertyBlock(propBlock);
                 propBlock.SetColor("_Color", col);
@@ -66,6 +92,18 @@ namespace SIS {
 
         // Update is called once per frame
         void Update() {
+            if (_flashBlack) {
+                _flashTimer += Time.deltaTime;
+                if (_flashTimer > 0.6f) {
+                    setMaterialColor(_isBlack ? _mainColor : Color.gray);
+                    _isBlack = !_isBlack;
+                    _flashTimer = 0;
+                }
+            } else if (_isBlack) {
+                setMaterialColor(_mainColor);
+                _isBlack = false;
+            }
+
             transform.Rotate(
                 _rotMultiplier * Mathf.Sin(0.618f * Time.time),
                 _rotMultiplier * Mathf.Sin(Time.time),

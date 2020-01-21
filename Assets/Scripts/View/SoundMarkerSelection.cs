@@ -59,6 +59,7 @@ namespace SIS {
         }
 
         private void CreateNewObjSelectionRadius() {
+            Debug.LogError("SoundMarkerSelection::CreatingNewObjSelectionRadius from prefab");
             objSelectionRadius = Instantiate(SoundRadiusPrefab, parent: transform).GetComponent<SoundRadius>();
             objSelectionRadius.transform.localScale = Vector3.one;
             objSelectionRadius.isMinHidden = true;
@@ -66,6 +67,11 @@ namespace SIS {
         }
 
         #region Selection Radius
+
+        public void setShape(SoundShape newShape) {
+            if (objSelectionRadius == null) { CreateNewObjSelectionRadius(); }
+            objSelectionRadius.activeShape = newShape;
+        }
 
         public void SetSelectionMinRadiusVisible(bool isVisible) {
             if (objSelectionRadius == null) { CreateNewObjSelectionRadius(); }
@@ -122,6 +128,7 @@ namespace SIS {
             if (objSelectionRadius == null) { CreateNewObjSelectionRadius(); }
 
             SetSelectionRadiusParent(sso.transform);
+            objSelectionRadius.activeShape = sso.soundShape;
             objSelectionRadius.minRadius = sso.soundMinDist;
             objSelectionRadius.maxRadius = sso.soundMaxDist;
             objSelectionRadius.isMinHidden = false;

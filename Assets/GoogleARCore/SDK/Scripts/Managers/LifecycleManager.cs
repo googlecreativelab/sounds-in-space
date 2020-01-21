@@ -47,5 +47,25 @@ namespace GoogleARCoreInternal
                 return s_Instance;
             }
         }
+
+        /// <summary>
+        /// Force reset the singleton instance to null. Should only be used in Unit Test.
+        /// </summary>
+        internal static void ResetInstance()
+        {
+            if (s_Instance != null)
+            {
+                if (Application.platform == RuntimePlatform.IPhonePlayer)
+                {
+                    ARCoreIOSLifecycleManager.ResetInstance();
+                }
+                else
+                {
+                    ARCoreAndroidLifecycleManager.ResetInstance();
+                }
+
+                s_Instance = null;
+            }
+        }
     }
 }

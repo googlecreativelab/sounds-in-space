@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SIS {
 
@@ -54,6 +55,9 @@ namespace SIS {
         public List<SyncedMarkers> syncedMarkerIDs;
         [NonSerialized] public HashSet<HashSet<string>> syncedMarkerIDSets;
 
+        public bool onDemandActive;
+        public float onDemandRadius;
+
         public long lastSaveDate;
         [NonSerialized] public string filename;
 
@@ -70,6 +74,12 @@ namespace SIS {
             Save();
         }
 
+        public void SetOnDemand(bool isActive, float radius) {
+            onDemandActive = isActive;
+            onDemandRadius = radius;
+            Save();
+        }
+
         public static string saveDirectory {
             get {
                 return DirectoryManager.layoutSaveDirectory;
@@ -81,6 +91,8 @@ namespace SIS {
             this.layoutName = string.Format("New Layout {0}", id);
             this.hotspots = new List<Hotspot>();
             this.syncedMarkerIDs = new List<SyncedMarkers>();
+            this.onDemandActive = false;
+            this.onDemandRadius = SingletonData.OnDemandDefaultDistFromUser;
             this.lastSaveDate = DateTime.Now.Ticks;
             this.syncedMarkerIDSets = new HashSet<HashSet<string>>();
         }
@@ -98,19 +110,30 @@ namespace SIS {
             } else {
                 updateSyncedMarkerSets();
             }
+            if (this.onDemandRadius < SingletonData.OnDemandMinDistFromUser) {
+                this.onDemandActive = false; // Off by default
+                this.onDemandRadius = SingletonData.OnDemandDefaultDistFromUser;
+            }
         }
 
         // =========
+        // Synchronised Markers
+
+        public void printSyncedMarkers() {
+            for (int i = 0; i < this.syncedMarkerIDs.Count; ++i) {
+                Debug.Log("   SynchronisedMarkerIDs(" + i + ") .count: " + this.syncedMarkerIDs[i].list.Count);
+            }
+        }
 
         private void updateSyncedMarkerSets() {
             this.syncedMarkerIDSets.Clear();
             foreach (SyncedMarkers markers in this.syncedMarkerIDs) {
-                if (this.syncedMarkerIDs.Count < 2) { continue; }
+                if (markers.list.Count < 2) { continue; }
                 this.syncedMarkerIDSets.Add(new HashSet<string>(markers.list));
             }
         }
 
-        public HashSet<string> getSynchronisedMarkers(string forMarkerID) {
+        public HashSet<string> getSynchronisedMarkerIDs(string forMarkerID) {
             foreach (HashSet<string> syncedMarkerIDs in this.syncedMarkerIDSets) {
                 if (syncedMarkerIDs.Contains(forMarkerID)) {
                     return syncedMarkerIDs;
@@ -120,7 +143,21 @@ namespace SIS {
             return null;
         }
 
+        // Returns Synced Markers - NOT INCLUDING the marker that was passed in
+        public IEnumerable<SoundMarker> getSynchronisedMarkers(string forMarkerID) {
+            HashSet<string> syncedMarkerIDs = getSynchronisedMarkerIDs(forMarkerID);
+            if (syncedMarkerIDs == null || syncedMarkerIDs.Count < 1) { return null; }
+
+            return MainController.soundMarkers.Where(
+                (sm) => {
+                    return sm.hotspot.id != forMarkerID // Ignore the caller marker
+                        && syncedMarkerIDs.Contains(sm.hotspot.id);
+                });
+        }
+
         public void setSynchronisedMarkerIDs(HashSet<string> markers) {
+            // Debug.Log ("setSynchronisedMarkerIDs markers.count: " + markers.Count);
+
             // Remove ANY duplicates
             for (int i = 0; i < this.syncedMarkerIDs.Count; i++) {
                 for (int j = 0; j < this.syncedMarkerIDs[i].list.Count; j++) {
@@ -140,12 +177,11 @@ namespace SIS {
             // Add the new markers
             this.syncedMarkerIDs.Add(new SyncedMarkers(markers));
             updateSyncedMarkerSets();
-
-            // Debug.Log ("setSynchronisedMarkerIDs this.syncedMarkerIDs.count " + this.syncedMarkerIDs.Count);
+            
             Save();
         }
 
-        private void removeMarkerIDFromSynchronisedMarkers(string markerID, bool save = true) {
+        public void removeMarkerIDFromSynchronisedMarkers(string markerID, bool save = true) {
             for (int i = 0; i < this.syncedMarkerIDs.Count; i++) {
                 for (int j = 0; j < this.syncedMarkerIDs[i].list.Count; j++) {
                     string tmpMarkerID = this.syncedMarkerIDs[i].list[j];

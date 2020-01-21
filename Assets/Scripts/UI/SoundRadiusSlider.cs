@@ -27,8 +27,16 @@ namespace SIS {
     public class SoundRadiusSlider : MonoBehaviour {
         public ISoundRadiusSliderDelegate sliderDelegate = null;
 
-        public float minDiameter = 0.2f;
-        public float maxDiameter = 21.1f;
+        public bool isInnerOtherwiseOuterRadius = false;
+        // public float minDiameter { get; private set; } // Will get set on Awake
+        // public float maxDiameter { get; private set; } // Will get set on Awake
+        public float minDiameter { get { return isInnerOtherwiseOuterRadius 
+                ? SingletonData.Instance.InnerRadiusMinDiameter 
+                : SingletonData.Instance.OuterRadiusMinDiameter; } } // Will get set on Awake
+        public float maxDiameter { get { return isInnerOtherwiseOuterRadius 
+                ? SingletonData.Instance.InnerRadiusMaxDiameter 
+                : SingletonData.Instance.OuterRadiusMaxDiameter; } } // Will get set on Awake
+
         public float minRadius { get { return minDiameter * 0.5f; } }
         public float maxRadius { get { return maxDiameter * 0.5f; } }
         protected float minDiameterDelta { get { return 1f - minDiameter; } }
@@ -50,9 +58,14 @@ namespace SIS {
 
         bool notifySliderDelegate = true;
 
+        private void Awake() {
+            
+        }
+
         // Start is called before the first frame update
         void Start() {
             radiusSlider = GetComponentInChildren<UnityEngine.UI.Slider>();
+
         }
 
         public void SetSliderDiameter(float diameter, bool notifyDelegate = true) {
