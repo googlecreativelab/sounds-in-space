@@ -10,19 +10,23 @@ Contents:
 - [How does it work?](#how)
 - [Known Issues](#issues)
 - [Developer Setup](#setup)
+- [Using a Flic Button](#flic-button)
+- [Kiosk Mode](#kiosk-mode)
 - [How to create your own experience](#how-to)
 - [General Notes](#general-notes)
 - [Contributors](#contributors)
 
-## What is the Sounds in Space Experiment?
 <a name="intro"></a>
+
+## What is the Sounds in Space Experiment?
 
 Sounds in Space is an augmented reality audio experiment by Google's Creative Lab in Sydney. It allows you to make your own locational audio experience in a physical space.
 
 This is very much an experiment. We are still learning lots and would love you to help us share in this experimentation and learning!
 
-## How does it work?
 <a name="how"></a>
+
+## How does it work?
 
 Sounds in Space is a mobile app that was built with Unity and [Google's ARCore tech](https://developers.google.com/ar/). 
 
@@ -37,8 +41,9 @@ To the audience, this is an audio only experience. The phone screen is only requ
 
 ------------
 
-## Known Issues
 <a name="issues"></a>
+
+## Known Issues
 
 - This project has mainly been tested on Pixel XL mobile devices running **Android 9 Pie**. There is no support for running on any other (non-Android) operating system at this time.
 - Connecting & disconnecting bluetooth audio devices can cause audio issues. If this occurs, you may need to restart the app.
@@ -48,8 +53,9 @@ To the audience, this is an audio only experience. The phone screen is only requ
 
 ------------
 
-## Developer Setup
 <a name="setup"></a>
+
+## Developer Setup
 
 The app has not been released to the public on a mobile app store, but can be downloaded and built in Unity. So far the experience has only been tested on fairly recent Android phones, such as a Pixel or Samsung Galaxy 7 or higher.
 
@@ -65,8 +71,30 @@ The app has not been released to the public on a mobile app store, but can be do
 
 ------------
 
-## How to create your own experience
+<a name="flic-button"></a>
+
+## Using a FLIC button
+
+In the FLIC app, when a button is clicked, double clicked, or held, send an 'Intent' action.
+In the Intent edit menu, set the 'Action (Optional)' field to "com.google.cl.syd.soundsinspace.flic.click" and press SAVE ACTION.
+
+If you want to use other FLIC events (like 'double click' and 'click and hold'), set an extra key-value pair in the Intent editor.
+- Click: (default)
+- Double click event: ["type" : "double-clicked"]
+- Click and Hold event: ["type" : "click-hold"]
+
+<a name="kiosk-mode"></a>
+
+## Kiosk Mode
+
+Kiosk mode can be accessed from the Main Menu. It will lock out any user interaction, until someone unlocks the mode using the access code.
+The access code is '3491'.
+
+Note: The Flic button can still be used while in Kiosk mode.
+
 <a name="how-to"></a>
+
+## How to create your own experience
 
 Summary:
 
@@ -193,19 +221,9 @@ To avoid repeating the above steps and placing sounds around the room with every
     - The important folders are named ‘sounds’ and ‘layouts’.
 2. Next, copy those folders to each phone you want the experience to run on by repeating Step 2 - ‘Copy sound files to the first phone’.
 
-## Using a FLIC button
-<a name="flic-button"></a>
-
-In the FLIC app, when a button is clicked, double clicked, or held, send an 'Intent' action.
-In the Intent edit menu, set the 'Action (Optional)' field to "com.google.cl.syd.soundsinspace.flic.click" and press SAVE ACTION.
-
-If you want to use other FLIC events (like 'double click' and 'click and hold'), set an extra key-value pair in the Intent editor.
-- Click: (default)
-- Double click event: ["type" : "double-clicked"]
-- Click and Hold event: ["type" : "click-hold"]
+<a name="general-notes"></a>
 
 ## General Notes
-<a name="general-notes"></a>
 
 ### How to “play” your Sounds In Space experience
 
@@ -240,8 +258,9 @@ Once all your sound files have been placed around the room and loaded onto all p
 [Click here for troubleshooting help](https://www.androidphonesoft.com/resources/fix-android-file-transfer-not-working-mac.html)
 
 
-## Contributors
 <a name="contributors"></a>
+
+## Contributors
 
  - [Rupert Parry](http://rparry.me) | [Github](https://github.com/rupertparry) | [Twitter](https://twitter.com/rupert_parry)
  - Byron Hallett
