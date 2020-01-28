@@ -220,11 +220,6 @@ namespace SIS {
                 _managerDelegate?.OnDemandLoadingLoadedAudioClipsChanged(this);
                 if (completion != null) { completion(); }
             });
-
-            // AwaitLoadingOnCoroutine(loadingOrLoadedSoundFiles, notifyDelegate: true,
-            //     completion: () => {
-            //         if (completion != null) { completion(); }
-            //     });
         }
 
         // --------------------------
@@ -288,11 +283,6 @@ namespace SIS {
             lambdaWaiter.WaitForAllCallbacks(() => {
                 if (completion != null) { completion(loadingOrLoadedMarkers); }
             });
-
-            // AwaitLoadingOnCoroutine(loadingOrLoadedSoundFiles, notifyDelegate: false,
-            //     completion: () => {
-            //         if (completion != null) { completion(loadingOrLoadedMarkers); }
-            //     });
         }
 
         void unloadSoundMarkerAndSyncedClips(SoundMarker marker, IEnumerable<SoundMarker> syncedMarkers) {
@@ -406,24 +396,9 @@ namespace SIS {
                 _managerDelegate?.OnDemandLoadingLoadedAudioClipsChanged(this);
                 if (completion != null) { completion(); }
             });
-            
-            // AwaitLoadingOnCoroutine(loadingOrLoadedSoundFiles, notifyDelegate: true,
-            //     completion: () => { 
-            //         if (completion != null) { completion(); }
-            //     });
         }
 
         // --------------------------
-
-        // private void AwaitLoadingOnCoroutine(HashSet<SoundFile> loadingOrLoadedSoundFiles, bool notifyDelegate, Action completion) {
-        //     _managerDelegate?.StartCoroutineOn(SoundFile.AwaitLoading(
-        //         loadingOrLoadedSoundFiles,
-        //         completion: () => {
-        //             // audioClipLoadingOrUnloadingComplete(completion);
-        //             if (notifyDelegate) { _managerDelegate?.OnDemandLoadingLoadedAudioClipsChanged(this); }
-        //             if (completion != null) { completion(); }
-        //         }));
-        // }
 
         private void LoadClipInSoundFileOnCoroutine(SoundFile sf, SoundMarker marker, System.Action<SoundFile> completion = null) {
             if (sf.isDefaultSoundFile || (sf.loadState == LoadState.Success && sf.clip != null)) {
