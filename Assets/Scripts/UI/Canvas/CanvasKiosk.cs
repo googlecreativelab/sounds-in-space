@@ -11,7 +11,7 @@ namespace SIS {
     public class CanvasKiosk : CanvasBase, INumPadDelegate {
         public ICanvasKioskDelegate canvasDelegate = null;
 
-        public override CanvasController.CanvasUIScreen canvasID { get { return CanvasController.CanvasUIScreen.Settings; } }
+        public override CanvasController.CanvasUIScreen canvasID { get { return CanvasController.CanvasUIScreen.Kiosk; } }
         public UnityEngine.UI.Text passcodeText;
         public NumPad numPad;
 
