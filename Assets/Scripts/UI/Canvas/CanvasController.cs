@@ -153,7 +153,13 @@ namespace SIS {
                 }
             }
 
-            objectSelection.selectionEnabled = (screen == CanvasUIScreen.Main || screen == CanvasUIScreen.AddSounds || screen == CanvasUIScreen.EditSound);
+            // Don't allow SoundMarker selection from certain modes
+            if (objectSelection != null) {
+                objectSelection.selectionEnabled = 
+                    (screen == CanvasUIScreen.Main 
+                    || screen == CanvasUIScreen.AddSounds 
+                    || screen == CanvasUIScreen.EditSound);
+            }
 
             mainScreen.gameObject.SetActive(screen == CanvasUIScreen.Main);
             placeSoundsOverlay.gameObject.SetActive(screen == CanvasUIScreen.AddSounds);
