@@ -77,6 +77,10 @@ namespace SIS {
         public bool shouldAllowEscapeKeyToTriggerBack() { return !loadingOverlay.activeInHierarchy; }
         public GameObject loadingOverlay;
         public UnityEngine.UI.Text loadingOverlayText;
+        public UnityEngine.UI.Text debugText = null;
+
+        private bool _trackingLost = false;
+        private bool _loadingSoundMarkers = false;
 
         // True if the app is in the process of quitting due to an ARCore
         bool isQuitting = false;
@@ -110,16 +114,23 @@ namespace SIS {
             firstPersonCamera = arCoreDevice.gameObject.transform.GetChild(0).GetComponent<Camera>();
             soundPlacement.SetCursorModelHidden(true);
         }
+        #region Tracking & Playback
 
-        #region IARCoreTrackingDelegate
-
-        public void arCoreTrackingResumedTracking() {
-            Debug.LogError("!!! arCoreTrackingResumedTracking");
+        private void resumeSoundMarkerPlayback() {
             VoiceOver.main.StopWarning();
 
             canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nON";
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: false);
             canvasControl.mainScreen.playbackButton.interactable = true;
+        }
+
+        #endregion
+        #region IARCoreTrackingDelegate
+
+        public void arCoreTrackingResumedTracking() {
+            Debug.LogError("!!! arCoreTrackingResumedTracking");
+
+            // resumeSoundMarkerPlayback();
         }
 
         public void arCoreTrackingPausedTracking() {
@@ -129,6 +140,8 @@ namespace SIS {
             canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nPAUSED";
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
             canvasControl.mainScreen.playbackButton.interactable = false;
+
+            _trackingLost = true;
         }
 
         public void arCoreTrackingStoppedTracking() {
@@ -138,6 +151,8 @@ namespace SIS {
             canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nSTOPPED";
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
             canvasControl.mainScreen.playbackButton.interactable = false;
+
+            _trackingLost = true;
         }
 
         #endregion
@@ -180,6 +195,30 @@ namespace SIS {
 
         public void Update() {
             UpdateApplicationLifecycle();
+
+            // ----------------
+            // DEBUG Label
+            int numTracking = 0;
+            // int numPaused = 0;
+            // int numStopped = 0;
+            foreach (SoundMarker marker in MainController.soundMarkers) {
+                Anchor anchorParent = marker.transform.parent.GetComponent<Anchor>();
+                switch (anchorParent.TrackingState) {
+                    case TrackingState.Tracking: ++numTracking; break;
+                    // case TrackingState.Paused: ++numPaused; break;
+                    // case TrackingState.Stopped: ++numStopped; break;
+                }
+            }
+
+            // ----------------
+            // Update tracking loss
+            if (_trackingLost && numTracking == MainController.soundMarkers.Count) {
+                resumeSoundMarkerPlayback();
+                _trackingLost = false;
+            }
+
+            // debugText.text = string.Format("{0} tracking, {1} paused, {2} stopped", 
+            //                                 numTracking, numPaused, numStopped);
         }
 
 
@@ -264,7 +303,8 @@ namespace SIS {
         /// Load all the sounds after the camera has been moved
         /// </summary>
         /// <returns></returns>
-        void ReloadSoundsRelativeToCamera() {
+        void ReloadSoundsRelativeToCamera(System.Action reloadComplete = null) {
+            if (_loadingSoundMarkers) { return; }
 
             anchorWrapperTransform.position = firstPersonCamera.transform.position;
             float camYRot = firstPersonCamera.transform.rotation.eulerAngles.y;
@@ -272,13 +312,16 @@ namespace SIS {
 
             CreateOriginMarkerAtCameraPosition();
 
-            LoadLayoutData();
+            LoadLayoutData(reloadComplete);
         }
 
         /// <summary>
         /// Update the scene data and place the corresponding sources
         /// </summary>
-        public void LoadLayoutData() {
+        public void LoadLayoutData(System.Action loadComplete = null) {
+            if (_loadingSoundMarkers) { return; }
+            _loadingSoundMarkers = true;
+
             #if UNITY_ANDROID
             Screen.fullScreen = true;
             #endif
@@ -298,6 +341,9 @@ namespace SIS {
                     #if UNITY_ANDROID
                     Screen.fullScreen = false;
                     #endif
+
+                    _loadingSoundMarkers = false;
+                    if (loadComplete != null) { loadComplete(); }
                 });
             } else {
                 layoutManager.LoadAllAudioClipsIntoMemory(MainController.soundMarkers,
@@ -305,6 +351,9 @@ namespace SIS {
                         // Load the SoundMarkers on a CoRoutine
                         loadSoundMarkersOnCoroutine(complete: () => {
                             Debug.Log("FINISHED loading clips and markers [OnDemand OFF]");
+
+                            _loadingSoundMarkers = false;
+                            if (loadComplete != null) { loadComplete(); }
                             
                             #if UNITY_ANDROID
                             if (canvasControl.activeScreen == CanvasController.CanvasUIScreen.Kiosk) { return; }
@@ -340,7 +389,7 @@ namespace SIS {
             System.Action<int> progressCallback = null, 
             System.Action completeCallback = null) {
             
-            float waitTime = 1.7f / hotspots.Count;
+            float waitTime = hotspots.Count < 6 ? (1.2f / hotspots.Count) : 0;
 
             int index = 0;
             // Bind all the sounds to their game objects
@@ -356,8 +405,12 @@ namespace SIS {
                 ++index;
                 Debug.Log("InitSoundMarkers LOADED " + index + " - Marker('" + h.soundID + "')");
                 if (progressCallback != null) { progressCallback(index); }
-                // yield return null;
-                yield return new WaitForSeconds(waitTime);
+                
+                if (waitTime > 0) {
+                    yield return new WaitForSeconds(waitTime);
+                } else {
+                    yield return null;
+                }
             }
             completeCallback();
         }
@@ -554,6 +607,8 @@ namespace SIS {
         /// </summary>
         public void ResetCameraTapped() {
             // Debug.Log("DONE");
+
+            // WILL check if _loadingSoundMarkers is 'true'
             ReloadSoundsRelativeToCamera();
         }
 
