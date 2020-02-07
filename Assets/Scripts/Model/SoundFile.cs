@@ -171,7 +171,7 @@ namespace SIS {
                 } else {
                     AudioClip ac = DownloadHandlerAudioClip.GetContent(req);
                     if (ac != null) {
-                        Debug.Log("AudioClip loadState: " + ac.loadState + " - " + sf.filename);
+                        // Debug.Log("AudioClip loadState: " + ac.loadState + " - " + sf.filename);
 
                         if (sf.clip != null) { GameObject.Destroy(sf.clip); }
                         sf.clip = ac;
@@ -182,7 +182,7 @@ namespace SIS {
                     }
                 }
             }
-            Debug.LogWarning("SoundFile::loadSoundFileClip WILL call completion...");
+            // Debug.LogWarning("SoundFile::loadSoundFileClip WILL call completion...");
             if (completion != null) { completion(sf); }
         }
 
