@@ -525,7 +525,7 @@ namespace SIS {
         }
 
         public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
-            Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
+            //Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
 
             // ----------------------
             // !!! This is important, otherwise we hear an artifact when the clip is assigned (Caused by Resonance)
