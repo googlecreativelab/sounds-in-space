@@ -88,7 +88,7 @@ If you want to use other FLIC events (like 'double click' and 'click and hold'),
 ## Kiosk Mode
 
 Kiosk mode can be accessed from the Main Menu. It will lock out any user interaction, until someone unlocks the mode using the access code.
-The access code is '3491'.
+The access code is '3000'.
 
 Note: The Flic button can still be used while in Kiosk mode.
 
