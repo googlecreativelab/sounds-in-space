@@ -112,6 +112,12 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &71896557 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6492938233099635019, guid: e3742696ac12f45c5bd72452a7f5f90b,
+    type: 3}
+  m_PrefabInstance: {fileID: 1439130835}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &120871356
 GameObject:
   m_ObjectHideFlags: 0
@@ -744,32 +750,32 @@ PrefabInstance:
     - target: {fileID: 3979688463759801205, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 57.99994
+      value: 58
       objectReference: {fileID: 0}
     - target: {fileID: 4758629169651438039, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     - target: {fileID: 2580166467571953762, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     - target: {fileID: 6573742891309427923, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     - target: {fileID: 6069312869294526837, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     - target: {fileID: 1707094790764539324, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1fbc2764a48f64e3e90c73999aa20142, type: 3}
@@ -802,6 +808,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: 01-MainScreen
+      objectReference: {fileID: 0}
+    - target: {fileID: 6251367957677439395, guid: 4ddcd03697551432a803e6dd4b3701e5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6251367957677439392, guid: 4ddcd03697551432a803e6dd4b3701e5,
         type: 3}
@@ -1080,6 +1091,31 @@ PrefabInstance:
       propertyPath: m_Name
       value: PointCloud
       objectReference: {fileID: 0}
+    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
+        type: 3}
+      propertyPath: PointColor.r
+      value: 0.8235294
+      objectReference: {fileID: 0}
+    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
+        type: 3}
+      propertyPath: PointColor.g
+      value: 0.1215686
+      objectReference: {fileID: 0}
+    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
+        type: 3}
+      propertyPath: PointColor.b
+      value: 0.7812381
+      objectReference: {fileID: 0}
+    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
+        type: 3}
+      propertyPath: EnablePopAnimation
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
+        type: 3}
+      propertyPath: m_DefaultSize
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 4205356930328266, guid: 26558ae1d2e7243728486d789f984c53, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1123,31 +1159,6 @@ PrefabInstance:
     - target: {fileID: 4205356930328266, guid: 26558ae1d2e7243728486d789f984c53, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
-        type: 3}
-      propertyPath: PointColor.r
-      value: 0.8235294
-      objectReference: {fileID: 0}
-    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
-        type: 3}
-      propertyPath: PointColor.g
-      value: 0.1215686
-      objectReference: {fileID: 0}
-    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
-        type: 3}
-      propertyPath: PointColor.b
-      value: 0.7812381
-      objectReference: {fileID: 0}
-    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
-        type: 3}
-      propertyPath: EnablePopAnimation
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114747870037459092, guid: 26558ae1d2e7243728486d789f984c53,
-        type: 3}
-      propertyPath: m_DefaultSize
-      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 26558ae1d2e7243728486d789f984c53, type: 3}
@@ -1655,14 +1666,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: ARCore Device
       objectReference: {fileID: 0}
-    - target: {fileID: 148, guid: e3742696ac12f45c5bd72452a7f5f90b, type: 3}
-      propertyPath: m_OcclusionCulling
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 148, guid: e3742696ac12f45c5bd72452a7f5f90b, type: 3}
-      propertyPath: m_AllowMSAA
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 144, guid: e3742696ac12f45c5bd72452a7f5f90b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1707,10 +1710,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 203, guid: e3742696ac12f45c5bd72452a7f5f90b, type: 3}
-      propertyPath: anchorWrapper
-      value: 
-      objectReference: {fileID: 1643203213}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e3742696ac12f45c5bd72452a7f5f90b, type: 3}
 --- !u!4 &1439130836 stripped
@@ -2785,6 +2784,11 @@ PrefabInstance:
       propertyPath: firstPersonCamera
       value: 
       objectReference: {fileID: 199551390}
+    - target: {fileID: 6511648024236452582, guid: d796d7f7a16184047807acd3f6e5f7e3,
+        type: 3}
+      propertyPath: soundMarkerPooling
+      value: 
+      objectReference: {fileID: 71896557}
     - target: {fileID: 6511648024236452582, guid: d796d7f7a16184047807acd3f6e5f7e3,
         type: 3}
       propertyPath: soundPlacementRef

@@ -142,7 +142,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79fd7242c76f64dd197a8d9b8f9b4930, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  anchorWrapper: {fileID: 0}
   mixer: {fileID: 24100000, guid: 248799cb4acba48f7b3ee842a80f788c, type: 2}
 --- !u!114 &234
 MonoBehaviour:
@@ -251,6 +250,7 @@ Transform:
   - {fileID: 5571414880213034607}
   - {fileID: 2626261689499014723}
   - {fileID: 7610438047318910687}
+  - {fileID: 6492938233099635019}
   m_Father: {fileID: 144}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -370,6 +370,36 @@ MonoBehaviour:
   loadAudioCollider: {fileID: 2178864027974220717}
   unloadAudioCollider: {fileID: 7830663141985967298}
   ThresholdDistance: 0.2
+--- !u!1 &1785889428893718907
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6492938233099635019}
+  m_Layer: 0
+  m_Name: SoundMarkerPooling
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6492938233099635019
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1785889428893718907}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -9999}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 132}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4434737162872493883
 GameObject:
   m_ObjectHideFlags: 0

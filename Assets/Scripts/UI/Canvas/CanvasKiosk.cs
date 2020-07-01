@@ -15,6 +15,9 @@ namespace SIS {
         public UnityEngine.UI.Text passcodeText;
         public NumPad numPad;
 
+        public UnityEngine.UI.Text statsText1;
+        public UnityEngine.UI.Text statsText2;
+
         private ushort _numIndex = 0;
         private int[] _numberData = new int[4];
 

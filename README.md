@@ -50,6 +50,7 @@ To the audience, this is an audio only experience. The phone screen is only requ
 - At this stage, the app only recognises .WAV audio filetypes.
 - When loading your own audio files onto the device, be wary that the app will load all audio into memory on startup. (This can be optimised in the future)
 - When switching between apps or opening the app again, AR core may experience some tracking issues. If this happens to you, try restarting the app!
+- The 'On-demand audio' feature in settings is experimental and still in beta. It is off by default, if you have more sounds than the app can handle, try turning this on.
 
 ------------
 
@@ -88,7 +89,7 @@ If you want to use other FLIC events (like 'double click' and 'click and hold'),
 ## Kiosk Mode
 
 Kiosk mode can be accessed from the Main Menu. It will lock out any user interaction, until someone unlocks the mode using the access code.
-The access code is '3491'.
+The access code is '3000'.
 
 Note: The Flic button can still be used while in Kiosk mode.
 

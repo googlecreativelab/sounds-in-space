@@ -31,7 +31,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 1588408034079187645}
+  - {fileID: 4451338017321130487}
   - {fileID: 4893516479629045851}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -54,6 +54,7 @@ MonoBehaviour:
     type: 3}
   canvasControl: {fileID: 0}
   firstPersonCamera: {fileID: 0}
+  soundMarkerPooling: {fileID: 0}
   soundPlacementRef: {fileID: 0}
   anchorWrapperTransform: {fileID: 0}
   defaultMinDistance: 0.25
@@ -172,7 +173,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 70ac56ae05e194f7cbc56f2ec59cd3fd, type: 3}
---- !u!4 &1588408034079187645 stripped
+--- !u!4 &4451338017321130487 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3156316246580181995, guid: 70ac56ae05e194f7cbc56f2ec59cd3fd,
     type: 3}
