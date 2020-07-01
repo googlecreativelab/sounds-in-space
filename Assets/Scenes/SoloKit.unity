@@ -750,32 +750,32 @@ PrefabInstance:
     - target: {fileID: 3979688463759801205, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 57.99994
+      value: 58
       objectReference: {fileID: 0}
     - target: {fileID: 4758629169651438039, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     - target: {fileID: 2580166467571953762, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     - target: {fileID: 6573742891309427923, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     - target: {fileID: 6069312869294526837, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     - target: {fileID: 1707094790764539324, guid: 1fbc2764a48f64e3e90c73999aa20142,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -57.49994
+      value: -57.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1fbc2764a48f64e3e90c73999aa20142, type: 3}
@@ -808,6 +808,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: 01-MainScreen
+      objectReference: {fileID: 0}
+    - target: {fileID: 6251367957677439395, guid: 4ddcd03697551432a803e6dd4b3701e5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6251367957677439392, guid: 4ddcd03697551432a803e6dd4b3701e5,
         type: 3}

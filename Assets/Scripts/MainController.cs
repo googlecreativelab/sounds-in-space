@@ -133,7 +133,10 @@ namespace SIS {
         private void resumeSoundMarkerPlayback() {
             VoiceOver.main.StopWarning();
 
-            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nON";
+            string arTrackingStr = "AR Tracking\nON";
+            canvasControl.mainScreen.arTrackingText.text = arTrackingStr;
+            canvasControl.kiosk.statsText1.text = arTrackingStr;
+
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: false);
             canvasControl.mainScreen.playbackButton.interactable = true;
         }
@@ -151,7 +154,10 @@ namespace SIS {
             Debug.LogError("!!! arCoreTrackingPausedTracking");
             VoiceOver.main.PlayWarning();
 
-            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nPAUSED";
+            string arTrackingStr = "AR Tracking\nPAUSED";
+            canvasControl.mainScreen.arTrackingText.text = arTrackingStr;
+            canvasControl.kiosk.statsText1.text = arTrackingStr;
+
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
             canvasControl.mainScreen.playbackButton.interactable = false;
 
@@ -162,7 +168,10 @@ namespace SIS {
             Debug.LogError("!!! arCoreTrackingStoppedTracking");
             VoiceOver.main.PlayWarning();
 
-            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nSTOPPED";
+            string arTrackingStr = "AR Tracking\nSTOPPED";
+            canvasControl.mainScreen.arTrackingText.text = arTrackingStr;
+            canvasControl.kiosk.statsText1.text = arTrackingStr;
+
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
             canvasControl.mainScreen.playbackButton.interactable = false;
 
@@ -402,7 +411,7 @@ namespace SIS {
             System.Action completeCallback = null) {
             
             float waitTime = hotspots.Count < 6 ? (1.2f / hotspots.Count) : 0;
-            int markersToLoadBeforeYield = Mathf.Min(4, Mathf.Max(1, hotspots.Count / 12));
+            int markersToLoadBeforeYield = Mathf.Min(2, Mathf.Max(1, hotspots.Count / 16));
             Debug.Log ("markersToLoadBeforeYield: " + markersToLoadBeforeYield);
 
             int index = 0;
@@ -633,6 +642,7 @@ namespace SIS {
         }
 
         public void PlaybackStateChanged(bool playbackIsStopped) {
+            canvasControl.kiosk.statsText2.text = playbackIsStopped ? "Audio NOT playing" : "Audio PLAYING";
             foreach (SoundMarker marker in soundMarkers) {
                 marker.userHasHeardSound = false;
                 if (playbackIsStopped) {
