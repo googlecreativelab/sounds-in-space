@@ -3,8 +3,9 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -13,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MatchCameraFramerate: 1
   PlaneFindingMode: 1
-  EnableLightEstimation: 1
-  EnableCloudAnchor: 0
+  LightEstimationMode: 1
+  CloudAnchorMode: 0
   AugmentedImageDatabase: {fileID: 0}
   CameraFocusMode: 0
+  AugmentedFaceMode: 0
+  DepthMode: 0

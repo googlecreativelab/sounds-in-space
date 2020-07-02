@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="TransformationUtility.cs" company="Google">
+// <copyright file="TransformationUtility.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,8 +52,19 @@ namespace GoogleARCore.Examples.ObjectManipulationInternal
         /// </summary>
         public enum TranslationMode
         {
+            /// <summary>
+            /// Horizontal translation mode.
+            /// </summary>
             Horizontal,
+
+            /// <summary>
+            /// Vertical translation mode.
+            /// </summary>
             Vertical,
+
+            /// <summary>
+            /// Horizontal or vertical translation mode.
+            /// </summary>
             Any,
         }
 

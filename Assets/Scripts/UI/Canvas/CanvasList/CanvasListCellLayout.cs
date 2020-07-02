@@ -21,14 +21,20 @@
 namespace SIS {
     public class CanvasListCellLayout : CanvasListCell<Layout> {
 
-        public override void SetDatum(Layout newDatum) {
-            base.SetDatum(newDatum);
+        public override void ReloadUI() {
+            base.ReloadUI();
 
             // Specifics
             titleLabel.text = "\"" + datum.layoutName + "\"";
             subtitleLabel.text = string.Format("{0} Marker{1} · Last saved {2}",
                 datum.hotspots.Count, (datum.hotspots.Count == 1 ? "" : "s"),
                 datum.LastSaveDate().ToString("dd MMM yyyy"));
+        }
+
+        public override void SetDatum(Layout newDatum) {
+            base.SetDatum(newDatum);
+
+            ReloadUI();
         }
     }
 }

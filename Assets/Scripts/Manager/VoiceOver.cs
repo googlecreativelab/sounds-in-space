@@ -23,73 +23,39 @@ using GoogleARCore;
 
 namespace SIS {
 
+    public interface IVoiceOverDelegate {
+        void voiceOverWillStart();
+        void voiceOverWillStop();
+    }
     public class VoiceOver : MonoBehaviour {
+
+        IVoiceOverDelegate _voiceOverDelegate;
+        public void setDelegate(IVoiceOverDelegate del) { _voiceOverDelegate = del; }
 
         AudioSource audioSource;
         public AudioMixer mixer;
-        public Transform anchorWrapper;
-        TrackingState prevTrackingState;
 
         static public VoiceOver main {
-            get {
-                return Camera.main.GetComponentInChildren<VoiceOver>();
-            }
+            get { return Camera.main.GetComponentInChildren<VoiceOver>(); }
         }
-
-        private Anchor FirstAnchor {
-            get {
-                return anchorWrapper.GetComponentInChildren<Anchor>(includeInactive: true);
-            }
-        }
-
-        private AudioSource[] AnchorSources {
-            get {
-                return anchorWrapper.GetComponentsInChildren<AudioSource>(includeInactive: true);
-            }
-        }
+        
 
         void Awake() {
             audioSource = GetComponent<AudioSource>();
         }
-
-        void Update() {
-            DetectTrackingLoss();
-        }
-        private void DetectTrackingLoss() {
-
-            if (FirstAnchor == null) {
-                // No anchor? New scene, warning is not relevant
-                VoiceOver.main.StopWarning();
-                return;
-            }
-            // make sure the state has changed
-            TrackingState currTrackingState = FirstAnchor.TrackingState;
-            if (currTrackingState == prevTrackingState) return;
-
-            if (currTrackingState == TrackingState.Paused) {
-                VoiceOver.main.PlayWarning();
-            } else if (currTrackingState == TrackingState.Tracking) {
-                VoiceOver.main.StopWarning();
-            }
-            prevTrackingState = currTrackingState; // update prev state
-        }
-
-        private void AdjustVolume(bool voiceOver) {
-            foreach (var source in AnchorSources) {
-                // If we are going to voice over mode, mute all world sounds
-                source.mute = voiceOver;
-            }
-        }
+        
 
         private void PlayThis(SoundFile sf, bool playOnLoop = false, float volume = 1.0f) {
-            AdjustVolume(voiceOver: true);
+            _voiceOverDelegate?.voiceOverWillStart();
+
             audioSource.clip = sf.clip;
             audioSource.loop = playOnLoop;
             audioSource.volume = volume;
             audioSource.Play();
         }
         private void StopVoiceOver() {
-            AdjustVolume(voiceOver: false);
+            _voiceOverDelegate?.voiceOverWillStop();
+            
             audioSource.clip = null;
             audioSource.Stop();
         }

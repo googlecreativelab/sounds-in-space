@@ -6,13 +6,13 @@ TextureImporter:
     21300002: Icons_1
     21300004: Icons_2
     21300006: Icons_3
-    21300008: Icons_4
+    21300008: Gear-Icon
     21300010: Icons_5
     21300012: Icons_6
     21300014: Icons_7
     21300016: Icons_8
   externalObjects: {}
-  serializedVersion: 7
+  serializedVersion: 9
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -195,11 +195,11 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Icons_4
+      name: Gear-Icon
       rect:
         serializedVersion: 2
-        x: 167
-        y: 157
+        x: 172
+        y: 159
         width: 180
         height: 180
       alignment: 0

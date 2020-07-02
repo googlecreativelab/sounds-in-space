@@ -17,19 +17,21 @@
 //
 // </copyright>
 //-----------------------------------------------------------------------
-using System;
+// using System;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
 namespace SIS {
     public interface ICanvasMainMenuDelegate {
-        void SoundPlaybackBTNClicked(bool playbackIsStopped);
-        void ResetCameraBTNClicked();
-        void PlaceSoundsBTNClicked();
-        void LoadLayoutBTNClicked();
-        void SoundMarkersBTNClicked();
-        void CurrentLayoutWasRenamed(string layoutName);
+        void MainMenuSoundPlaybackStateChanged(bool playbackIsStopped);
+        void MainMenuResetCameraBTNClicked();
+        void MainMenuSettingsBTNClicked();
+        void MainMenuPlaceSoundsBTNClicked();
+        void MainMenuLoadLayoutBTNClicked();
+        void MainMenuSoundMarkersBTNClicked();
+        void MainMenuKioskBTNClicked();
+        void MainMenuCurrentLayoutWasRenamed(string layoutName);
         Layout GetCurrentLayout();
     }
 
@@ -40,6 +42,8 @@ namespace SIS {
         public Button playbackButton = null;
         public Button placeSoundsButton = null;
 
+        public Text arTrackingText = null;
+
         private bool _playbackIsStopped = false;
         public bool playbackIsStopped {
             get { return _playbackIsStopped; }
@@ -49,7 +53,6 @@ namespace SIS {
             }
         }
 
-        AndroidJavaClass jc; // Java class for Flic integration
         public GameObject layoutNameGameObj = null;
         public InputField layoutNameInputField = null;
         public Text numSoundMarkersText = null;
@@ -91,32 +94,25 @@ namespace SIS {
             // Hide the menu to start, forcing the user to Set Start Position on app startup
             SetResetCamButtonToCenterOrLeft(isCenter: true);
 
-            jc = new AndroidJavaClass("com.google.cl.syd.solo.flic.MyReceiver");
-            jc.CallStatic("createInstance");
         }
 
-        void Update() {
-            DetectFlicIntent();
+        // void Update() {
+            
+        // }
+
+        public void UpdateMarkerCountLabel(int markerCount, int loadedAudioFileCount, int uniqueAudioFileCount) {
+            numSoundMarkersText.text = "" + markerCount + " Marker" + (markerCount == 1 ? "" : "s") 
+            + " (" + loadedAudioFileCount + "/" + uniqueAudioFileCount + ") Clips Loaded [" 
+            + (UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576) + "mb/" 
+            + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]\n";
+            // + (UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576) + "mb]";
         }
 
-        private void DetectFlicIntent() {
-            // Flic button resets camera on android
-            try {
-                if (jc.GetStatic<string>("text") == "clicked") {
-                    // Simulate clicking the reset button
-                    BtnClickedResetCamera();
-                    jc.CallStatic("clearText");
-                }
-            } catch (NullReferenceException e) {
-                Debug.Log(e); // Not sure why we're getting a null exception here. Pass over it for now.
-            }
-        }
-
-        public void LayoutChanged(Layout layout) {
+        public void LayoutChanged(Layout layout, int loadedAudioFileCount, int uniqueAudioFileCount) {
             if (layout == null) { return; }
 
             layoutNameInputField.text = layout.layoutName;
-            numSoundMarkersText.text = "" + layout.hotspots.Count + " Sound Marker" + (layout.hotspots.Count == 1 ? "" : "s");
+            UpdateMarkerCountLabel(MainController.soundMarkers.Count, loadedAudioFileCount, uniqueAudioFileCount);
             playbackButton.gameObject.SetActive(layout.hotspots.Count > 0);
         }
 
@@ -158,7 +154,8 @@ namespace SIS {
                 numSoundMarkersText.gameObject.SetActive(initialStartPosHasBeenSet);
                 menuButton.gameObject.SetActive(initialStartPosHasBeenSet);
                 playbackButton.gameObject.SetActive(initialStartPosHasBeenSet && hotspotCount > 0);
-                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
+                // placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
+                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet);
 
                 menuBtnImg.sprite = menuIsOpen ? menuCloseSprite : menuNormalSprite;
 
@@ -180,7 +177,8 @@ namespace SIS {
 
                 menuBtnImg.sprite = menuIsOpen ? menuCloseSprite : menuNormalSprite;
                 playbackButton.gameObject.SetActive(initialStartPosHasBeenSet && hotspotCount > 0);
-                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
+                // placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet && !menuIsOpen && hotspotCount < 1);
+                placeSoundsButton.gameObject.SetActive(initialStartPosHasBeenSet);
 
                 menuBGIMG.raycastTarget = initialStartPosHasBeenSet && menuIsOpen;
 
@@ -213,7 +211,7 @@ namespace SIS {
         }
 
         public void LayoutNameTextfieldFinishedEditing(string str) {
-            canvasDelegate?.CurrentLayoutWasRenamed(str);
+            canvasDelegate?.MainMenuCurrentLayoutWasRenamed(str);
         }
 
         #endregion
@@ -242,33 +240,44 @@ namespace SIS {
             }
 
             if (canvasDelegate == null) { return; }
-            canvasDelegate.ResetCameraBTNClicked();
+            canvasDelegate.MainMenuResetCameraBTNClicked();
+        }
+
+        public void SetAllMarkerPlaybackState(bool stopPlayback) {
+            playbackIsStopped = stopPlayback;
+
+            if (canvasDelegate == null) { return; }
+            canvasDelegate.MainMenuSoundPlaybackStateChanged(playbackIsStopped);
         }
 
         public void BtnClickedPlayback() {
-            playbackIsStopped = !playbackIsStopped; // setter updates the view state
-
-            if (canvasDelegate == null) { return; }
-            canvasDelegate.SoundPlaybackBTNClicked(playbackIsStopped);
+            if (!playbackButton.interactable) { return; }
+            SetAllMarkerPlaybackState(!playbackIsStopped);
         }
 
         // - - - - - - - - - -
 
         public void BtnClickedLoadLayout() {
             if (canvasDelegate == null) { return; }
-            canvasDelegate.LoadLayoutBTNClicked();
+            canvasDelegate.MainMenuLoadLayoutBTNClicked();
+            CloseMenu();
+        }
+
+        public void BtnClickedSettings() {
+            if (canvasDelegate == null) { return; }
+            canvasDelegate.MainMenuSettingsBTNClicked();
             CloseMenu();
         }
 
         public void BtnClickedPlaceSounds() {
             if (canvasDelegate == null) { return; }
-            canvasDelegate.PlaceSoundsBTNClicked();
+            canvasDelegate.MainMenuPlaceSoundsBTNClicked();
             CloseMenu();
         }
 
         public void BtnClickedSoundList() {
             if (canvasDelegate == null) { return; }
-            canvasDelegate.SoundMarkersBTNClicked();
+            canvasDelegate.MainMenuSoundMarkersBTNClicked();
             CloseMenu();
         }
 
@@ -277,7 +286,9 @@ namespace SIS {
         }
 
         public void BtnClickedKioskMode() {
-            ShowNativeUnsupportedDialog();
+            if (canvasDelegate == null) { return; }
+            canvasDelegate.MainMenuKioskBTNClicked();
+            CloseMenu();
         }
 
         #endregion

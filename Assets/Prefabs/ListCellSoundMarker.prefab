@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7243c4210e48d450a92fc4652dd60336, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  datum: {fileID: 0}
   titleLabel: {fileID: 5775504187889768544}
   subtitleLabel: {fileID: 4797275533359373867}
   iconImage: {fileID: 4545719215424269795}
@@ -140,6 +139,22 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: cfe85ccc300c6447d8357685909a7f37,
         type: 3}
+    - target: {fileID: 7588335724649151052, guid: 939d3d430c79a4513b49d90239c91b3d,
+        type: 3}
+      propertyPath: m_Text
+      value: Base Text that happens to be quite long indeed in this case in time,
+        I do say
+      objectReference: {fileID: 0}
+    - target: {fileID: 6284175967249565886, guid: 939d3d430c79a4513b49d90239c91b3d,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -16
+      objectReference: {fileID: 0}
+    - target: {fileID: 6284175967249565886, guid: 939d3d430c79a4513b49d90239c91b3d,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: -72
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 939d3d430c79a4513b49d90239c91b3d, type: 3}
 --- !u!1 &8034038267262342373 stripped

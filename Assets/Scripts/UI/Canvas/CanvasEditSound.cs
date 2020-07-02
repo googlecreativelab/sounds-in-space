@@ -34,42 +34,46 @@ namespace SIS {
         void BackButtonClicked(CanvasController.CanvasUIScreen fromScreen);
         void SoundFileButtonClicked();
         void SyncPlaybackButtonClicked();
-        void ResetCameraBTNClicked();
+        void MainMenuResetCameraBTNClicked();
         void PlaceNewSoundsButtonClickedFromSoundEdit();
+        void SoundMarkerAppearanceButtonClicked(int colourIndex, int iconIndex);
+        
+        // Synced Markers
         System.Collections.Generic.HashSet<string> SynchronisedMarkerIDsWithMarkerID(string markerID);
+        void RemoveAnySynchronisationWithOtherMarkers(string markerID);
     }
 
     public class CanvasEditSound : CanvasBase, ISoundRadiusSliderDelegate, IInputFieldExtensionDelegate {
         public ICanvasEditSoundDelegate canvasDelegate = null;
         public override CanvasController.CanvasUIScreen canvasID { get { return CanvasController.CanvasUIScreen.EditSound; } }
 
+        [SerializeField] EditSoundPanel _bottomPanel;
+        public EditSoundPanel.Visibility BottomPanelState { get { return _bottomPanel.botPanelState; } }
+
         [SerializeField] UnityEngine.UI.Button topBackButton = null;
         [SerializeField] UnityEngine.UI.Button placeNewSoundButton = null;
 
-        [SerializeField] UnityEngine.UI.Button moreButton = null;
+        
         [SerializeField] UnityEngine.UI.Button soundSrcButton = null;
         [SerializeField] UnityEngine.UI.Text soundLabelResizeText = null;
         [SerializeField] InputFieldExtension soundNameInputField = null;
-
-        [SerializeField] RectTransform botPanelRect = null;
-        [SerializeField] RectTransform whiteBGRect = null;
-        [SerializeField] RectTransform sliderWrapperRect = null;
 
         [SerializeField] UnityEngine.UI.Image topGradientImage = null;
         bool topGradientActive = true;
 
         [SerializeField] UnityEngine.UI.Image repositionImage = null;
-        [SerializeField] UnityEngine.UI.Image soundIconImage = null;
-        [SerializeField] UnityEngine.UI.Image soundColorImage = null;
+        [SerializeField] UnityEngine.UI.Image soundShapeImage = null;
+        [SerializeField] UnityEngine.UI.Image soundAppearanceImage = null;
 
         [SerializeField] SoundRadiusSlider minRadiusSlider = null;
         [SerializeField] SoundRadiusSlider maxRadiusSlider = null;
 
         [SerializeField] UnityEngine.UI.Button confirmRepositionButton = null;
 
-        [SerializeField] UnityEngine.UI.ScrollRect settingsScrollview = null;
+        // [SerializeField] UnityEngine.UI.ScrollRect settingsScrollview = null;
         [SerializeField] UnityEngine.UI.Toggle triggerPlaybackToggle = null;
         [SerializeField] UnityEngine.UI.Toggle loopAudioToggle = null;
+        [SerializeField] UnityEngine.UI.Toggle playOnceToggle = null;
         [SerializeField] UnityEngine.UI.Text soundFilenameText = null;
 
         [SerializeField] UnityEngine.UI.Button syncPlaybackButton = null;
@@ -80,14 +84,9 @@ namespace SIS {
         [SerializeField] UnityEngine.UI.Slider freqCutoffSlider = null;
         [SerializeField] UnityEngine.UI.Slider phaserSlider = null;
         [SerializeField] UnityEngine.UI.Slider distortionSlider = null;
+        [SerializeField] UnityEngine.UI.Slider echoSlider = null;
 
-        // -----------------------------------------------
-        // -----------------------------------------------
-
-        enum Visibility { Hidden, Mini, Fullscreen }
-        Visibility botPanelState = Visibility.Mini;
-        float botPanelDefaultHeight { get { return botPanelRect.sizeDelta.y * -0.5243161094f; } }
-        // float botPanelDefaultHeight { get { return botPanelRect.sizeDelta.y * -0.547112462f; } }
+        public UnityEngine.UI.Text debugText = null;
 
         // -----------------------------------------------
 
@@ -106,123 +105,108 @@ namespace SIS {
             SetCanvasTitle("Edit Sound");
 
             setTopGradientState(active: false, animated: false);
-            setScrollRectToTop();
 
-            SetBottomPanelState(Visibility.Hidden, animated: false);
-            SetBottomPanelState(Visibility.Mini, animated: true, easing: Ease.OutExpo);
-        }
-
-        private void setScrollRectToTop() {
-            Vector3 pos = settingsScrollview.content.anchoredPosition3D;
-            pos.y = 0;
-            settingsScrollview.content.anchoredPosition3D = pos;
-        }
-
-        private void SetBottomPanelState(Visibility vis, bool animated = false, float delay = 0, Ease easing = Ease.InOutExpo) {
-            if (botPanelState == vis) { return; }
-
-            botPanelState = vis;
-            UpdateBottomPanel(animated, delay, easing);
-        }
-
-        private void UpdateBottomPanel(bool animated, float delay, Ease easing, float bottomMargin = 0, float animDuration = 0.6f) {
-            float botPanelYPos = 0;
-            float bgYScale = 1.05f;
-            float moreBTNAlpha = botPanelState == Visibility.Fullscreen ? 0 : 1f;
-            if (botPanelState == Visibility.Mini) {
-                botPanelYPos = botPanelDefaultHeight - bottomMargin;
-                bgYScale = 1f;
-            } else if (botPanelState == Visibility.Hidden) {
-                botPanelYPos = -botPanelRect.sizeDelta.y;
-                bgYScale = 1f;
-            }
-
-            if (botPanelState == Visibility.Fullscreen) { setScrollRectToTop(); }
-
-            UnityEngine.CanvasGroup moreBTNCanvasGroup = moreButton.GetComponentInChildren<UnityEngine.CanvasGroup>();
-            moreButton.interactable = botPanelState == Visibility.Mini;
-            if (!animated) {
-                Vector3 pos = botPanelRect.anchoredPosition3D;
-                pos.y = botPanelYPos;
-                botPanelRect.anchoredPosition3D = pos;
-                whiteBGRect.localScale = new Vector3(1f, bgYScale, 1f);
-                moreBTNCanvasGroup.alpha = moreBTNAlpha;
-
-            } else {
-                if (delay > 0) {
-                    moreBTNCanvasGroup.DOFade(moreBTNAlpha, animDuration).SetDelay(delay);
-                    botPanelRect.DOAnchorPos3DY(botPanelYPos, animDuration).SetEase(easing).SetDelay(delay);
-                    whiteBGRect.DOScaleY(bgYScale, animDuration).SetEase(easing).SetDelay(delay);
-                } else {
-                    moreBTNCanvasGroup.DOFade(moreBTNAlpha, animDuration);
-                    botPanelRect.DOAnchorPos3DY(botPanelYPos, animDuration).SetEase(easing);
-                    whiteBGRect.DOScaleY(bgYScale, animDuration).SetEase(easing);
-                }
-            }
+            _bottomPanel.panelWillAppear();
         }
 
         // ------------------------------------------------
 
-        public void SoundMarkerSelected(SoundMarker selectedSound) {
-            // Change the InputField text
-            soundNameInputField.text = selectedSound.hotspot.name;
-            soundLabelResizeText.text = selectedSound.hotspot.name;
-
-            // Change the 2D UI representation
-            soundIconImage.sprite = selectedSound.iconSprite;
-
-            // Set the trigger and loop toggles
-            triggerPlaybackToggle.isOn = selectedSound.hotspot.triggerPlayback;
-            loopAudioToggle.isOn = selectedSound.hotspot.loopAudio;
-            loopAudioToggle.interactable = (triggerPlaybackToggle.isOn == true);
-            SetTriggerVisualInteractiveState(loopAudioToggle);
-
-            pitchSlider.value = selectedSound.hotspot.pitchBend;
-            volumeSlider.value = selectedSound.hotspot.soundVolume;
-
-            // Filter values
-            freqCutoffSlider.value = selectedSound.hotspot.freqCutoff;
-            phaserSlider.value = selectedSound.hotspot.phaserLevel;
-            distortionSlider.value = selectedSound.hotspot.distortion;
-
+        private void updateSyncedMarkersUI(SoundMarker soundMarker) {
             // Syncronisation button subtitle
             syncSubtitleText.text = "Edit synchronised Sound Markers";
             if (canvasDelegate != null) {
-                System.Collections.Generic.HashSet<string> syncedMarkers = canvasDelegate.SynchronisedMarkerIDsWithMarkerID(selectedSound.hotspot.id);
+                System.Collections.Generic.HashSet<string> syncedMarkers = canvasDelegate.SynchronisedMarkerIDsWithMarkerID(soundMarker.hotspot.id);
                 if (syncedMarkers != null && syncedMarkers.Count > 1) {
-                    syncSubtitleText.text = string.Format("Synced with {0} Sound Marker{1}", 
+                    syncSubtitleText.text = string.Format("Synced with {0} Sound Marker{1}",
                                             syncedMarkers.Count - 1, (syncedMarkers.Count == 2 ? "" : "s"));
                 }
             }
+        }
+
+        public void setSelectedMarkersColourAndIcon(int colourIndex, int iconIndex) {
+            SoundMarker selectedMarker = canvasDelegate.objectSelection.selectedMarker;
+            if (selectedMarker == null) { return; }
+            
+            selectedMarker.SetIconColourAndIndex(colourIndex, iconIndex);
+
+            soundAppearanceImage.sprite = selectedMarker.iconSprite;
+            updateUIColor(selectedMarker.color);
+        }
+
+        public void SoundMarkerSelected(SoundMarker selectedMarker) {
+            // Change the InputField text
+            soundNameInputField.text = selectedMarker.hotspot.name;
+            soundLabelResizeText.text = selectedMarker.hotspot.name;
+
+            // Change the 2D UI representation
+            soundAppearanceImage.sprite = selectedMarker.iconSprite;
+            soundShapeImage.sprite = selectedMarker.soundShapeSprite;
+
+            // Set the trigger and loop toggles
+            triggerPlaybackToggle.isOn = selectedMarker.hotspot.triggerPlayback;
+            playOnceToggle.isOn = selectedMarker.hotspot.playOnce;
+            loopAudioToggle.isOn = selectedMarker.hotspot.loopAudio;
+            
+            bool loopAudioInteractable = selectedMarker.hotspot.triggerPlayback;
+            if (selectedMarker.hotspot.playOnce) { loopAudioInteractable = false; }
+            loopAudioToggle.interactable = loopAudioInteractable;
+
+            SetTriggerVisualInteractiveState(loopAudioToggle, loopAudioInteractable, selectedMarker.hotspot.loopAudio);
+
+            pitchSlider.value = selectedMarker.hotspot.pitchBend;
+            volumeSlider.value = selectedMarker.hotspot.soundVolume;
+
+            // Filter values
+            freqCutoffSlider.value = selectedMarker.hotspot.freqCutoff;
+            phaserSlider.value = selectedMarker.hotspot.phaserLevel;
+            distortionSlider.value = selectedMarker.hotspot.distortion;
+            echoSlider.value = selectedMarker.hotspot.echoMagnitude;
+
+            updateSyncedMarkersUI(selectedMarker);
 
             // Change the colour of the UI
-            Color newCol = selectedSound.color;
-            repositionImage.color = newCol;
-            soundIconImage.color = newCol;
-            soundColorImage.color = newCol;
+            updateUIColor(selectedMarker.color, notifyDelegate: false);
+            // Color newCol = selectedSound.color;
+            // repositionImage.color = newCol;
+            // soundAppearanceImage.color = newCol;
+            // soundColorImage.color = newCol;
 
-            minRadiusSlider.SetColorTint(newCol);
-            maxRadiusSlider.SetColorTint(newCol);
+            // minRadiusSlider.SetColorTint(newCol);
+            // maxRadiusSlider.SetColorTint(newCol);
 
-            minRadiusSlider.SetSliderRadius(selectedSound.soundMinDist, notifyDelegate: false);
-            maxRadiusSlider.SetSliderRadius(selectedSound.soundMaxDist, notifyDelegate: false);
+            // UnityEngine.UI.ColorBlock cols = soundSrcButton.colors;
+            // cols.normalColor = newCol;
+            // cols.highlightedColor = newCol.ColorWithBrightness(-0.15f);
+            // cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
+            // soundSrcButton.colors = cols;
 
-            UnityEngine.UI.ColorBlock cols = soundSrcButton.colors;
-            cols.normalColor = newCol;
-            cols.highlightedColor = newCol.ColorWithBrightness(-0.15f);
-            cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
-            soundSrcButton.colors = cols;
+            minRadiusSlider.SetSliderRadius(selectedMarker.soundMinDist, notifyDelegate: false);
+            maxRadiusSlider.SetSliderRadius(selectedMarker.soundMaxDist, notifyDelegate: false);
 
-            if (selectedSound.hotspot.soundFile.isDefaultSoundFile) {
+            SoundFile markerSoundFile = selectedMarker.hotspot.soundFile;
+
+            if (markerSoundFile.isDefaultSoundFile) {
                 soundFilenameText.text = "Tap to change sound";
             } else {
-                soundFilenameText.text = "\"" + selectedSound.hotspot.soundFile.filenameWithExtension + "\"";
+                soundFilenameText.text = "\"" + markerSoundFile.filenameWithExtension + "\"";
             }
 
             int charLimit = 21;
             int charsOver = soundFilenameText.text.Length - charLimit;
             float percentOverCharLimit = (charsOver > 0) ? (charsOver / 8f) : 0;
             soundFilenameText.fontSize = 36 - (int)(8 * percentOverCharLimit);
+
+            refreshDebugText();
+            // debugText.text = selectedMarker.userHasHeardSound ? "User HAS heard" : "NOT heard";
+        }
+
+        public void refreshDebugText() {
+            if (canvasDelegate == null || canvasDelegate.objectSelection == null || canvasDelegate.objectSelection.selectedMarker == null 
+             || canvasDelegate.objectSelection.selectedMarker.hotspot == null) { return; }
+
+            SoundFile markerSoundFile = canvasDelegate.objectSelection.selectedMarker.hotspot.soundFile;
+            if (markerSoundFile == null) { return; }
+            debugText.text = markerSoundFile.filename + (markerSoundFile.loadState == LoadState.Success ? " is LOADED" : " is NOT loaded");
         }
 
         public void SetMinRadiusSliderDistanceValue(float dist) {
@@ -245,7 +229,8 @@ namespace SIS {
             if (inputField == soundNameInputField) {
                 // Animate the bottom panel up based on the height of the keyboard...
                 Debug.Log("InputFieldExtension::OnSelect KB height: " + TouchScreenKeyboard.area.height);
-                UpdateBottomPanel(animated: true, delay: 0, Ease.InOutExpo, bottomMargin: botPanelDefaultHeight * 0.37f);
+
+                _bottomPanel.setIsVisibleAboveKeyboard();
             }
         }
 
@@ -263,11 +248,31 @@ namespace SIS {
             topGradientActive = active;
         }
 
-        public void ScrollViewMoved(Vector2 offset) {
-            // Debug.Log (offset);
-            setTopGradientState(offset.y < 0.9f);
+        // --------------------------------------
+        #region Settings ScrollView Functions
+
+        public void OnBeginDrag(UnityEngine.EventSystems.BaseEventData eventData) {
+            UnityEngine.EventSystems.PointerEventData pointerData = eventData as UnityEngine.EventSystems.PointerEventData;
+            if (pointerData != null) {
+                _bottomPanel.bottomScrollViewStartedDragging(pointerData.position.y);
+            }
+            
         }
 
+        public void ScrollViewMoved(Vector2 offset) {
+            setTopGradientState(offset.y < 0.9f);
+            _bottomPanel.bottomScrollViewYMoved(offset.y);
+        }
+
+        public void OnEndDrag(UnityEngine.EventSystems.BaseEventData eventData) {
+            UnityEngine.EventSystems.PointerEventData pointerData = eventData as UnityEngine.EventSystems.PointerEventData;
+            if (pointerData != null) {
+                _bottomPanel.bottomScrollViewEndedDragging(pointerData.position.y);
+            }
+        }
+
+        #endregion
+        // --------------------------------------
         #region Textfield Callbacks
 
         public void SoundNameTextfieldChanged(string str) {
@@ -275,7 +280,9 @@ namespace SIS {
         }
 
         public void SoundNameTextfieldFinishedEditing(string str) {
-            UpdateBottomPanel(animated: true, delay: 0, Ease.InOutExpo, bottomMargin: 0, animDuration: 0.1f);
+            _bottomPanel.SetBottomPanelState(EditSoundPanel.Visibility.Mini, animated: true, delay: 0, 
+                                                Ease.InOutExpo, bottomMargin: 0, animDuration: 0.1f);
+            // UpdateBottomPanel(animated: true, delay: 0, DG.Tweening.Ease.InOutExpo, bottomMargin: 0, animDuration: 0.1f);
 
             SoundMarker selectedSound = canvasDelegate.objectSelection.selectedMarker;
             if (selectedSound == null) { return; }
@@ -286,19 +293,25 @@ namespace SIS {
 
         // ------------------------------------------------
 
-        void AnimateToggle(UnityEngine.UI.Toggle toggle, bool isOn, float animDuration = 0.36f) {
+        public static Color bgColorForToggle(bool interactable, bool isOn) {
             Color interactiveCol = ColorThemeData.Instance.interactionColor;
             Color onButNotInteractiveColor = new Color(interactiveCol.r, interactiveCol.g, interactiveCol.b, 0.25f);
 
-            Color bgCol = toggle.isOn
-                ? (toggle.interactable ? interactiveCol : onButNotInteractiveColor)
-                : new Color(0.632f, 0.632f, 0.632f);
+            return isOn
+                ? (interactable ? interactiveCol : onButNotInteractiveColor)
+                : (interactable ? new Color(0.632f, 0.632f, 0.632f) : new Color(0.87f, 0.87f, 0.87f));
+        }
+
+        public static void AnimateToggle(UnityEngine.UI.Toggle toggle, bool isOn, float animDuration = 0.36f) {
+            
+
+            Color bgCol = bgColorForToggle(toggle.interactable, isOn);
             toggle.targetGraphic.DOColor(bgCol, animDuration);
 
             // Transform toggleKnob = toggle.targetGraphic.transform.GetChild(0);
             Transform toggleKnob = toggle.transform.GetChild(0).transform.GetChild(0);
             RectTransform rectTransform = toggleKnob.GetComponent<RectTransform>();
-            rectTransform.DOAnchorPos3DX(endValue: isOn ? 32 : -32, duration: animDuration).SetEase(Ease.InOutExpo);
+            rectTransform.DOAnchorPos3DX(endValue: isOn ? 32 : -32, duration: animDuration).SetEase(DG.Tweening.Ease.InOutExpo);
 
             // Debug.Log(rectTransform);
             // float toggleKnobX = toggleKnob.GetComponent<RectTransform>().anchoredPosition3D.x;
@@ -311,14 +324,13 @@ namespace SIS {
             // rectTransform.anchoredPosition = new Vector2(isOn ? 32 : -32, 0);
         }
 
-        void SetTriggerVisualInteractiveState(UnityEngine.UI.Toggle toggle) {
-            Color interactiveCol = ColorThemeData.Instance.interactionColor;
-            Color onButNotInteractiveColor = new Color(interactiveCol.r, interactiveCol.g, interactiveCol.b, 0.25f);
+        void SetTriggerVisualInteractiveState(UnityEngine.UI.Toggle toggle, bool interactable, bool isOn) {
 
-            Color bgCol = toggle.isOn
-                ? (toggle.interactable ? interactiveCol : onButNotInteractiveColor)
-                : new Color(0.632f, 0.632f, 0.632f);
+            Color bgCol = bgColorForToggle(toggle.interactable, isOn);
             toggle.targetGraphic.color = bgCol;
+
+            // UnityEngine.UI.Image knobImage = toggle.transform.GetChild(0).transform.GetChild(0).GetComponent<UnityEngine.UI.Image>();
+            // knobImage.color = toggle.interactable ? Color.white : new Color(0.8f, 0.8f, 0.8f);
         }
 
         #region Trigger Callbacks
@@ -330,12 +342,24 @@ namespace SIS {
 
             AnimateToggle(triggerPlaybackToggle, isOn); // Animate
 
+            // - - - - - - - - - - -
             // Only allow loop to be turned off if trigger is on
-            loopAudioToggle.interactable = (isOn == true);
-            if (!isOn && !loopAudioToggle.isOn) {
-                loopAudioToggle.isOn = true;
-            } else {
-                SetTriggerVisualInteractiveState(loopAudioToggle);
+            bool loopInteractable = (isOn == true);
+            if (playOnceToggle.isOn) { loopInteractable = false; }
+
+            bool loopIsOn = loopAudioToggle.isOn;
+            loopAudioToggle.interactable = loopInteractable;
+            if (loopAudioToggle.isOn == false && isOn == false && playOnceToggle.isOn == false) {
+                loopIsOn = true;
+            }
+            loopAudioToggle.isOn = loopIsOn;
+            SetTriggerVisualInteractiveState(loopAudioToggle, loopInteractable, loopIsOn);
+            // - - - - - - - - - - -
+
+            if (!isOn) {
+                // Remove any involvement with synced markers
+                canvasDelegate?.RemoveAnySynchronisationWithOtherMarkers(selectedMarker.hotspot.id);
+                updateSyncedMarkersUI(selectedMarker);
             }
 
             // Save the data to the Hotspot
@@ -343,6 +367,7 @@ namespace SIS {
         }
 
         public void LoopAudioToggled(bool isOn) {
+            // Debug.Log("LoopAudioToggled");
             if (canvasDelegate == null) { return; }
             SoundMarker selectedMarker = canvasDelegate.objectSelection.selectedMarker;
             if (selectedMarker == null && selectedMarker.hotspot != null) { return; }
@@ -351,6 +376,32 @@ namespace SIS {
 
             // Save the data to the Hotspot
             selectedMarker.SetAudioShouldLoop(isOn);
+        }
+
+        public void PlayOnceToggled(bool isOn) {
+            if (canvasDelegate == null) { return; }
+            SoundMarker selectedMarker = canvasDelegate.objectSelection.selectedMarker;
+            if (selectedMarker == null && selectedMarker.hotspot != null) { return; }
+
+            AnimateToggle(playOnceToggle, isOn); // Animate
+
+            // - - - - - - - - - - -
+            // Only allow loop to be turned on if PlayOnce is off
+            bool loopInteractable = (isOn == false);
+            bool loopIsOn = loopAudioToggle.isOn;
+            loopAudioToggle.interactable = loopInteractable;
+            if (loopAudioToggle.isOn == true && isOn == true) {
+                loopIsOn = false;
+            } else if (loopAudioToggle.isOn == false && isOn == false && triggerPlaybackToggle.isOn == false) {
+                loopIsOn = true;
+            }
+
+            loopAudioToggle.isOn = loopIsOn;
+            SetTriggerVisualInteractiveState(loopAudioToggle, loopInteractable, loopIsOn);
+            // - - - - - - - - - - -
+
+            // Save the data to the Hotspot
+            selectedMarker.SetPlayOnce(isOn);
         }
 
         #endregion
@@ -409,6 +460,36 @@ namespace SIS {
         }
 
         #endregion
+        #region Echo Slider Callback
+
+        public void EchoSliderChanged(float newVal) {
+            if (canvasDelegate == null) { return; }
+            SoundMarker selectedMarker = canvasDelegate.objectSelection.selectedMarker;
+            if (selectedMarker == null && selectedMarker.hotspot != null) { return; }
+
+            selectedMarker.SetEchoMagnitude(newVal);
+        }
+
+        #endregion
+
+        private void updateUIColor(Color newCol, bool notifyDelegate = true) {
+            
+            repositionImage.color = newCol;
+            soundShapeImage.color = newCol;
+            soundAppearanceImage.color = newCol;
+            minRadiusSlider.SetColorTint(newCol);
+            maxRadiusSlider.SetColorTint(newCol);
+
+            UnityEngine.UI.ColorBlock cols = soundSrcButton.colors;
+            cols.normalColor = newCol;
+            cols.highlightedColor = newCol.ColorWithBrightness(-0.15f);
+            cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
+            soundSrcButton.colors = cols;
+
+            if (!notifyDelegate) { return; }
+            canvasDelegate.objectSelection.SetSelectionRadiusColor(newCol);
+        }
+
         #region Button Callbacks
 
         public void SyncPlaybackButtonClicked() {
@@ -418,10 +499,11 @@ namespace SIS {
         }
 
         public override void BackButtonClicked() {
-            if (botPanelState == Visibility.Fullscreen) {
-                SetBottomPanelState(Visibility.Mini, animated: true);
+            if (_bottomPanel.isFullscreen) {
+                _bottomPanel.SetBottomPanelState(EditSoundPanel.Visibility.Mini, animated: true);
             } else {
                 base.BackButtonClicked();
+                debugText.text = "";
 
                 if (canvasDelegate == null) { return; }
                 canvasDelegate.BackButtonClicked(this.canvasID);
@@ -429,7 +511,11 @@ namespace SIS {
         }
 
         public void MoreButtonClicked() {
-            SetBottomPanelState((botPanelState == Visibility.Fullscreen) ? Visibility.Mini : Visibility.Fullscreen, animated: true);
+            _bottomPanel.toggleBetweenFullscreenAndMini();
+            // SetBottomPanelState((botPanelState == EditSoundPanel.Visibility.Fullscreen) 
+            //                             ? EditSoundPanel.Visibility.Mini 
+            //                             : EditSoundPanel.Visibility.Fullscreen, 
+            //                                 animated: true);
         }
 
         public void SoundNameButtonClicked() {
@@ -449,12 +535,12 @@ namespace SIS {
         }
 
         public void RepositionSoundButtonClicked() {
-            SetBottomPanelState(Visibility.Hidden, animated: true);
+            _bottomPanel.SetBottomPanelState(EditSoundPanel.Visibility.Hidden, animated: true);
 
             topBackButton.gameObject.SetActive(false);
             placeNewSoundButton.gameObject.SetActive(false);
 
-            sliderWrapperRect.gameObject.SetActive(false);
+            _bottomPanel.sliderWrapperRect.gameObject.SetActive(false);
             confirmRepositionButton.gameObject.SetActive(true);
             SetCanvasTitle("Reposition Sound");
 
@@ -470,12 +556,12 @@ namespace SIS {
         }
 
         public void ConfirmRepositionButtonClicked() {
-            SetBottomPanelState(Visibility.Mini, animated: true);
+            _bottomPanel.SetBottomPanelState(EditSoundPanel.Visibility.Mini, animated: true);
 
             topBackButton.gameObject.SetActive(true);
             placeNewSoundButton.gameObject.SetActive(true);
 
-            sliderWrapperRect.gameObject.SetActive(true);
+            _bottomPanel.sliderWrapperRect.gameObject.SetActive(true);
             confirmRepositionButton.gameObject.SetActive(false);
             SetCanvasTitle("Edit Sound");
 
@@ -489,40 +575,31 @@ namespace SIS {
             canvasDelegate.objectSelection.ReturnSelectedSoundIconFromCursor();
         }
 
-        public void SoundIconButtonClicked() {
-            // Just cycle through soundIcons for now
+        public void SoundShapeButtonClicked() {
             if (canvasDelegate == null) { return; }
             SoundMarker selectedSound = canvasDelegate.objectSelection.selectedMarker;
             if (selectedSound == null) { return; }
 
-            // Change the 3D representation
-            selectedSound.SetToNextIcon();
-            // Change the 2D UI representation
-            soundIconImage.sprite = selectedSound.iconSprite;
+            selectedSound.SetToNextSoundShape();
+
+            soundShapeImage.sprite = selectedSound.soundShapeSprite;
+
+            canvasDelegate?.objectSelection.setShape(selectedSound.soundShape);
         }
 
-        public void SoundColorButtonClicked() {
-            // Just cycle through colors for now
+        public void SoundAppearanceButtonClicked() {
+            // Cycle through colors AND icon
             if (canvasDelegate == null) { return; }
             SoundMarker selectedSound = canvasDelegate.objectSelection.selectedMarker;
             if (selectedSound == null) { return; }
 
-            selectedSound.SetToNextColor();
+            canvasDelegate?.SoundMarkerAppearanceButtonClicked(selectedSound.colorIndex, selectedSound.iconIndex);
 
-            Color newCol = selectedSound.color;
-            repositionImage.color = newCol;
-            soundIconImage.color = newCol;
-            soundColorImage.color = newCol;
-            minRadiusSlider.SetColorTint(newCol);
-            maxRadiusSlider.SetColorTint(newCol);
+            // selectedSound.SetToNextColor();
+            // selectedSound.SetToNextIcon();
 
-            UnityEngine.UI.ColorBlock cols = soundSrcButton.colors;
-            cols.normalColor = newCol;
-            cols.highlightedColor = newCol.ColorWithBrightness(-0.15f);
-            cols.pressedColor = newCol.ColorWithBrightness(-0.3f);
-            soundSrcButton.colors = cols;
-
-            canvasDelegate.objectSelection.SetSelectionRadiusColor(newCol);
+            // soundAppearanceImage.sprite = selectedSound.iconSprite;
+            // updateUIColor(selectedSound.color);
         }
 
         void DeleteSelectedSound() {

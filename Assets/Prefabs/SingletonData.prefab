@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7994065471992340091
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3348998777963022007}
+  - component: {fileID: 8840246764415035120}
+  - component: {fileID: 4934547731395968457}
+  m_Layer: 0
+  m_Name: SingletonData
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3348998777963022007
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7994065471992340091}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8840246764415035120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7994065471992340091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ca8eb87fc89e44e2bc2d80fde816d1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionColor: {r: 0.3063813, g: 0.65146923, b: 0.764151, a: 1}
+  greyInteractionColor: {r: 0.4339623, g: 0.4339623, b: 0.4339623, a: 1}
+  soundColors:
+  - {r: 0.49803925, g: 0.70980394, b: 0.2392157, a: 1}
+  - {r: 0.23718406, g: 0.7735849, b: 0.6256123, a: 1}
+  - {r: 1, g: 0.75937426, b: 0.2688679, a: 1}
+  - {r: 0.9215687, g: 0.40000004, b: 0.26666668, a: 1}
+  - {r: 0.83921576, g: 0.17254902, b: 0.30588236, a: 1}
+  - {r: 0.9150943, g: 0.4704966, b: 0.6125846, a: 1}
+  - {r: 0.35978103, g: 0.50680614, b: 0.990566, a: 1}
+--- !u!114 &4934547731395968457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7994065471992340091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9621dbfe08ea4a47ba3c5eac345abc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sprites:
+  - {fileID: 21300000, guid: f44f9213c120d43b582a912ac0aed16a, type: 3}
+  - {fileID: 21300000, guid: 68cf4bd3309f446eb9279c6eef513d26, type: 3}
+  - {fileID: 21300000, guid: f6d39cc77fb0e4eec83bd088c74b182a, type: 3}
+  - {fileID: 21300000, guid: 2ad2d2acdef4846e3b101593960af011, type: 3}
+  - {fileID: 21300000, guid: cfe85ccc300c6447d8357685909a7f37, type: 3}
+  soundShapeSprites:
+  - {fileID: 21300000, guid: 921fac401f1b6426e94ecffaa244e421, type: 3}
+  - {fileID: 21300000, guid: 9e2f1ae8b72a747c2ab44e54d1d0062d, type: 3}
+  KioskPasscode: 3000
+  InnerRadiusMinDiameter: 0.25
+  InnerRadiusMaxDiameter: 14
+  OuterRadiusMinDiameter: 0.5
+  OuterRadiusMaxDiameter: 20.1

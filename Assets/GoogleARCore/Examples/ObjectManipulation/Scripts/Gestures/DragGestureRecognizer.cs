@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="DragGestureRecognizer.cs" company="Google">
+//-----------------------------------------------------------------------
+// <copyright file="DragGestureRecognizer.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace GoogleARCore.Examples.ObjectManipulation
     {
         private const float k_SlopInches = 0.1f;
 
-        internal float m_SlopInches
+        internal float SlopInches
         {
             get
             {

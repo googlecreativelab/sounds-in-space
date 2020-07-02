@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="PlaneDiscoveryGuide.cs" company="Google">
+//-----------------------------------------------------------------------
+// <copyright file="PlaneDiscoveryGuide.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -161,6 +161,25 @@ namespace GoogleARCore.Examples.Common
         }
 
         /// <summary>
+        /// Enable or Disable this Plane Discovery Guide.
+        /// </summary>
+        /// <param name="guideEnabled">Enable/Disable the guide.</param>
+        public void EnablePlaneDiscoveryGuide(bool guideEnabled)
+        {
+            if (guideEnabled)
+            {
+                enabled = true;
+            }
+            else
+            {
+                enabled = false;
+                m_FeaturePoints.SetActive(false);
+                m_HandAnimation.enabled = false;
+                m_SnackBar.SetActive(false);
+            }
+        }
+
+        /// <summary>
         /// Callback executed when the open button has been clicked by the user.
         /// </summary>
         private void _OnOpenButtonClicked()
@@ -229,6 +248,10 @@ namespace GoogleARCore.Examples.Common
                         break;
                     case LostTrackingReason.ExcessiveMotion:
                         m_SnackBarText.text = "Moving too fast. Slow down.";
+                        break;
+                    case LostTrackingReason.CameraUnavailable:
+                        m_SnackBarText.text = "Another app is using the camera. Tap on this app " +
+                            "or try closing the other one.";
                         break;
                     default:
                         m_SnackBarText.text = "Motion tracking is lost.";

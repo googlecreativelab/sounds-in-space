@@ -53,14 +53,17 @@ namespace SIS {
 
         [SerializeField] private int _iconIndex;
         [SerializeField] private int _colorIndex;
+        [SerializeField] private int _soundShapeIndex;
 
         [SerializeField] private bool _triggerPlayback;
         [SerializeField] private bool _loopAudio;
+        [SerializeField] private bool _playOnce;
         [SerializeField] private float _pitchBend;
         [SerializeField] private float _srcVolume = 1f;
         [SerializeField] private float _freqCutoff;
         [SerializeField] private float _distortion;
         [SerializeField] private float _phaserLevel;
+        [SerializeField] private float _echoMagnitude;
 
         [SerializeField] private string _objectName;
 
@@ -70,23 +73,24 @@ namespace SIS {
         public string id { get { return _id; } }
         public int iconIndex { get { return _iconIndex; } }
         public int colorIndex { get { return _colorIndex; } }
+        public int soundShapeIndex { get { return _soundShapeIndex; } }
         public bool triggerPlayback { get { return _triggerPlayback; } }
         public bool loopAudio { get { return _loopAudio; } }
+        public bool playOnce { get { return _playOnce; } }
         public float pitchBend { get { return _pitchBend; } }
         public float freqCutoff { get { return _freqCutoff; } }
         public float distortion { get { return _distortion; } }
+        public float echoMagnitude { get { return _echoMagnitude; } }
         public float phaserLevel { get { return _phaserLevel; } }
         public float soundVolume { get { return _srcVolume < 0 ? 0 : _srcVolume; } }
         public Vector3 positon { get { return new Vector3(_positionX, _positionY, _positionZ); } }
         public Quaternion rotation { get { return Quaternion.Euler(_rotationX, _rotationY, _rotationZ); } }
         public float minDistance { get { return _minDistance; } }
         public float maxDistance { get { return _maxDistance; } }
+        public bool hasInfiniteMaxDistance { get { return _maxDistance < 0; } }
         public string name { get { return _objectName; } }
         public string soundID { get { return _soundID; } }
         public SoundFile soundFile { get { return hotspotDelegate?.GetSoundFileFromSoundID(_soundID); } }
-        // public string[] syncedSoundsIDs { 
-        //     get { return JsonUtility.FromJson<string[]>(_syncedSoundsJSON); } 
-        // }
 
         public void OnBeforeSerialize() {
           // Debug.Log ("OnBeforeDeserialize _srcVolume: " + _srcVolume);
@@ -94,18 +98,17 @@ namespace SIS {
 
         public void OnAfterDeserialize() {
             if (_srcVolume == 0) { _srcVolume = 1f; } // If _srcVolume==0, it has not been set.
-            // Debug.Log("OnAfterDeserialize _srcVolume: " + _srcVolume);
             if (_id == null || _id.Length < 1) { _id = System.Guid.NewGuid().ToString(); }
-            // Debug.Log("_id(" + _id.Length + "): " + _id);
-            // Debug.Log("_syncedSoundsJSON(" + _syncedSoundsJSON.Length + "): " + _syncedSoundsJSON);
-            // if (_syncedSoundsJSON != null && _syncedSoundsJSON.Length < 1) { _syncedSoundsJSON = "[]"; }
-
-            // string[] ids = syncedSoundsIDs;
-            // Debug.Log("syncedSoundsIDs(" + syncedSoundsIDs.Length + "): " + syncedSoundsIDs);
         }
 
         // =============
         // SETTERS
+
+        public void SetColorAndIconIndex(int newColorIndex, int newIconIndex) {
+            _colorIndex = newColorIndex;
+            _iconIndex = newIconIndex;
+            hotspotDelegate?.Save();
+        }
 
         public void SetIconIndex(int newIconIndex) {
             _iconIndex = newIconIndex;
@@ -113,6 +116,10 @@ namespace SIS {
         }
         public void SetColorIndex(int newColorIndex) {
             _colorIndex = newColorIndex;
+            hotspotDelegate?.Save();
+        }
+        public void SetSoundShapeIndex(int newSoundShapeIndex) {
+            _soundShapeIndex = newSoundShapeIndex;
             hotspotDelegate?.Save();
         }
 
@@ -123,6 +130,11 @@ namespace SIS {
 
         public void SetLoopAudio(bool newValue) {
             _loopAudio = newValue;
+            hotspotDelegate?.Save();
+        }
+
+        public void SetPlayOnce(bool newValue) {
+            _playOnce = newValue;
             hotspotDelegate?.Save();
         }
 
@@ -143,6 +155,11 @@ namespace SIS {
 
         public void SetDistortion(float newDistortion) {
             _distortion = newDistortion;
+            hotspotDelegate?.Save();
+        }
+        
+        public void SetEchoMagnitude(float newEcho) {
+            _echoMagnitude = newEcho;
             hotspotDelegate?.Save();
         }
 
@@ -220,10 +237,12 @@ namespace SIS {
 
             _triggerPlayback = false;
             _loopAudio = true;
+            _playOnce = false;
             _pitchBend = 0;
             _srcVolume = 1f;
             _freqCutoff = 0;
             _distortion = 0;
+            _echoMagnitude = 0;
 
             _soundID = SoundFile.DEFAULT_CLIP;
         }

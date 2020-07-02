@@ -22,23 +22,35 @@ using UnityEngine;
 
 namespace SIS {
     public interface ISoundMarkerTriggerDelegate {
-        void UserDidEnterMarkerTrigger();
-        void UserDidExitMarkerTrigger();
+        void UserDidEnterMarkerTrigger(SoundMarkerTrigger.Type triggerType);
+        void UserDidExitMarkerTrigger(SoundMarkerTrigger.Type triggerType);
     }
 
     public class SoundMarkerTrigger : MonoBehaviour {
 
+        public enum Type { Playback, OnDemandLoad, OnDemandUnload }
+
         public ISoundMarkerTriggerDelegate triggerDelegate = null;
         public SphereCollider triggerCollider = null;
 
+        private Type typeForTag(string tag) {
+            if (tag.StartsWith("U")) { // "UNLOAD-OnDemand-Audio"
+                return Type.OnDemandUnload;
+            } else if (tag.StartsWith("L")) { // "LOAD-OnDemand-Audio"
+                return Type.OnDemandLoad;
+            } else {
+                return Type.Playback; // DEFAULT
+            }
+        }
+
         private void OnTriggerEnter(Collider other) {
             // ÷Debug.Log ("SoundMarkerTrigger::OnTriggerEnter");
-            triggerDelegate?.UserDidEnterMarkerTrigger();
+            triggerDelegate?.UserDidEnterMarkerTrigger( typeForTag(other.tag) );
         }
 
         private void OnTriggerExit(Collider other) {
             // Debug.Log("SoundMarkerTrigger::OnTriggerExit");
-            triggerDelegate?.UserDidExitMarkerTrigger();
+            triggerDelegate?.UserDidExitMarkerTrigger( typeForTag(other.tag) );
         }
     }
 }

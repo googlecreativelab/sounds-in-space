@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="AugmentedFacesExampleController.cs" company="Google">
+//-----------------------------------------------------------------------
+// <copyright file="AugmentedFacesExampleController.cs" company="Google LLC">
 //
-// Copyright 2019 Google Inc. All Rights Reserved.
+// Copyright 2019 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,16 @@ namespace GoogleARCore.Examples.AugmentedFaces
         private List<AugmentedFace> m_TempAugmentedFaces = new List<AugmentedFace>();
 
         /// <summary>
+        /// The Unity Awake() method.
+        /// </summary>
+        public void Awake()
+        {
+            // Enable ARCore to target 60fps camera capture frame rate on supported devices.
+            // Note, Application.targetFrameRate is ignored when QualitySettings.vSyncCount != 0.
+            Application.targetFrameRate = 60;
+        }
+
+        /// <summary>
         /// The Unity Update method.
         /// </summary>
         public void Update()
@@ -56,8 +66,7 @@ namespace GoogleARCore.Examples.AugmentedFaces
             // Only allows the screen to sleep when ARCore can't detect a face.
             if (m_TempAugmentedFaces.Count == 0)
             {
-                const int lostTrackingSleepTimeout = 15;
-                Screen.sleepTimeout = lostTrackingSleepTimeout;
+                Screen.sleepTimeout = SleepTimeout.SystemSetting;
                 FaceAttachment.SetActive(false);
             }
             else

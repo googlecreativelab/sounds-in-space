@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="TwoFingerDragGestureRecognizer.cs" company="Google">
+// <copyright file="TwoFingerDragGestureRecognizer.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ namespace GoogleARCore.Examples.ObjectManipulation
         private const float k_SlopInches = 0.1f;
         private const float k_AngleThresholdRadians = Mathf.PI / 6;
 
-        internal float m_SlopInches
+        internal float SlopInches
         {
             get
             {
@@ -39,7 +39,7 @@ namespace GoogleARCore.Examples.ObjectManipulation
             }
         }
 
-        internal float m_AngleThresholdRadians
+        internal float AngleThresholdRadians
         {
             get
             {

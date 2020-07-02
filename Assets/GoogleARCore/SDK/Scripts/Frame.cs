@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="Frame.cs" company="Google">
+// <copyright file="Frame.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,9 +67,13 @@ namespace GoogleARCore
             get
             {
                 var nativeSession = LifecycleManager.Instance.NativeSession;
-                if (nativeSession == null)
+                var sessionComponent = LifecycleManager.Instance.SessionComponent;
+                if (nativeSession == null || sessionComponent == null ||
+                    sessionComponent.SessionConfig.LightEstimationMode ==
+                    LightEstimationMode.Disabled)
                 {
-                    return new LightEstimate(LightEstimateState.NotValid, 0.0f, Color.black);
+                    return new LightEstimate(LightEstimateState.NotValid, 0.0f, Color.black,
+                        Quaternion.LookRotation(Vector3.down), Color.white, null, -1);
                 }
 
                 return nativeSession.FrameApi.GetLightEstimate();
@@ -77,16 +81,17 @@ namespace GoogleARCore
         }
 
         /// <summary>
-        /// Performs a raycast against physical objects being tracked by ARCore.
+        /// Performs a raycast against objects being tracked by ARCore.
         /// Output the closest hit from the camera.
         /// Note that the Unity's screen coordinate (0, 0)
         /// starts from bottom left.
         /// </summary>
         /// <param name="x">Horizontal touch position in Unity's screen coordiante.</param>
         /// <param name="y">Vertical touch position in Unity's screen coordiante.</param>
-        /// <param name="filter">A filter bitmask where each set bit in {@link TrackableHitFlags}
+        /// <param name="filter">A filter bitmask where each set bit in
+        /// <see cref="TrackableHitFlags"/>
         /// represents a category of raycast hits the method call should consider valid.</param>
-        /// <param name="hitResult">A {@link TrackableHit} that will be set if the raycast is
+        /// <param name="hitResult">A <see cref="TrackableHit"/> that will be set if the raycast is
         /// successful.</param>
         /// <returns><c>true</c> if the raycast had a hit, otherwise <c>false</c>.</returns>
         [SuppressMemoryAllocationError(IsWarning = true, Reason = "List could be resized")]
@@ -113,15 +118,16 @@ namespace GoogleARCore
         }
 
         /// <summary>
-        /// Performs a raycast against physical objects being tracked by ARCore.
+        /// Performs a raycast against objects being tracked by ARCore.
         /// Output the closest hit from the origin.
         /// </summary>
         /// <param name="origin">The starting point of the ray in world coordinates.</param>
         /// <param name="direction">The direction of the ray.</param>
-        /// <param name="hitResult">A {@link TrackableHit} that will be set if the raycast is
+        /// <param name="hitResult">A <see cref="TrackableHit"/> that will be set if the raycast is
         /// successful.</param>
         /// <param name="maxDistance">The max distance the ray should check for collisions.</param>
-        /// <param name="filter">A filter bitmask where each set bit in {@link TrackableHitFlags}
+        /// <param name="filter">A filter bitmask where each set bit in
+        /// <see cref="TrackableHitFlags"/>
         /// represents a category of raycast hits the method call should consider valid.</param>
         /// <returns><c>true</c> if the raycast had a hit, otherwise <c>false</c>.</returns>
         [SuppressMemoryAllocationError(IsWarning = true, Reason = "List could be resized")]
@@ -151,17 +157,18 @@ namespace GoogleARCore
         }
 
         /// <summary>
-        /// Performs a raycast against physical objects being tracked by ARCore.
+        /// Performs a raycast against objects being tracked by ARCore.
         /// Output all hits from the camera.
         /// Note that the Unity's screen coordinate (0, 0)
         /// starts from bottom left.
         /// </summary>
         /// <param name="x">Horizontal touch position in Unity's screen coordiante.</param>
         /// <param name="y">Vertical touch position in Unity's screen coordiante.</param>
-        /// <param name="filter">A filter bitmask where each set bit in {@link TrackableHitFlags}
+        /// <param name="filter">A filter bitmask where each set bit in
+        /// <see cref="TrackableHitFlags"/>
         /// represents a category of raycast hits the method call should consider valid.</param>
-        /// <param name="hitResults">A list of {@link TrackableHit} that will be set if the raycast
-        /// is successful.</param>
+        /// <param name="hitResults">A list of <see cref="TrackableHit"/> that will be set if the
+        /// raycast is successful.</param>
         /// <returns><c>true</c> if the raycast had a hit, otherwise <c>false</c>.</returns>
         [SuppressMemoryAllocationError(IsWarning = true, Reason = "List could be resized")]
         public static bool RaycastAll(
@@ -179,16 +186,16 @@ namespace GoogleARCore
         }
 
         /// <summary>
-        /// Performs a raycast against physical objects being tracked by ARCore.
+        /// Performs a raycast against objects being tracked by ARCore.
         /// Output all hits from the origin.
         /// </summary>
         /// <param name="origin">The starting point of the ray in world coordinates.</param>
         /// <param name="direction">The direction of the ray.</param>
-        /// <param name="hitResults">A list of {@link TrackableHit} that will be set if the raycast
-        /// is successful.</param>
+        /// <param name="hitResults">A list of <see cref="TrackableHit"/> that will be set if the
+        /// raycast is successful.</param>
         /// <param name="maxDistance">The max distance the ray should check for collisions.</param>
-        /// <param name="filter">A filter bitmask where each set bit in {@link TrackableHitFlags}
-        /// represents a category
+        /// <param name="filter">A filter bitmask where each set bit in
+        /// <see cref="TrackableHitFlags"/> represents a category
         /// of raycast hits the method call should consider valid.</param>
         /// <returns><c>true</c> if the raycast had a hit, otherwise <c>false</c>.</returns>
         [SuppressMemoryAllocationError(IsWarning = true, Reason = "List could be resized")]
@@ -209,7 +216,7 @@ namespace GoogleARCore
         }
 
         /// <summary>
-        /// Container for state related to the ARCore camera image metadata for the Frame.
+        /// Container for state related to the ARCore camera image metadata for the frame.
         /// </summary>
         public static class CameraMetadata
         {
@@ -273,7 +280,7 @@ namespace GoogleARCore
         }
 
         /// <summary>
-        /// Container for state related to the ARCore point cloud for the Frame.
+        /// Container for state related to the ARCore point cloud for the frame.
         /// </summary>
         public static class PointCloud
         {
@@ -632,6 +639,29 @@ namespace GoogleARCore
                 nativeSession.CameraApi.Release(cameraHandle);
                 return result;
             }
+
+            /// <summary>
+            /// Updates the input texture with the latest depth data from ARCore.
+            /// If there is no new data, or an error occurs, the contents of the
+            /// texture will remain unchanged. See <see cref="DepthStatus"/> for a
+            /// complete list of reasons.
+            /// </summary>
+            /// <param name="depthTexture">The texture to hold the depth data.</param>
+            /// <returns><see cref="DepthStatus"/>.<c>Success</c> if
+            /// successful.</returns>
+            public static DepthStatus UpdateDepthTexture(ref Texture2D depthTexture)
+            {
+                var nativeSession = LifecycleManager.Instance.NativeSession;
+                var sessionComponent = LifecycleManager.Instance.SessionComponent;
+                if (nativeSession == null || sessionComponent == null ||
+                    sessionComponent.SessionConfig.DepthMode == DepthMode.Disabled)
+                {
+                    return DepthStatus.InternalError;
+                }
+
+                return nativeSession.FrameApi.UpdateDepthTexture(ref depthTexture);
+            }
         }
+
     }
 }

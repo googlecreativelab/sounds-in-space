@@ -12,11 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4001fab900d54ab88f33ec7bb13aa02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  datum:
-    filename: 
-    soundName: 
-    averagePitch: 
-    duration: 0
   titleLabel: {fileID: 5775504187889768544}
   subtitleLabel: {fileID: 4797275533359373867}
   iconImage: {fileID: 4545719215424269795}
@@ -144,10 +139,26 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300002, guid: 0eac3ef67041a4791a5581c63dcb1a41,
         type: 3}
+    - target: {fileID: 7588335724649151052, guid: 939d3d430c79a4513b49d90239c91b3d,
+        type: 3}
+      propertyPath: m_Text
+      value: Base Text that happens to be extremely long in this particular case in
+        time
+      objectReference: {fileID: 0}
     - target: {fileID: 8933666082852699143, guid: 939d3d430c79a4513b49d90239c91b3d,
         type: 3}
       propertyPath: m_Text
       value: File Text
+      objectReference: {fileID: 0}
+    - target: {fileID: 6284175967249565886, guid: 939d3d430c79a4513b49d90239c91b3d,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -16
+      objectReference: {fileID: 0}
+    - target: {fileID: 6284175967249565886, guid: 939d3d430c79a4513b49d90239c91b3d,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: -72
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 939d3d430c79a4513b49d90239c91b3d, type: 3}

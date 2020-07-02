@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="TwistGesture.cs" company="Google">
+//-----------------------------------------------------------------------
+// <copyright file="TwistGesture.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,11 +101,11 @@ namespace GoogleARCore.Examples.ObjectManipulation
                 return false;
             }
 
-            TwistGestureRecognizer twistRecognizer = m_Recognizer as TwistGestureRecognizer;
+            TwistGestureRecognizer twistRecognizer = Recognizer as TwistGestureRecognizer;
 
             float rotation = CalculateDeltaRotation(
                 touch1.position, touch2.position, StartPosition1, StartPosition2);
-            if (Mathf.Abs(rotation) < twistRecognizer.m_SlopRotation)
+            if (Mathf.Abs(rotation) < twistRecognizer.SlopRotation)
             {
                 return false;
             }

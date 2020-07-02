@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="AnchorApi.cs" company="Google">
+// <copyright file="AnchorApi.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ namespace GoogleARCoreInternal
     using System;
     using System.Runtime.InteropServices;
     using GoogleARCore;
+    using GoogleARCore.CrossPlatform;
     using GoogleARCoreInternal.CrossPlatform;
     using UnityEngine;
 
@@ -33,6 +34,11 @@ namespace GoogleARCoreInternal
         public AnchorApi(NativeSession nativeSession)
         {
             m_NativeSession = nativeSession;
+        }
+
+        public static void Release(IntPtr anchorHandle)
+        {
+            ExternApi.ArAnchor_release(anchorHandle);
         }
 
         public Pose GetPose(IntPtr anchorHandle)
@@ -77,11 +83,6 @@ namespace GoogleARCoreInternal
             {
                 ExternApi.ArAnchor_detach(m_NativeSession.SessionHandle, anchorHandle);
             }
-        }
-
-        public void Release(IntPtr anchorHandle)
-        {
-            ExternApi.ArAnchor_release(anchorHandle);
         }
 
         public IntPtr CreateList()

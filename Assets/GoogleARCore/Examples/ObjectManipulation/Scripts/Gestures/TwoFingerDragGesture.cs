@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="TwoFingerDragGesture.cs" company="Google">
+// <copyright file="TwoFingerDragGesture.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ namespace GoogleARCore.Examples.ObjectManipulation
             float diff1 = (pos1 - StartPosition1).magnitude;
             Vector2 pos2 = touch2.position;
             float diff2 = (pos2 - StartPosition2).magnitude;
-            float slopInches = (m_Recognizer as TwoFingerDragGestureRecognizer).m_SlopInches;
+            float slopInches = (Recognizer as TwoFingerDragGestureRecognizer).SlopInches;
             if (GestureTouchesUtility.PixelsToInches(diff1) < slopInches ||
                 GestureTouchesUtility.PixelsToInches(diff2) < slopInches)
             {
@@ -117,12 +117,12 @@ namespace GoogleARCore.Examples.ObjectManipulation
             }
 
             TwoFingerDragGestureRecognizer recognizer =
-                m_Recognizer as TwoFingerDragGestureRecognizer;
+                Recognizer as TwoFingerDragGestureRecognizer;
 
             // Check both fingers move in the same direction.
             float dot =
                 Vector3.Dot(touch1.deltaPosition.normalized, touch2.deltaPosition.normalized);
-            if (dot < Mathf.Cos(recognizer.m_AngleThresholdRadians))
+            if (dot < Mathf.Cos(recognizer.AngleThresholdRadians))
             {
                 return false;
             }

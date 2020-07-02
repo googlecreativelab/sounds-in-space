@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="HelloARController.cs" company="Google">
+//-----------------------------------------------------------------------
+// <copyright file="HelloARController.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2020 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,30 +37,35 @@ namespace GoogleARCore.Examples.HelloAR
     public class HelloARController : MonoBehaviour
     {
         /// <summary>
+        /// The Depth Setting Menu.
+        /// </summary>
+        public DepthMenu DepthMenu;
+
+        /// <summary>
         /// The first-person camera being used to render the passthrough camera image (i.e. AR
         /// background).
         /// </summary>
         public Camera FirstPersonCamera;
 
         /// <summary>
-        /// A prefab for tracking and visualizing detected planes.
+        /// A prefab to place when a raycast from a user touch hits a vertical plane.
         /// </summary>
-        public GameObject DetectedPlanePrefab;
+        public GameObject GameObjectVerticalPlanePrefab;
 
         /// <summary>
-        /// A model to place when a raycast from a user touch hits a plane.
+        /// A prefab to place when a raycast from a user touch hits a horizontal plane.
         /// </summary>
-        public GameObject AndyPlanePrefab;
+        public GameObject GameObjectHorizontalPlanePrefab;
 
         /// <summary>
-        /// A model to place when a raycast from a user touch hits a feature point.
+        /// A prefab to place when a raycast from a user touch hits a feature point.
         /// </summary>
-        public GameObject AndyPointPrefab;
+        public GameObject GameObjectPointPrefab;
 
         /// <summary>
-        /// The rotation in degrees need to apply to model when the Andy model is placed.
+        /// The rotation in degrees need to apply to prefab when it is placed.
         /// </summary>
-        private const float k_ModelRotation = 180.0f;
+        private const float k_PrefabRotation = 180.0f;
 
         /// <summary>
         /// True if the app is in the process of quitting due to an ARCore connection error,
@@ -69,11 +74,26 @@ namespace GoogleARCore.Examples.HelloAR
         private bool m_IsQuitting = false;
 
         /// <summary>
+        /// The Unity Awake() method.
+        /// </summary>
+        public void Awake()
+        {
+            // Enable ARCore to target 60fps camera capture frame rate on supported devices.
+            // Note, Application.targetFrameRate is ignored when QualitySettings.vSyncCount != 0.
+            Application.targetFrameRate = 60;
+        }
+
+        /// <summary>
         /// The Unity Update() method.
         /// </summary>
         public void Update()
         {
             _UpdateApplicationLifecycle();
+
+            if (DepthMenu != null && !DepthMenu.CanPlaceAsset())
+            {
+                return;
+            }
 
             // If the player has not touched the screen, we are done with this update.
             Touch touch;
@@ -105,30 +125,48 @@ namespace GoogleARCore.Examples.HelloAR
                 }
                 else
                 {
-                    // Choose the Andy model for the Trackable that got hit.
+                    if (DepthMenu != null)
+                    {
+                        // Show depth card window if necessary.
+                        DepthMenu.ConfigureDepthBeforePlacingFirstAsset();
+                    }
+
+                    // Choose the prefab based on the Trackable that got hit.
                     GameObject prefab;
                     if (hit.Trackable is FeaturePoint)
                     {
-                        prefab = AndyPointPrefab;
+                        prefab = GameObjectPointPrefab;
+                    }
+                    else if (hit.Trackable is DetectedPlane)
+                    {
+                        DetectedPlane detectedPlane = hit.Trackable as DetectedPlane;
+                        if (detectedPlane.PlaneType == DetectedPlaneType.Vertical)
+                        {
+                            prefab = GameObjectVerticalPlanePrefab;
+                        }
+                        else
+                        {
+                            prefab = GameObjectHorizontalPlanePrefab;
+                        }
                     }
                     else
                     {
-                        prefab = AndyPlanePrefab;
+                        prefab = GameObjectHorizontalPlanePrefab;
                     }
 
-                    // Instantiate Andy model at the hit pose.
-                    var andyObject = Instantiate(prefab, hit.Pose.position, hit.Pose.rotation);
+                    // Instantiate prefab at the hit pose.
+                    var gameObject = Instantiate(prefab, hit.Pose.position, hit.Pose.rotation);
 
                     // Compensate for the hitPose rotation facing away from the raycast (i.e.
                     // camera).
-                    andyObject.transform.Rotate(0, k_ModelRotation, 0, Space.Self);
+                    gameObject.transform.Rotate(0, k_PrefabRotation, 0, Space.Self);
 
                     // Create an anchor to allow ARCore to track the hitpoint as understanding of
                     // the physical world evolves.
                     var anchor = hit.Trackable.CreateAnchor(hit.Pose);
 
-                    // Make Andy model a child of the anchor.
-                    andyObject.transform.parent = anchor.transform;
+                    // Make game object a child of the anchor.
+                    gameObject.transform.parent = anchor.transform;
                 }
             }
         }
@@ -147,8 +185,7 @@ namespace GoogleARCore.Examples.HelloAR
             // Only allow the screen to sleep when not tracking.
             if (Session.Status != SessionStatus.Tracking)
             {
-                const int lostTrackingSleepTimeout = 15;
-                Screen.sleepTimeout = lostTrackingSleepTimeout;
+                Screen.sleepTimeout = SleepTimeout.SystemSetting;
             }
             else
             {

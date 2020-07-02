@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="ARCoreBackgroundRenderer.cs" company="Google">
+// <copyright file="ARCoreBackgroundRenderer.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,13 @@
 
 namespace GoogleARCore
 {
+    using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Runtime.InteropServices;
     using GoogleARCoreInternal;
     using UnityEngine;
-    using UnityEngine.XR;
+    using UnityEngine.Rendering;
 
     /// <summary>
     /// Renders the device's camera as a background to the attached Unity camera component.
@@ -48,8 +50,6 @@ namespace GoogleARCore
 
         private Camera m_Camera;
 
-        private ARBackgroundRenderer m_BackgroundRenderer;
-
         private Texture m_TransitionImageTexture;
 
         private BackgroundTransitionState m_TransitionState = BackgroundTransitionState.BlackScreen;
@@ -60,6 +60,10 @@ namespace GoogleARCore
 
         private bool m_UserInvertCullingValue = false;
 
+        private CameraClearFlags m_CameraClearFlags = CameraClearFlags.Skybox;
+
+        private CommandBuffer m_CommandBuffer = null;
+
         private enum BackgroundTransitionState
         {
             BlackScreen = 0,
@@ -69,11 +73,6 @@ namespace GoogleARCore
 
         private void OnEnable()
         {
-            if (m_BackgroundRenderer == null)
-            {
-                m_BackgroundRenderer = new ARBackgroundRenderer();
-            }
-
             if (BackgroundMaterial == null)
             {
                 Debug.LogError("ArCameraBackground:: No material assigned.");
@@ -83,12 +82,11 @@ namespace GoogleARCore
             LifecycleManager.Instance.OnSessionSetEnabled += _OnSessionSetEnabled;
 
             m_Camera = GetComponent<Camera>();
-            m_BackgroundRenderer.backgroundMaterial = BackgroundMaterial;
-            m_BackgroundRenderer.camera = m_Camera;
-            m_BackgroundRenderer.mode = ARRenderMode.MaterialAsBackground;
 
             m_TransitionImageTexture = Resources.Load<Texture2D>("ViewInARIcon");
             BackgroundMaterial.SetTexture("_TransitionIconTex", m_TransitionImageTexture);
+
+            EnableARBackgroundRendering();
         }
 
         private void OnDisable()
@@ -98,11 +96,8 @@ namespace GoogleARCore
             m_CurrentStateElapsed = 0.0f;
 
             m_Camera.ResetProjectionMatrix();
-            if (m_BackgroundRenderer != null)
-            {
-                m_BackgroundRenderer.mode = ARRenderMode.StandardBackground;
-                m_BackgroundRenderer.camera = null;
-            }
+
+            DisableARBackgroundRendering();
         }
 
         private void OnPreRender()
@@ -238,5 +233,64 @@ namespace GoogleARCore
                 (float)Screen.height / m_TransitionImageTexture.height,
                 transitionHeightTransform);
         }
+
+        private void EnableARBackgroundRendering()
+        {
+            if (BackgroundMaterial == null || m_Camera == null)
+            {
+                return;
+            }
+
+            m_CameraClearFlags = m_Camera.clearFlags;
+            m_Camera.clearFlags = CameraClearFlags.Depth;
+
+            m_CommandBuffer = new CommandBuffer();
+
+#if UNITY_ANDROID
+            if (SystemInfo.graphicsMultiThreaded && !InstantPreviewManager.IsProvidingPlatform)
+            {
+                m_CommandBuffer.IssuePluginEvent(ExternApi.ARCoreRenderingUtils_GetRenderEventFunc(),
+                                                (int)ApiRenderEvent.WaitOnPostUpdateFence);
+#if UNITY_2018_2_OR_NEWER
+                // There is a bug in Unity that IssuePluginEvent will reset the opengl state but it
+                // doesn't respect the value set to GL.invertCulling. Hence we need to reapply
+                // the invert culling in the command buffer for front camera session.
+                // Note that the CommandBuffer.SetInvertCulling is only available for 2018.2+.
+                var sessionComponent = LifecycleManager.Instance.SessionComponent;
+                if (sessionComponent != null &&
+                    sessionComponent.DeviceCameraDirection == DeviceCameraDirection.FrontFacing)
+                {
+                    m_CommandBuffer.SetInvertCulling(true);
+                }
+#endif
+            }
+
+#endif
+            m_CommandBuffer.Blit(null,
+                BuiltinRenderTextureType.CameraTarget, BackgroundMaterial);
+
+            m_Camera.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, m_CommandBuffer);
+            m_Camera.AddCommandBuffer(CameraEvent.BeforeGBuffer, m_CommandBuffer);
+        }
+
+        private void DisableARBackgroundRendering()
+        {
+            if (m_CommandBuffer == null || m_Camera == null)
+            {
+                return;
+            }
+
+            m_Camera.clearFlags = m_CameraClearFlags;
+
+            m_Camera.RemoveCommandBuffer(CameraEvent.BeforeForwardOpaque, m_CommandBuffer);
+            m_Camera.RemoveCommandBuffer(CameraEvent.BeforeGBuffer, m_CommandBuffer);
+        }
+
+#if UNITY_ANDROID
+        private struct ExternApi {
+            [DllImport(ApiConstants.ARRenderingUtilsApi)]
+            public static extern IntPtr ARCoreRenderingUtils_GetRenderEventFunc();
+        }
+#endif
     }
 }

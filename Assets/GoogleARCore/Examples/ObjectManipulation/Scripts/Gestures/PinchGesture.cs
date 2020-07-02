@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="PinchGesture.cs" company="Google">
+//-----------------------------------------------------------------------
+// <copyright file="PinchGesture.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,13 +103,13 @@ namespace GoogleARCore.Examples.ObjectManipulation
                 return false;
             }
 
-            PinchGestureRecognizer pinchRecognizer = m_Recognizer as PinchGestureRecognizer;
+            PinchGestureRecognizer pinchRecognizer = Recognizer as PinchGestureRecognizer;
 
             Vector3 firstToSecondDirection = (StartPosition1 - StartPosition2).normalized;
             float dot1 = Vector3.Dot(touch1.deltaPosition.normalized, -firstToSecondDirection);
             float dot2 = Vector3.Dot(touch2.deltaPosition.normalized, firstToSecondDirection);
             float dotThreshold =
-                Mathf.Cos(pinchRecognizer.m_SlopMotionDirectionDegrees * Mathf.Deg2Rad);
+                Mathf.Cos(pinchRecognizer.SlopMotionDirectionDegrees * Mathf.Deg2Rad);
 
             // Check angle of motion for the first touch.
             if (touch1.deltaPosition != Vector2.zero && Mathf.Abs(dot1) < dotThreshold)
@@ -126,7 +126,7 @@ namespace GoogleARCore.Examples.ObjectManipulation
             float startgap = (StartPosition1 - StartPosition2).magnitude;
             Gap = (touch1.position - touch2.position).magnitude;
             float separation = GestureTouchesUtility.PixelsToInches(Mathf.Abs(Gap - startgap));
-            if (separation < pinchRecognizer.m_SlopInches)
+            if (separation < pinchRecognizer.SlopInches)
             {
                 return false;
             }
