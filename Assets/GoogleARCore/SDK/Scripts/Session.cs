@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="Session.cs" company="Google">
+// <copyright file="Session.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -149,6 +149,28 @@ namespace GoogleARCore
         public static AsyncTask<ApkInstallationStatus> RequestApkInstallation(bool userRequested)
         {
             return LifecycleManager.Instance.RequestApkInstallation(userRequested);
+        }
+
+        /// <summary>
+        /// Check whether the depth mode is supported on this device. Not all
+        /// devices support depth, see the
+        /// <a href="https://developers.google.com/ar/discover/supported-devices">
+        /// ARCore supported devices</a> page for details.
+        /// </summary>
+        /// <param name="depthMode">The depth mode.</param>
+        /// <returns>true if the depth mode is supported, false if it is not
+        /// supported or the session has not yet been initialized.</returns>
+        public static bool IsDepthModeSupported(DepthMode depthMode)
+        {
+            var nativeSession = LifecycleManager.Instance.NativeSession;
+            if (nativeSession == null)
+            {
+                return false;
+            }
+
+            bool result = nativeSession.SessionApi.IsDepthModeSupported(
+                depthMode.ToApiDepthMode());
+            return result;
         }
     }
 }

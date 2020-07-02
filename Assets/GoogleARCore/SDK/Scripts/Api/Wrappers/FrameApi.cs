@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="FrameApi.cs" company="Google">
+// <copyright file="FrameApi.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -213,6 +213,84 @@ namespace GoogleARCoreInternal
             m_NativeSession.TrackableListApi.Destroy(listHandle);
         }
 
+        public int GetCameraTextureName()
+        {
+            int textureId = -1;
+            ExternApi.ArFrame_getCameraTextureName(
+                m_NativeSession.SessionHandle, m_NativeSession.FrameHandle, ref textureId);
+            return textureId;
+        }
+
+        public DepthStatus UpdateDepthTexture(ref Texture2D depthTexture)
+        {
+            IntPtr depthImageHandle = IntPtr.Zero;
+
+            // Get the current depth image.
+            ApiArStatus status =
+                (ApiArStatus)ExternApi.ArFrame_acquireDepthImage(
+                    m_NativeSession.SessionHandle,
+                    m_NativeSession.FrameHandle,
+                    ref depthImageHandle);
+            if (status != ApiArStatus.Success)
+            {
+                Debug.LogErrorFormat("[ARCore] failed to acquire depth image " +
+                    "with status {0}", status.ToString());
+                return status.ToDepthStatus();
+            }
+
+            // Update the depth texture.
+            if (!_UpdateDepthTexture(ref depthTexture, depthImageHandle))
+            {
+                return DepthStatus.InternalError;
+            }
+
+            return DepthStatus.Success;
+        }
+
+        private bool _UpdateDepthTexture(
+            ref Texture2D depthTexture, IntPtr depthImageHandle)
+        {
+            // Get the size of the depth data.
+            int width = m_NativeSession.ImageApi.GetWidth(depthImageHandle);
+            int height = m_NativeSession.ImageApi.GetHeight(depthImageHandle);
+
+            // Access the depth image surface data.
+            IntPtr planeDoublePtr = IntPtr.Zero;
+            int planeSize = 0;
+            m_NativeSession.ImageApi.GetPlaneData(
+                depthImageHandle, 0, ref planeDoublePtr, ref planeSize);
+            IntPtr planeDataPtr = new IntPtr(planeDoublePtr.ToInt64());
+
+            // Resize the depth texture if needed.
+            if (width != depthTexture.width ||
+                height != depthTexture.height ||
+                depthTexture.format != TextureFormat.RGB565)
+            {
+                if (!depthTexture.Resize(
+                    width, height, TextureFormat.RGB565, false))
+                {
+                    Debug.LogErrorFormat("Unable to resize depth texture! " +
+                            "Current: width {0} height {1} depthFormat {2} " +
+                            "Desired: width {3} height {4} depthFormat {5} ",
+                            depthTexture.width, depthTexture.height,
+                            depthTexture.format.ToString(),
+                            width, height,
+                            TextureFormat.RGB565);
+
+                    m_NativeSession.ImageApi.Release(depthImageHandle);
+                    return false;
+                }
+            }
+
+            // Copy the raw depth data to the texture.
+            depthTexture.LoadRawTextureData(planeDataPtr, planeSize);
+            depthTexture.Apply();
+
+            m_NativeSession.ImageApi.Release(depthImageHandle);
+
+            return true;
+        }
+
         private struct ExternApi
         {
             [DllImport(ApiConstants.ARCoreNativeApi)]
@@ -265,6 +343,14 @@ namespace GoogleARCoreInternal
             [AndroidImport(ApiConstants.ARCoreNativeApi)]
             public static extern ApiArStatus ArFrame_acquireImageMetadata(
                 IntPtr sessionHandle, IntPtr frameHandle, ref IntPtr outMetadata);
+
+            [AndroidImport(ApiConstants.ARCoreNativeApi)]
+            public static extern void ArFrame_getCameraTextureName(
+                IntPtr sessionHandle, IntPtr frameHandle, ref int outTextureId);
+
+            [AndroidImport(ApiConstants.ARCoreNativeApi)]
+            public static extern ApiArStatus ArFrame_acquireDepthImage(
+                IntPtr sessionHandle, IntPtr frameHandle, ref IntPtr imageHandle);
 #pragma warning restore 626
         }
     }

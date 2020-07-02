@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="ARCoreSessionConfig.cs" company="Google">
+// <copyright file="ARCoreSessionConfig.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,10 +82,11 @@ namespace GoogleARCore
         [Header("Cloud Anchors")]
 
         /// <summary>
-        /// Toggles whether the Cloud Anchors are enabled.
+        /// Chooses which Cloud Anchors mode will be used in ARCore session.
         /// </summary>
-        [Tooltip("Toggles whether the Cloud Anchors are enabled.")]
-        public bool EnableCloudAnchor = false;
+        [Tooltip("Chooses which Cloud Anchors mode will be used in ARCore session.")]
+        [FormerlySerializedAs("EnableCloudAnchor")]
+        public CloudAnchorMode CloudAnchorMode = CloudAnchorMode.Disabled;
 
         [Header("Augmented Images")]
 
@@ -99,23 +100,27 @@ namespace GoogleARCore
         [Header("Camera")]
 
         /// <summary>
-        /// Chooses the desired focus mode to be used by the ARCore camera.
+        /// On supported devices, selects the desired camera focus mode.
         /// </summary>
         /// <remarks>
-        /// The default focus mode varies by device and camera, and is set to optimize AR tracking.
-        /// Currently the default on most ARCore devices and cameras is
+        /// On these devices, the default desired focus mode is currently
         /// <see cref="GoogleARCore.CameraFocusMode"/>.<c>FixedFocus</c>, although this default
-        /// might change in the future.
+        /// might change in the future. See the
+        /// <a href="https://developers.google.com/ar/discover/supported-devices">ARCore supported
+        /// devices</a> page for a list of devices on which ARCore does not support changing the
+        /// desired focus mode.
         ///
-        /// Note, on devices where ARCore does not support auto focus mode due to the use of
-        /// a fixed focus camera, setting
-        /// <see cref="GoogleARCore.CameraFocusMode"/>.<c>AutoFocus</c> will be ignored. Similarly,
-        /// on devices where tracking requires auto focus mode, setting
-        /// <see cref="GoogleARCore.CameraFocusMode"/>.<c>FixedFocus</c> will be ignored. See the
-        /// <a href="https://developers.google.com/ar/discover/supported-devices">ARCore
-        /// supported devices</a> page for a list of affected devices.
+        /// For optimal AR tracking performance, use the focus mode provided by the default session
+        /// config. While capturing pictures or video, use
+        /// <see cref="GoogleARCore.CameraFocusMode"/>.<c>AutoFocus</c>. For optimal AR tracking,
+        /// revert to the default focus mode once auto focus behavior is no longer needed. If your
+        /// app requires fixed focus camera, set
+        /// <see cref="GoogleARCore.CameraFocusMode"/>.<c>FixedFocus</c> before enabling the AR
+        /// session. This ensures that your app always uses fixed focus, even if the default camera
+        /// config focus mode changes in a future release.
         /// </remarks>
-        [Tooltip("Chooses the desired focus mode to be used by the ARCore camera.")]
+        [Tooltip("On supported devices, chooses the desired focus mode to be used by the ARCore " +
+                 "camera.")]
         [Help("Note, on devices where ARCore does not support auto focus mode due to the use of " +
               "a fixed focus camera, setting focus mode to Auto Focus will be ignored. " +
               "Similarly, on devices where tracking requires auto focus mode, seting focus mode " +
@@ -127,6 +132,12 @@ namespace GoogleARCore
         /// </summary>
         public AugmentedFaceMode AugmentedFaceMode = AugmentedFaceMode.Disabled;
 
+
+        /// <summary>
+        /// Chooses which DepthMode will be used in the ARCore session.
+        /// </summary>
+        [Tooltip("Chooses which DepthMode will be used in the ARCore session.")]
+        public DepthMode DepthMode = DepthMode.Disabled;
         /// <summary>
         ///  Gets or sets a value indicating whether PlaneFinding is enabled.
         /// </summary>
@@ -170,6 +181,27 @@ namespace GoogleARCore
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether Cloud Anchors are enabled.
+        /// </summary>
+        /// <value><c>true</c> if enable Cloud Anchors; otherwise, <c>false</c>.</value>
+        /// @deprecated Please use ARCoreSessionConfig.CloudAnchorMode instead.
+        [System.Obsolete(
+            "This field has been replaced by ARCoreSessionConfig.CloudAnchorMode. See " +
+            "https://github.com/google-ar/arcore-unity-sdk/releases/tag/v1.15.0")]
+        public bool EnableCloudAnchor
+        {
+            get
+            {
+                return CloudAnchorMode != CloudAnchorMode.Disabled;
+            }
+
+            set
+            {
+                CloudAnchorMode = value ? CloudAnchorMode.Enabled : CloudAnchorMode.Disabled;
+            }
+        }
+
+        /// <summary>
         /// ValueType check if two SessionConfig objects are equal.
         /// </summary>
         /// <param name="other">The other SessionConfig.</param>
@@ -186,9 +218,10 @@ namespace GoogleARCore
             if (MatchCameraFramerate != otherConfig.MatchCameraFramerate ||
                 PlaneFindingMode != otherConfig.PlaneFindingMode ||
                 LightEstimationMode != otherConfig.LightEstimationMode ||
-                EnableCloudAnchor != otherConfig.EnableCloudAnchor ||
+                CloudAnchorMode != otherConfig.CloudAnchorMode ||
                 AugmentedImageDatabase != otherConfig.AugmentedImageDatabase ||
                 CameraFocusMode != otherConfig.CameraFocusMode ||
+                DepthMode != otherConfig.DepthMode ||
                 AugmentedFaceMode != otherConfig.AugmentedFaceMode)
             {
                 return false;
@@ -215,10 +248,11 @@ namespace GoogleARCore
             MatchCameraFramerate = other.MatchCameraFramerate;
             PlaneFindingMode = other.PlaneFindingMode;
             LightEstimationMode = other.LightEstimationMode;
-            EnableCloudAnchor = other.EnableCloudAnchor;
+            CloudAnchorMode = other.CloudAnchorMode;
             AugmentedImageDatabase = other.AugmentedImageDatabase;
             CameraFocusMode = other.CameraFocusMode;
             AugmentedFaceMode = other.AugmentedFaceMode;
+            DepthMode = other.DepthMode;
         }
 
         /// <summary>
@@ -228,7 +262,7 @@ namespace GoogleARCore
         {
             if ((LightEstimationMode == LightEstimationMode.EnvironmentalHDRWithoutReflections ||
                 LightEstimationMode == LightEstimationMode.EnvironmentalHDRWithReflections) &&
-                AugmentedFaceMode != AugmentedFaceMode.Disabled)
+                AugmentedFaceMode == AugmentedFaceMode.Mesh)
             {
                 Debug.LogErrorFormat("LightEstimationMode.{0} is incompatible with " +
                     "AugmentedFaceMode.{1}, please use other LightEstimationMode or disable " +

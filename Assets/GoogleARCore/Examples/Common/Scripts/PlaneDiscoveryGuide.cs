@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="PlaneDiscoveryGuide.cs" company="Google">
+// <copyright file="PlaneDiscoveryGuide.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -158,6 +158,25 @@ namespace GoogleARCore.Examples.Common
         {
             _UpdateDetectedPlaneTrackingState();
             _UpdateUI();
+        }
+
+        /// <summary>
+        /// Enable or Disable this Plane Discovery Guide.
+        /// </summary>
+        /// <param name="guideEnabled">Enable/Disable the guide.</param>
+        public void EnablePlaneDiscoveryGuide(bool guideEnabled)
+        {
+            if (guideEnabled)
+            {
+                enabled = true;
+            }
+            else
+            {
+                enabled = false;
+                m_FeaturePoints.SetActive(false);
+                m_HandAnimation.enabled = false;
+                m_SnackBar.SetActive(false);
+            }
         }
 
         /// <summary>

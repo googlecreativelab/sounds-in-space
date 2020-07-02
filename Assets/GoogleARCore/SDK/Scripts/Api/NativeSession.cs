@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="NativeSession.cs" company="Google">
+// <copyright file="NativeSession.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ namespace GoogleARCoreInternal
             CameraMetadataApi = new CameraMetadataApi(this);
             FrameApi = new FrameApi(this);
             HitTestApi = new HitTestApi(this);
-            ImageApi = new ImageApi();
+            ImageApi = new ImageApi(this);
             LightEstimateApi = new LightEstimateApi(this);
             PlaneApi = new PlaneApi(this);
             PointApi = new PointApi(this);

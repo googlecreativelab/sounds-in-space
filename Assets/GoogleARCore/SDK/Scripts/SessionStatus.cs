@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="SessionStatus.cs" company="Google">
+// <copyright file="SessionStatus.cs" company="Google LLC">
 //
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,5 +78,17 @@ namespace GoogleARCore
         /// SessionStatus is SessionStatus.NotTracking, ARCoreSession can be enabled.
         /// </summary>
         ErrorSessionConfigurationNotSupported = 203,
+
+        /// <summary>
+        /// The ARCore session cannot begin tracking because the camera has been reallocated to
+        /// a higher priority application or is otherwise unavailable.
+        /// </summary>
+        ErrorCameraNotAvailable = 204,
+
+        /// <summary>
+        /// The ARCore session cannot begin tracking because the camera configuration was changed,
+        /// and there is at least one unreleased image.
+        /// </summary>
+        ErrorIllegalState = 205,
     }
 }
