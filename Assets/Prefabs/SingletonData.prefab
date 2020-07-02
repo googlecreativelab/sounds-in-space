@@ -75,5 +75,8 @@ MonoBehaviour:
   soundShapeSprites:
   - {fileID: 21300000, guid: 921fac401f1b6426e94ecffaa244e421, type: 3}
   - {fileID: 21300000, guid: 9e2f1ae8b72a747c2ab44e54d1d0062d, type: 3}
-  MinDiameterForSoundMarkers: 0.4
-  MaxDiameterForSoundMarkers: 21.1
+  KioskPasscode: 3000
+  InnerRadiusMinDiameter: 0.25
+  InnerRadiusMaxDiameter: 14
+  OuterRadiusMinDiameter: 0.5
+  OuterRadiusMaxDiameter: 20.1

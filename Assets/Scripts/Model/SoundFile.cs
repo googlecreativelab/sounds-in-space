@@ -141,23 +141,6 @@ namespace SIS {
             }
         }
 
-        public static IEnumerator AwaitLoading(Dictionary<string, SoundFile> ofDict, Action completion) {
-            yield return AwaitLoading(ofDict.Values, completion);
-        }
-
-        public static IEnumerator AwaitLoading(IEnumerable<SoundFile> soundFilesThatAreLoading, Action completion) {
-            // Debug.LogWarning("AwaitLoading...");
-            foreach (SoundFile sf in soundFilesThatAreLoading) {
-                if (sf.loadState == LoadState.Fail) { continue; }
-                if (sf.loadState != LoadState.Success) {
-                    // Will either be loading or about to load, let's give it a chance!
-                    yield return new WaitForSeconds(0.1f);
-                }
-            }
-            // Debug.LogWarning("AwaitLoading COMPLETE!");
-            completion();
-        }
-
         private static IEnumerator loadSoundFileClip(SoundFile sf, System.Action<SoundFile> completion = null) {
             if (sf.isDefaultSoundFile || (sf.loadState == LoadState.Success && sf.clip != null)) {
                 // ALREADY LOADED!
@@ -188,7 +171,7 @@ namespace SIS {
                 } else {
                     AudioClip ac = DownloadHandlerAudioClip.GetContent(req);
                     if (ac != null) {
-                        Debug.Log("AudioClip loadState: " + ac.loadState + " - " + sf.filename);
+                        // Debug.Log("AudioClip loadState: " + ac.loadState + " - " + sf.filename);
 
                         if (sf.clip != null) { GameObject.Destroy(sf.clip); }
                         sf.clip = ac;
@@ -199,7 +182,7 @@ namespace SIS {
                     }
                 }
             }
-            Debug.LogWarning("SoundFile::loadSoundFileClip WILL call completion...");
+            // Debug.LogWarning("SoundFile::loadSoundFileClip WILL call completion...");
             if (completion != null) { completion(sf); }
         }
 

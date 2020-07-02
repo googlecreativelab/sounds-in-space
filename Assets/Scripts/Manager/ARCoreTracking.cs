@@ -15,7 +15,8 @@ namespace SIS {
         public void setDelegate(IARCoreTrackingDelegate del) { _managerDelegate = del; }
 
         private Transform _anchorWrapper;
-        private TrackingState _prevTrackingState = TrackingState.Tracking;
+        // private TrackingState _prevTrackingState = TrackingState.Tracking;
+        private SessionStatus _prevTrackingStatus = SessionStatus.None;
 
         private Anchor FirstAnchor {
             get { return _anchorWrapper.GetComponentInChildren<Anchor>(includeInactive: true); }
@@ -37,17 +38,30 @@ namespace SIS {
                 VoiceOver.main.StopWarning();
                 return;
             }
-            // make sure the state has changed
-            TrackingState currTrackingState = FirstAnchor.TrackingState;
-            if (currTrackingState == _prevTrackingState) return;
+            
+            SessionStatus curSessionStatus = Session.Status;
+            if (curSessionStatus == _prevTrackingStatus) return;
 
-            switch(currTrackingState) {
-                case TrackingState.Tracking: _managerDelegate?.arCoreTrackingResumedTracking(); break;
-                case TrackingState.Paused: _managerDelegate?.arCoreTrackingPausedTracking(); break;
-                case TrackingState.Stopped: _managerDelegate?.arCoreTrackingStoppedTracking(); break;
+            switch (curSessionStatus) {
+                case SessionStatus.Tracking: _managerDelegate?.arCoreTrackingResumedTracking(); break;
+                case SessionStatus.NotTracking: _managerDelegate?.arCoreTrackingPausedTracking(); break;
+                case SessionStatus.LostTracking: _managerDelegate?.arCoreTrackingStoppedTracking(); break;
+                default: break;
             }
 
-            _prevTrackingState = currTrackingState; // update prev state
+            _prevTrackingStatus = curSessionStatus; // update prev state
+
+            // make sure the state has changed
+            // TrackingState currTrackingState = FirstAnchor.TrackingState;
+            // if (currTrackingState == _prevTrackingState) return;
+
+            // switch(currTrackingState) {
+            //     case TrackingState.Tracking: _managerDelegate?.arCoreTrackingResumedTracking(); break;
+            //     case TrackingState.Paused: _managerDelegate?.arCoreTrackingPausedTracking(); break;
+            //     case TrackingState.Stopped: _managerDelegate?.arCoreTrackingStoppedTracking(); break;
+            // }
+
+            // _prevTrackingState = currTrackingState; // update prev state
         }
     }
 }

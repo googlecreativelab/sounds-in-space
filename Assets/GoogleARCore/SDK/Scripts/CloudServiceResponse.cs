@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="CloudServiceResponse.cs" company="Google">
+// <copyright file="CloudServiceResponse.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 namespace GoogleARCore.CrossPlatform
 {
     /// <summary>
-    /// A response from the ARCore Cloud Anchor service.
+    /// A response from the ARCore <see cref="Cloud Anchor"/> service.
     /// </summary>
     public enum CloudServiceResponse
     {
@@ -41,7 +41,7 @@ namespace GoogleARCore.CrossPlatform
         ErrorNotTracking,
 
         /// <summary>
-        /// The ARCore Cloud Anchor service could not be reached via the network connection.
+        /// The ARCore <see cref="Cloud Anchor"/> service could not be reached via the network connection.
         /// </summary>
         /// @deprecated This enum value is deprecated.
         [System.Obsolete(
@@ -63,17 +63,17 @@ namespace GoogleARCore.CrossPlatform
 
         /// <summary>
         /// The device needs to gather additional tracking data from the environment before the
-        /// ARCore Cloud Anchor service can fulfill the request.
+        /// ARCore <see cref="Cloud Anchor"/> service can fulfill the request.
         /// </summary>
         ErrorDatasetInadequate,
 
         /// <summary>
-        /// The request referenced a Cloud Anchor ID that was not found.
+        /// The request referenced a <see cref="Cloud Anchor"/> ID that was not found.
         /// </summary>
         ErrorCloudIdNotFound,
 
         /// <summary>
-        /// The ARCore Cloud Anchor service failed to localize.
+        /// The ARCore <see cref="Cloud Anchor"/> service failed to localize.
         /// </summary>
         /// @deprecated This enum value is deprecated.
         [System.Obsolete(
@@ -82,33 +82,39 @@ namespace GoogleARCore.CrossPlatform
         ErrorLocalizationFailed,
 
         /// <summary>
-        /// The SDK version is too old to be compatible with the ARCore Cloud Anchor service.
+        /// The SDK version is too old to be compatible with the ARCore <see cref="Cloud Anchor"/> service.
         /// </summary>
         ErrorSDKTooOld,
 
         /// <summary>
-        /// The SDK version is too new to be compatible with the ARCore Cloud Anchor service.
+        /// The SDK version is too new to be compatible with the ARCore <see cref="Cloud Anchor"/> service.
         /// </summary>
         ErrorSDKTooNew,
 
         /// <summary>
-        /// The ARCore Cloud Anchor service experienced an internal error when processing the request.
+        /// The ARCore <see cref="Cloud Anchor"/> service experienced an internal error when processing the request.
         /// </summary>
         ErrorInternal,
 
         /// <summary>
-        /// The ARCore Cloud Anchor service was unreachable. This can happen because
+        /// The ARCore <see cref="Cloud Anchor"/> service was unreachable. This can happen because
         /// of a number of reasons. The device may is in airplane mode or does not
         /// have a working internet connection. The request sent to the server could
         /// have timed out with no response, there could be a bad network
         /// connection, DNS unavailability, firewall issues, or anything that could
-        /// affect the device's ability to connect to the ARCore Cloud Anchor servce.
+        /// affect the device's ability to connect to the ARCore <see cref="Cloud Anchor"/> service.
         /// </summary>
         ErrorHostingServiceUnavailable,
 
         /// <summary>
-        /// The ARCore Cloud Anchor service request has been cancelled.
+        /// The ARCore <see cref="Cloud Anchor"/> service request has been cancelled.
         /// </summary>
         ErrorRequestCancelled,
+
+        /// <summary>
+        /// Too many Cloud Anchors are being hosted and/or resolved. To create more, destroy some
+        /// XPAnchor objects or cancel some AsyncTasks to free up resources.
+        /// </summary>
+        ErrorTooManyCloudAnchors,
     }
 }

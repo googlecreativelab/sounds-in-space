@@ -35,12 +35,12 @@ namespace SIS {
         void StartCoroutineOn(IEnumerator e);
     }
 
-    public class LayoutManager : ILayoutDelegate, IOnDemandLoadingDelegate {
+    public class LayoutManager : ILayoutDelegate, IAudioClipLoadingDelegate {
 
         public ILayoutManagerDelegate layoutManagerDelegate = null;
 
         public Layout layout; // Current scene layout in memory
-        public OnDemandLoadingManager onDemandLoadingManager = new OnDemandLoadingManager();
+        public AudioClipLoadingManager onDemandLoadingManager = new AudioClipLoadingManager();
 
         public Dictionary<string, SoundFile> soundDictionary;
         public Dictionary<string, SoundFile> getSoundDictionary() { return soundDictionary; }
@@ -273,7 +273,7 @@ namespace SIS {
 
         #region IOnDemandLoadingDelegate
 
-        public void OnDemandLoadingLoadedAudioClipsChanged(OnDemandLoadingManager manager) {
+        public void OnDemandLoadingLoadedAudioClipsChanged(AudioClipLoadingManager manager) {
             layoutManagerDelegate?.LayoutManagerLoadedAudioClipsChanged(this, hotspotCount: this.layout != null ? this.layout.hotspots.Count : 0);
         }
         public void StartCoroutineOn(IEnumerator e) {

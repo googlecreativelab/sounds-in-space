@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------
-// <copyright file="ARCoreAndroidLifecycleManager.cs" company="Google">
+// <copyright file="ARCoreAndroidLifecycleManager.cs" company="Google LLC">
 //
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,8 +34,11 @@ namespace GoogleARCoreInternal
     using IOSImport = GoogleARCoreInternal.DllImportNoop;
 #endif
 
+
     internal class ARCoreAndroidLifecycleManager : ILifecycleManager
     {
+        private const int k_MTNumTextureIds = 4;
+
         private static ARCoreAndroidLifecycleManager s_Instance = null;
 
         private IntPtr m_CachedSessionHandle = IntPtr.Zero;
@@ -66,6 +69,11 @@ namespace GoogleARCoreInternal
         private List<IntPtr> m_TempCameraConfigHandles = new List<IntPtr>();
 
         private List<CameraConfig> m_TempCameraConfigs = new List<CameraConfig>();
+
+        // List of OpenGL ES texture IDs for camera generated during OnEarlyUpdate
+        private int[] m_CameraTextureIds = null;
+        private Dictionary<int, Texture2D> m_TextureIdToTexture2D =
+            new Dictionary<int, Texture2D>();
 
         public event Action UpdateSessionFeatures;
 
@@ -236,6 +244,8 @@ namespace GoogleARCoreInternal
 
         private void _OnEarlyUpdate()
         {
+            _SetCameraTextureName();
+
             // Update session activity before EarlyUpdate.
             if (m_HaveDisableToEnableTransition)
             {
@@ -300,6 +310,11 @@ namespace GoogleARCoreInternal
 
             // Update ArPresto and potentially ArCore.
             ExternApi.ArPresto_update();
+            if (SystemInfo.graphicsMultiThreaded && !InstantPreviewManager.IsProvidingPlatform)
+            {
+                // Synchronize render thread with update call.
+                ExternApi.ARCoreRenderingUtils_CreatePostUpdateFence();
+            }
 
             SessionStatus previousSessionStatus = SessionStatus;
 
@@ -356,6 +371,40 @@ namespace GoogleARCoreInternal
             }
         }
 
+        private void _SetCameraTextureName()
+        {
+            if (InstantPreviewManager.IsProvidingPlatform)
+            {
+                return;
+            }
+
+            // Generate texture IDs if necessary
+            if (m_CameraTextureIds == null)
+            {
+                int textureNum = SystemInfo.graphicsMultiThreaded ? k_MTNumTextureIds : 1;
+                Debug.LogFormat("Using {0} textures for ARCore session", textureNum);
+                m_CameraTextureIds = new int[textureNum];
+                OpenGL.glGenTextures(m_CameraTextureIds.Length, m_CameraTextureIds);
+                int error = OpenGL.glGetError();
+                if (error != 0)
+                {
+                    Debug.LogErrorFormat("OpenGL glGenTextures error: {0}", error);
+                }
+
+                foreach (int textureId in m_CameraTextureIds)
+                {
+                    OpenGL.glBindTexture(OpenGL.Target.GL_TEXTURE_EXTERNAL_OES,
+                                         textureId);
+                    Texture2D texture2d = Texture2D.CreateExternalTexture(
+                        0, 0, TextureFormat.ARGB32, false, false, new IntPtr(textureId));
+                    m_TextureIdToTexture2D[textureId] = texture2d;
+                }
+
+                ExternApi.ArPresto_setCameraTextureNames(
+                    m_CameraTextureIds.Length, m_CameraTextureIds);
+            }
+        }
+
         private void _Initialize()
         {
             if (m_NativeSessions != null)
@@ -391,34 +440,18 @@ namespace GoogleARCoreInternal
 
             IntPtr frameHandle = IntPtr.Zero;
             ExternApi.ArPresto_getFrame(ref frameHandle);
-
-            int backgroundTextureId = ExternApi.ArCoreUnity_getBackgroundTextureId();
-
             if (frameHandle == IntPtr.Zero)
             {
                 // This prevents using a texture that has not been filled out by ARCore.
                 return;
             }
-            else if (backgroundTextureId == -1)
-            {
-                return;
-            }
-            else if (BackgroundTexture != null &&
-                BackgroundTexture.GetNativeTexturePtr().ToInt32() == backgroundTextureId)
-            {
-                return;
-            }
-            else if (BackgroundTexture == null)
-            {
-                // The Unity-cached size and format of the texture (0x0, ARGB) is not the
-                // actual format of the texture. This is okay because the texture is not
-                // accessed by pixels, it is accessed with UV coordinates.
-                BackgroundTexture = Texture2D.CreateExternalTexture(
-                    0, 0, TextureFormat.ARGB32, false, false, new IntPtr(backgroundTextureId));
-                return;
-            }
 
-            BackgroundTexture.UpdateExternalTexture(new IntPtr(backgroundTextureId));
+            int backgroundTextureId = NativeSession.FrameApi.GetCameraTextureName();
+            Texture2D texture2d = null;
+            if (m_TextureIdToTexture2D.TryGetValue(backgroundTextureId, out texture2d))
+            {
+                BackgroundTexture = texture2d;
+            }
         }
 
         private void _SetSessionEnabled(bool sessionEnabled)
@@ -489,6 +522,17 @@ namespace GoogleARCoreInternal
             {
                 Debug.LogWarning("Cannot set configuration for invalid sessionHandle.");
                 return;
+            }
+
+            // Disable depth if the device doesn't support it.
+            if (m_CachedConfig.DepthMode != DepthMode.Disabled)
+            {
+                NativeSession tempNativeSession = _GetNativeSession(sessionHandle);
+                if (!tempNativeSession.SessionApi.IsDepthModeSupported(
+                    m_CachedConfig.DepthMode.ToApiDepthMode()))
+                {
+                    m_CachedConfig.DepthMode = DepthMode.Disabled;
+                }
             }
 
             SessionConfigApi.UpdateApiConfigWithARCoreSessionConfig(
@@ -571,6 +615,14 @@ namespace GoogleARCoreInternal
             [AndroidImport(ApiConstants.ARPrestoApi)]
             public static extern void ArPresto_setDeviceCameraDirection(
                 ApiPrestoDeviceCameraDirection cameraDirection);
+
+
+            [AndroidImport(ApiConstants.ARPrestoApi)]
+            public static extern void ArPresto_setCameraTextureNames(
+                int numberOfTextures, int[] textureIds);
+
+            [AndroidImport(ApiConstants.ARRenderingUtilsApi)]
+            public static extern void ARCoreRenderingUtils_CreatePostUpdateFence();
 
             [AndroidImport(ApiConstants.ARPrestoApi)]
             public static extern void ArPresto_setEnabled(bool isEnabled);

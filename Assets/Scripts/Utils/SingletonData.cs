@@ -31,7 +31,7 @@ namespace SIS {
         public Sprite[] sprites;
         public Sprite[] soundShapeSprites;
 
-        public string KioskPasscode = "3491";
+        public string KioskPasscode = "3000";
 
         public float InnerRadiusMinDiameter = 0.25f;
         public float InnerRadiusMaxDiameter = 14f;

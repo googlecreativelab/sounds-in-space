@@ -29,7 +29,8 @@ namespace SIS {
     [RequireComponent(typeof(ARCoreTracking))]
     [RequireComponent(typeof(FlicReceiver))]
     public class MainController : MonoBehaviour, IObjectSelectionDelegate, ICanvasControllerDelegate, 
-        ILayoutManagerDelegate, ISoundMarkerDelegate, IARCoreTrackingDelegate, IVoiceOverDelegate, IFlicReceiverDelegate {
+        ILayoutManagerDelegate, ISoundMarkerDelegate, IARCoreTrackingDelegate, 
+        IVoiceOverDelegate, IFlicReceiverDelegate, ISoundMarkerPoolingDelegate {
 
         // Used to reset the ARCore device.
         private SessionStatus arCoreSessionStatus = SessionStatus.None;
@@ -37,10 +38,18 @@ namespace SIS {
 
         public GameObject soundMarkerPrefab;
         public GameObject originMarkerPrefab;
+        public GameObject getSoundMarkerPrefab() { return soundMarkerPrefab; }
 
         // General objects we need to access
         public CanvasController canvasControl;
         public Camera firstPersonCamera;
+
+        public Transform soundMarkerPooling;
+
+        // --------------------------------------------
+        private SoundMarkerPooling _soundMarkerPooling;
+        public Transform getPoolingTransform() { return soundMarkerPooling; }
+
         public static List<SoundMarker> soundMarkers;
         public static IEnumerable<SoundMarker> soundMarkersForSoundFileIDs(HashSet<string> soundFileIDs) {
             return soundMarkers.Where( sm => soundFileIDs.Contains(sm.hotspot.soundID) );
@@ -51,6 +60,7 @@ namespace SIS {
         public static IEnumerable<SoundMarker> soundMarkersNotUsingSoundFileIDs(HashSet<string> soundFileIDsToAvoid) {
             return soundMarkers.Where(sm => !soundFileIDsToAvoid.Contains(sm.hotspot.soundID));
         }
+        // --------------------------------------------
 
         public SoundPlacement soundPlacementRef;
         public SoundPlacement soundPlacement { get { return soundPlacementRef; } }
@@ -64,6 +74,7 @@ namespace SIS {
         OriginMarker originMarker = null;
 
         public LayoutManager layoutManager;
+        public LayoutManager getLayoutManager() { return layoutManager; }
         public bool playbackIsStopped { get { return canvasControl.mainScreen.playbackIsStopped; } }
 
         public static AudioOnDemandColliders OnDemandColliders { get { return Camera.main.GetComponent<AudioOnDemandColliders>(); } }
@@ -77,6 +88,10 @@ namespace SIS {
         public bool shouldAllowEscapeKeyToTriggerBack() { return !loadingOverlay.activeInHierarchy; }
         public GameObject loadingOverlay;
         public UnityEngine.UI.Text loadingOverlayText;
+        public UnityEngine.UI.Text debugText = null;
+
+        private bool _trackingLost = false;
+        private bool _loadingSoundMarkers = false;
 
         // True if the app is in the process of quitting due to an ARCore
         bool isQuitting = false;
@@ -91,6 +106,9 @@ namespace SIS {
             layoutManager.LoadCurrentLayout(); // Calls the delegate method LayoutManagerLoadedNewLayout
             // The below is called in LayoutManagerLoadedNewLayout
             // layoutManager.LoadSoundClipsForCurrentLayout(() => { });
+
+            int numToPreallocate = Mathf.Min(128, Mathf.Max(8, layoutManager.layout.hotspots.Count));
+            _soundMarkerPooling = new SoundMarkerPooling(numToPreallocate, del: this);
         }
 
         void Start() {
@@ -110,34 +128,54 @@ namespace SIS {
             firstPersonCamera = arCoreDevice.gameObject.transform.GetChild(0).GetComponent<Camera>();
             soundPlacement.SetCursorModelHidden(true);
         }
+        #region Tracking & Playback
 
+        private void resumeSoundMarkerPlayback() {
+            VoiceOver.main.StopWarning();
+
+            string arTrackingStr = "AR Tracking\nON";
+            canvasControl.mainScreen.arTrackingText.text = arTrackingStr;
+            canvasControl.kiosk.statsText1.text = arTrackingStr;
+
+            canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: false);
+            canvasControl.mainScreen.playbackButton.interactable = true;
+        }
+
+        #endregion
         #region IARCoreTrackingDelegate
 
         public void arCoreTrackingResumedTracking() {
             Debug.LogError("!!! arCoreTrackingResumedTracking");
-            VoiceOver.main.StopWarning();
 
-            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nON";
-            canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: false);
-            canvasControl.mainScreen.playbackButton.interactable = true;
+            // resumeSoundMarkerPlayback();
         }
 
         public void arCoreTrackingPausedTracking() {
             Debug.LogError("!!! arCoreTrackingPausedTracking");
             VoiceOver.main.PlayWarning();
 
-            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nPAUSED";
+            string arTrackingStr = "AR Tracking\nPAUSED";
+            canvasControl.mainScreen.arTrackingText.text = arTrackingStr;
+            canvasControl.kiosk.statsText1.text = arTrackingStr;
+
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
             canvasControl.mainScreen.playbackButton.interactable = false;
+
+            _trackingLost = true;
         }
 
         public void arCoreTrackingStoppedTracking() {
             Debug.LogError("!!! arCoreTrackingStoppedTracking");
             VoiceOver.main.PlayWarning();
 
-            canvasControl.mainScreen.arTrackingText.text = "AR Tracking\nSTOPPED";
+            string arTrackingStr = "AR Tracking\nSTOPPED";
+            canvasControl.mainScreen.arTrackingText.text = arTrackingStr;
+            canvasControl.kiosk.statsText1.text = arTrackingStr;
+
             canvasControl.mainScreen.SetAllMarkerPlaybackState(stopPlayback: true);
             canvasControl.mainScreen.playbackButton.interactable = false;
+
+            _trackingLost = true;
         }
 
         #endregion
@@ -180,6 +218,32 @@ namespace SIS {
 
         public void Update() {
             UpdateApplicationLifecycle();
+
+            if (!_trackingLost) { return; }
+
+            // ----------------
+            // DEBUG Label
+            int numTracking = 0;
+            // int numPaused = 0;
+            // int numStopped = 0;
+            foreach (SoundMarker marker in MainController.soundMarkers) {
+                Anchor anchorParent = marker.transform.parent.GetComponent<Anchor>();
+                switch (anchorParent.TrackingState) {
+                    case TrackingState.Tracking: ++numTracking; break;
+                    // case TrackingState.Paused: ++numPaused; break;
+                    // case TrackingState.Stopped: ++numStopped; break;
+                }
+            }
+
+            // ----------------
+            // Update tracking loss
+            if (_trackingLost && numTracking == MainController.soundMarkers.Count) {
+                resumeSoundMarkerPlayback();
+                _trackingLost = false;
+            }
+
+            // debugText.text = string.Format("{0} tracking, {1} paused, {2} stopped", 
+            //                                 numTracking, numPaused, numStopped);
         }
 
 
@@ -198,65 +262,59 @@ namespace SIS {
             originMarker = OriginMarker.CreatePrefab(firstPersonCamera.transform, originMarkerPrefab, anchorWrapperTransform);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="soundObj"></param>
-        /// <param name="removeFromList"></param>
-        /// <param name="eraseHotspotData"></param>
-        public void DeleteAndDestroySoundMarker(SoundMarker soundObj, bool removeFromList = true, bool eraseHotspotData = true) {
-            if (soundObj == null) { return; }
+        // public void DeleteAndDestroySoundMarker(SoundMarker soundObj, bool removeFromList = true, bool eraseHotspotData = true) {
+        //     if (soundObj == null) { return; }
 
-            // TODO: Implement object pooling
-            if (removeFromList) {
-                soundObj.markerDelegate = null;
-                soundMarkers.Remove(soundObj);
-            }
-            if (eraseHotspotData) layoutManager.EraseHotspot(soundObj.hotspot);
+        //     // TODO: Implement object pooling
+        //     if (removeFromList) {
+        //         soundObj.markerDelegate = null;
+        //         soundMarkers.Remove(soundObj);
+        //     }
+        //     if (eraseHotspotData) layoutManager.EraseHotspot(soundObj.hotspot);
 
-            if (soundObj.transform.parent != null) {
-                Destroy(soundObj.transform.parent.gameObject);
-            } else {
-                Destroy(soundObj);
-            }
-        }
+        //     if (soundObj.transform.parent != null) {
+        //         Destroy(soundObj.transform.parent.gameObject);
+        //     } else {
+        //         Destroy(soundObj);
+        //     }
+        // }
 
-        /// <summary>
-        /// Remove all the sound markers from the scene
-        /// </summary>
-        private void UnloadCurrentSoundMarkers() {
-            foreach (SoundMarker s in soundMarkers) {
-                DeleteAndDestroySoundMarker(s, removeFromList: false, eraseHotspotData: false);
-            }
-            soundMarkers.Clear();
-        }
+        // private void UnloadCurrentSoundMarkers() {
+        //     foreach (SoundMarker s in soundMarkers) {
+        //         DeleteAndDestroySoundMarker(s, removeFromList: false, eraseHotspotData: false);
+        //     }
+        //     soundMarkers.Clear();
+        // }
 
         /// <summary>
         /// Place the next sound marker
         /// </summary>
         private void PlaceSoundTapped() {
             // Place a new sound with default config
-            SoundMarker soundIconObj = null;
+            SoundMarker soundMarker = _soundMarkerPooling.GetSoundMarker();
             // Create and position the prefab.
             if (canvasControl.placeSoundsOverlay.placeSoundsOnCursor && cursorTransform != null) {
-                soundIconObj = SoundMarker.CreatePrefab(cursorTransform, soundMarkerPrefab, anchorWrapperTransform);
+                SoundMarker.SetupUnanchoredMarker(soundMarker, cursorTransform, anchorWrapperTransform);
+                // soundMarker = SoundMarker.CreatePrefab(cursorTransform, soundMarkerPrefab, anchorWrapperTransform);
             } else {
-                soundIconObj = SoundMarker.CreatePrefab(firstPersonCamera.transform, soundMarkerPrefab, anchorWrapperTransform);
+                SoundMarker.SetupUnanchoredMarker(soundMarker, firstPersonCamera.transform, anchorWrapperTransform);
+                // soundMarker = SoundMarker.CreatePrefab(firstPersonCamera.transform, soundMarkerPrefab, anchorWrapperTransform);
             }
-            soundIconObj.markerDelegate = this;
-            Anchor anchorParent = soundIconObj.transform.parent.GetComponent<Anchor>();
+            soundMarker.markerDelegate = this;
+            Anchor anchorParent = soundMarker.transform.parent.GetComponent<Anchor>();
             Vector3 anchorPos = anchorParent.transform.localPosition;
 
             // Create a new hotspot for the json file and save it.
-            soundMarkers.Add(soundIconObj);
+            soundMarkers.Add(soundMarker);
 
             Hotspot h = layoutManager.AddNewHotspot(
               localPos: anchorPos,
               rotation: Vector3.zero,
               minDist: defaultMinDistance * 0.5f,
               maxDist: canvasControl.placeSoundsOverlay.maxRadiusSlider.radiusValue);
-            layoutManager.Bind(soundIconObj, h, !playbackIsStopped, reloadSoundClips: false);
+            layoutManager.Bind(soundMarker, h, !playbackIsStopped, reloadSoundClips: false);
 
-            soundIconObj.SetIconAndRangeToRandomValue();
+            soundMarker.SetIconAndRangeToRandomValue();
 
         }
 
@@ -264,7 +322,8 @@ namespace SIS {
         /// Load all the sounds after the camera has been moved
         /// </summary>
         /// <returns></returns>
-        void ReloadSoundsRelativeToCamera() {
+        void ReloadSoundsRelativeToCamera(System.Action reloadComplete = null) {
+            if (_loadingSoundMarkers) { return; }
 
             anchorWrapperTransform.position = firstPersonCamera.transform.position;
             float camYRot = firstPersonCamera.transform.rotation.eulerAngles.y;
@@ -272,13 +331,16 @@ namespace SIS {
 
             CreateOriginMarkerAtCameraPosition();
 
-            LoadLayoutData();
+            LoadLayoutData(reloadComplete);
         }
 
         /// <summary>
         /// Update the scene data and place the corresponding sources
         /// </summary>
-        public void LoadLayoutData() {
+        public void LoadLayoutData(System.Action loadComplete = null) {
+            if (_loadingSoundMarkers) { return; }
+            _loadingSoundMarkers = true;
+
             #if UNITY_ANDROID
             Screen.fullScreen = true;
             #endif
@@ -286,7 +348,9 @@ namespace SIS {
             loadingOverlay.gameObject.SetActive(true);
 
             // remove the previous
-            UnloadCurrentSoundMarkers();
+            // UnloadCurrentSoundMarkers();
+            _soundMarkerPooling.RecycleAllMarkers(eraseHotspotData: false);
+
             // set up all the hotspots
             layoutManager.LoadCurrentLayout();
             
@@ -298,6 +362,9 @@ namespace SIS {
                     #if UNITY_ANDROID
                     Screen.fullScreen = false;
                     #endif
+
+                    _loadingSoundMarkers = false;
+                    if (loadComplete != null) { loadComplete(); }
                 });
             } else {
                 layoutManager.LoadAllAudioClipsIntoMemory(MainController.soundMarkers,
@@ -305,6 +372,9 @@ namespace SIS {
                         // Load the SoundMarkers on a CoRoutine
                         loadSoundMarkersOnCoroutine(complete: () => {
                             Debug.Log("FINISHED loading clips and markers [OnDemand OFF]");
+
+                            _loadingSoundMarkers = false;
+                            if (loadComplete != null) { loadComplete(); }
                             
                             #if UNITY_ANDROID
                             if (canvasControl.activeScreen == CanvasController.CanvasUIScreen.Kiosk) { return; }
@@ -340,24 +410,36 @@ namespace SIS {
             System.Action<int> progressCallback = null, 
             System.Action completeCallback = null) {
             
-            float waitTime = 1.7f / hotspots.Count;
+            float waitTime = hotspots.Count < 6 ? (1.2f / hotspots.Count) : 0;
+            int markersToLoadBeforeYield = Mathf.Min(2, Mathf.Max(1, hotspots.Count / 16));
+            Debug.Log ("markersToLoadBeforeYield: " + markersToLoadBeforeYield);
 
             int index = 0;
+            int numLoadedAfterLastYield = 0;
             // Bind all the sounds to their game objects
             foreach (Hotspot h in hotspots) {
-                var pf = SoundMarker.CreatePrefab(
-                  anchorWrapperTransform.TransformPoint(h.positon),
-                  h.rotation, soundMarkerPrefab, anchorWrapperTransform);
-                SoundMarker soundObj = pf.GetComponent<SoundMarker>();
-                layoutManager.Bind(soundObj, h, !playbackIsStopped, reloadSoundClips: false);
+                // SoundMarker newSoundMarker = SoundMarker.CreatePrefab(
+                //   anchorWrapperTransform.TransformPoint(h.positon),
+                //   h.rotation, soundMarkerPrefab, anchorWrapperTransform);
+                SoundMarker newSoundMarker = _soundMarkerPooling.GetSoundMarker();
+                SoundMarker.SetupUnanchoredMarker(newSoundMarker, anchorWrapperTransform.TransformPoint(h.positon),
+                  h.rotation, anchorWrapperTransform);
 
-                pf.markerDelegate = this;
-                soundMarkers.Add(pf);
+                layoutManager.Bind(newSoundMarker, h, !playbackIsStopped, reloadSoundClips: false);
+
+                newSoundMarker.markerDelegate = this;
+                soundMarkers.Add(newSoundMarker);
                 ++index;
-                Debug.Log("InitSoundMarkers LOADED " + index + " - Marker('" + h.soundID + "')");
+                // Debug.Log("InitSoundMarkers LOADED " + index + " - Marker('" + h.soundID + "')");
                 if (progressCallback != null) { progressCallback(index); }
-                // yield return null;
-                yield return new WaitForSeconds(waitTime);
+
+                ++numLoadedAfterLastYield;
+                if (waitTime > 0) {
+                    yield return new WaitForSeconds(waitTime);
+                } else if (numLoadedAfterLastYield >= markersToLoadBeforeYield) {
+                    numLoadedAfterLastYield = 0;
+                    yield return null;
+                }
             }
             completeCallback();
         }
@@ -554,10 +636,13 @@ namespace SIS {
         /// </summary>
         public void ResetCameraTapped() {
             // Debug.Log("DONE");
+
+            // WILL check if _loadingSoundMarkers is 'true'
             ReloadSoundsRelativeToCamera();
         }
 
         public void PlaybackStateChanged(bool playbackIsStopped) {
+            canvasControl.kiosk.statsText2.text = playbackIsStopped ? "Audio NOT playing" : "Audio PLAYING";
             foreach (SoundMarker marker in soundMarkers) {
                 marker.userHasHeardSound = false;
                 if (playbackIsStopped) {
@@ -595,10 +680,11 @@ namespace SIS {
             }
         }
 
-        public void DeleteSoundMarker(SoundMarker soundObj) {
+        public void DeleteSoundMarker(SoundMarker soundMarker) {
             // Make sure the SelectionRadius won't be deleted
             SetSoundMarkerRadiusUIParentToCursor();
-            DeleteAndDestroySoundMarker(soundObj);
+            // DeleteAndDestroySoundMarker(soundMarker);
+            _soundMarkerPooling.RecycleSoundMarker(soundMarker, removeFromSoundMarkerList: true, eraseHotspotData: true);
         }
 
         // newPosition is the world position

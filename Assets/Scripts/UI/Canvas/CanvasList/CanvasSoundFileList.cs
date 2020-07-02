@@ -44,7 +44,7 @@ namespace SIS {
             _searchString = null;
             clearSearchButton.gameObject.SetActive(false);
 
-            ReloadSoundFiles();
+            if (data == null || data.Count < 1) { ReloadSoundFiles(); }
         }
 
         private void ReloadSoundFiles() {

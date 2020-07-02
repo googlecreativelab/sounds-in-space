@@ -85,6 +85,8 @@ namespace SIS {
         public CanvasUIScreen activeScreen { get { return _activeScreen; } }
         public int activeScreenIndex { get { return (int)_activeScreen; } }
 
+        public GoogleARCore.Examples.Common.PointcloudVisualizer pointCloudVisualiser;
+
         // Start is called before the first frame update
         void Start() {
             mainScreen.gameObject.SetActive(true);
@@ -151,6 +153,14 @@ namespace SIS {
                 }
             }
 
+            // Don't allow SoundMarker selection from certain modes
+            if (objectSelection != null) {
+                objectSelection.selectionEnabled = 
+                    (screen == CanvasUIScreen.Main 
+                    || screen == CanvasUIScreen.AddSounds 
+                    || screen == CanvasUIScreen.EditSound);
+            }
+
             mainScreen.gameObject.SetActive(screen == CanvasUIScreen.Main);
             placeSoundsOverlay.gameObject.SetActive(screen == CanvasUIScreen.AddSounds);
             editSoundOverlay.gameObject.SetActive(screen == CanvasUIScreen.EditSound || screen == CanvasUIScreen.MarkerAppearance);
@@ -188,6 +198,7 @@ namespace SIS {
         }
 
         public void MainMenuKioskBTNClicked() {
+            pointCloudVisualiser.gameObject.SetActive(false);
             SetCanvasScreenActive(CanvasUIScreen.Kiosk);
         }
 
@@ -422,6 +433,8 @@ namespace SIS {
                 markerAppearance.gameObject.SetActive(false);
                 _activeScreen = CanvasUIScreen.EditSound;
                 return;
+            } else if (fromScreen == CanvasUIScreen.Kiosk) {
+                pointCloudVisualiser.gameObject.SetActive(true);
             }
 
             // ==========================================

@@ -411,6 +411,19 @@ namespace SIS {
             iconIndex = Random.Range(0, SingletonData.Instance.sprites.Length - 1);
         }
 
+        public void NullifyHotspot() {
+            hotspot = null;
+
+            _audioSrc.volume = 0;
+            _audioSrc.Stop();
+            setAudioClip(null);
+
+            followCameraYPos.enabled = false;
+            filterDistortion.enabled = false;
+            filterPhaser.enabled = false;
+            filterEcho.enabled = false;
+        }
+
         public void SetHotspot(Hotspot newHotspot, bool overrideInteralData = true) {
             hotspot = newHotspot;
 
@@ -512,7 +525,7 @@ namespace SIS {
         }
 
         public void OnDemandSoundFileClipWasLoaded(SoundFile sf) {
-            Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
+            //Debug.LogWarning("SoundMarker::OnDemandSoundFileClipWasLoaded " + sf.filename);
 
             // ----------------------
             // !!! This is important, otherwise we hear an artifact when the clip is assigned (Caused by Resonance)
@@ -676,20 +689,11 @@ namespace SIS {
         // Construct from prefab convenience methods
         // ----------------------------
 
-        /// <summary>
-        /// Construct from transform
-        /// </summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static SoundMarker CreatePrefab(Transform t, GameObject prefab, Transform anchorWrapperT) { return CreatePrefab(t.position, t.rotation, prefab, anchorWrapperT); }
+        public static void SetupUnanchoredMarker(SoundMarker marker, Transform t, Transform anchorWrapperT) {
+            SetupUnanchoredMarker(marker, t.position, t.rotation, anchorWrapperT);
+        }
 
-        /// <summary>
-        /// Creates a hotspot prefab and positions it in 3D space relative to the current camera position.
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <param name="rot"></param>
-        /// <returns></returns>
-        public static SoundMarker CreatePrefab(Vector3 pos, Quaternion rot, GameObject prefab, Transform anchorWrapperT) {
+        public static void SetupUnanchoredMarker(SoundMarker marker, Vector3 pos, Quaternion rot, Transform anchorWrapperT) {
             Pose p = new Pose() // {position = pos, rotation = rot }
             {
                 position = pos,
@@ -697,11 +701,28 @@ namespace SIS {
             };
             Anchor anchor = Session.CreateAnchor(p);
 
-            SoundMarker sso = Instantiate(prefab, parent: anchor.transform).GetComponent<SoundMarker>();
-            sso.transform.localPosition = Vector3.zero;
+            marker.transform.SetParent(anchor.transform);
+            marker.transform.localPosition = Vector3.zero;
             anchor.transform.parent = anchorWrapperT;
-
-            return sso;
         }
+
+        // public static SoundMarker CreatePrefab(Transform t, GameObject prefab, Transform anchorWrapperT) {
+        //     return CreatePrefab(t.position, t.rotation, prefab, anchorWrapperT);
+        // }
+
+        // public static SoundMarker CreatePrefab(Vector3 pos, Quaternion rot, GameObject prefab, Transform anchorWrapperT) {
+        //     Pose p = new Pose() // {position = pos, rotation = rot }
+        //     {
+        //         position = pos,
+        //         rotation = Quaternion.identity // anchorWrapperTransform.rotation * rot
+        //     };
+        //     Anchor anchor = Session.CreateAnchor(p);
+
+        //     SoundMarker sso = Instantiate(prefab, parent: anchor.transform).GetComponent<SoundMarker>();
+        //     sso.transform.localPosition = Vector3.zero;
+        //     anchor.transform.parent = anchorWrapperT;
+
+        //     return sso;
+        // }
     }
 }

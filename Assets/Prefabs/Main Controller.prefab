@@ -54,12 +54,14 @@ MonoBehaviour:
     type: 3}
   canvasControl: {fileID: 0}
   firstPersonCamera: {fileID: 0}
+  soundMarkerPooling: {fileID: 0}
   soundPlacementRef: {fileID: 0}
   anchorWrapperTransform: {fileID: 0}
   defaultMinDistance: 0.25
   defaultMaxDistance: 0.5
   loadingOverlay: {fileID: 0}
   loadingOverlayText: {fileID: 0}
+  debugText: {fileID: 0}
 --- !u!114 &6511648024236452584
 MonoBehaviour:
   m_ObjectHideFlags: 0
