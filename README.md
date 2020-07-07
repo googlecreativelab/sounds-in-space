@@ -268,7 +268,11 @@ Once all your sound files have been placed around the room and loaded onto all p
  - Byron Hallett
  - [Rupert Parry](http://rparry.me) | [Github](https://github.com/rupertparry) | [Twitter](https://twitter.com/rupert_parry)
 
-## License
+## License & Notes
 [Apache 2.0 license.](https://www.apache.org/licenses/LICENSE-2.0)
+
+This is not an official Google product, but an AR Experiment developed at the Google Creative Lab. We’ll do our best to support and maintain this experiment but your mileage may vary.
+
+We encourage open sourcing projects as a way of learning from each other. Please respect our and other creators’ rights, including copyright and trademark rights when present, when sharing these works and creating derivative work.
 
 ------------
