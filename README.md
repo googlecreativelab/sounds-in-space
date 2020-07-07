@@ -20,7 +20,7 @@ Contents:
 
 ## What is the Sounds in Space Experiment?
 
-Sounds in Space is an augmented reality audio experiment by Google's Creative Lab in Sydney. It allows you to make your own locational audio experience in a physical space.
+Sounds in Space is an augmented reality audio experiment by Google Creative Lab in Sydney. It allows you to make your own locational audio experience in a physical space.
 
 This is very much an experiment. We are still learning lots and would love you to help us share in this experimentation and learning!
 
